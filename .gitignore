@@ -1,0 +1,22 @@
+#Logs
+logs
+*.log
+
+
+#Dependencies
+/node_modules
+/elm-stuff
+
+# Yarn Integrity file
+.yarn-integrity
+
+
+#OS stuff
+.DS_Store
+.vscode
+*.iml
+/.idea
+
+#Build
+/dist
+/WIP
