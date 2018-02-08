@@ -19,9 +19,3 @@ main =
         , subscriptions = subscriptions
         , update = update
         }
-
-
-
--- getBooks : Http.Request (List String)
--- getBooks =
---     Debug.log "" <| Http.get "http://localhost:8080/levels/level1/level.json" (list string)

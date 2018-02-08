@@ -1,5 +1,6 @@
 module App.Message exposing (Message(..))
 
+import Game.Message as Game
 import Time exposing (Time)
 import Window exposing (Size)
 
@@ -7,3 +8,4 @@ import Window exposing (Size)
 type Message
     = Window Size
     | Animate Time
+    | Game Game.Message
