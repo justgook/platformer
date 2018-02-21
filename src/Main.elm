@@ -3,11 +3,11 @@ module Main exposing (..)
 -- import Http
 
 import App.Message exposing (Message)
-import App.Model exposing (Model, init, model)
+import App.Model exposing (Model, init)
 import App.Subscriptions exposing (subscriptions)
 import App.Update exposing (update)
 import App.View exposing (view)
-import Html exposing (div, text)
+import Html
 import Json.Decode as Json
 
 

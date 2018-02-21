@@ -1,8 +1,12 @@
 module Game.Message exposing (Message(..))
 
-import Game.Level exposing (Level)
+import Game.TextureLoader as Texture
 import Http
+import Time exposing (Time)
+import Util.Level exposing (Level)
 
 
 type Message
-    = LoadLevel (Result Http.Error Level)
+    = LevelLoaded (Result Http.Error Level)
+    | Texture Texture.Message
+    | Animate Time

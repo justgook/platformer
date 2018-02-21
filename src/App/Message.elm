@@ -7,5 +7,4 @@ import Window exposing (Size)
 
 type Message
     = Window Size
-    | Animate Time
     | Game Game.Message
