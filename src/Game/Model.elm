@@ -1,20 +1,20 @@
-module Game.Model exposing (Model, init)
+module Game.Model exposing (Level, Model, init)
 
+import Game.Logic.World exposing (World, world)
 import Game.TextureLoader as TextureLoader
-import QuadTree exposing (QuadTree)
-import Time exposing (Time)
-import Util.Level as Level exposing (Level)
+import Util.Level exposing (Layer, LevelWith, Tileset)
+import Util.Level.Special as Level exposing (LevelProps)
 
 
---exposing (Message, Model, init, load, update)
+type alias Level =
+    LevelWith LevelProps Layer Tileset
 
 
 type alias Model =
-    { level : Level
-    , runtime : Time
+    { level : LevelWith LevelProps Layer Tileset
     , widthRatio : Float
     , textures : TextureLoader.Model
-    , collision : QuadTree (QuadTree.Bounded { data : { x : Float, y : Float, height : Float, width : Float } })
+    , world : World
     }
 
 
@@ -23,6 +23,5 @@ init =
     { level = Level.init
     , textures = TextureLoader.init
     , widthRatio = 1
-    , runtime = 0
-    , collision = QuadTree.emptyQuadTree (QuadTree.boundingBox 0 0 0 0) 0
+    , world = world
     }

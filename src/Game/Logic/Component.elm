@@ -1,19 +1,11 @@
-module Game.ECS.Component exposing (Collision, Dimension(Rectangle), Input, Position, Velocity)
+module Game.Logic.Component exposing (BoundingBox, Collision, Input, Sprite, Velocity)
 
 import Keyboard.Extra exposing (Direction, Key)
+import QuadTree exposing (QuadTree)
 
 
-type alias Position =
-    { x : Float
-    , y : Float
-    }
-
-
-type Dimension
-    = Rectangle
-        { width : Float
-        , height : Float
-        }
+type alias BoundingBox =
+    QuadTree.Bounded {}
 
 
 type alias Velocity =
@@ -30,6 +22,11 @@ type alias Input =
     { x : Int
     , y : Int
     , parse : List Key -> { x : Int, y : Int }
+    }
+
+
+type alias Sprite =
+    { name : String
     }
 
 

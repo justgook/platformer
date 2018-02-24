@@ -1,11 +1,11 @@
-module Game.ECS.SlimeTest exposing (..)
+module Game.Logic.SlimeTest exposing (..)
 
-import Game.ECS.Component exposing (Dimension(Rectangle))
-import Game.ECS.Entity as Entity
-import Game.ECS.Message exposing (Message)
-import Game.ECS.Subscriptions exposing (subscriptions)
-import Game.ECS.Update exposing (update)
-import Game.ECS.World as World exposing (World, world)
+import Game.Logic.Component exposing (Dimension(Rectangle))
+import Game.Logic.Entity as Entity
+import Game.Logic.Message exposing (Message)
+import Game.Logic.Subscriptions exposing (subscriptions)
+import Game.Logic.Update exposing (update)
+import Game.Logic.World as World exposing (World, world)
 import Html exposing (div, text)
 import Html.Attributes exposing (style)
 import Slime
@@ -51,7 +51,10 @@ main =
     Html.program
         { init = model ! []
         , subscriptions = subscriptions >> Slime.Engine.engineSubs
-        , update = update
+        , update =
+            \msg model ->
+                update msg model.world
+                    |> Tuple.mapFirst (\m -> { world = m })
         , view = render
         }
 

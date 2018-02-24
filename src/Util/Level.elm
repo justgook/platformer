@@ -1,7 +1,8 @@
-module Util.Level exposing (Layer(..), Level, Object(..), Tileset(..), decode, decodeWith, init)
+module Util.Level exposing (Layer(..), Level, LevelWith, Object(..), Tileset(..), decode, decodeWith, defaultOptions, init, initWith)
 
 import BinaryBase64
 import Bitwise exposing (or, shiftLeftBy)
+import Dict exposing (Dict)
 import Json.Decode exposing (field)
 import Json.Decode.Pipeline exposing (decode, hardcoded, optional, required)
 
@@ -11,10 +12,10 @@ import Json.Decode.Pipeline exposing (decode, hardcoded, optional, required)
 
 
 type alias Level =
-    LevelWith Layer Tileset
+    LevelWith {} Layer Tileset
 
 
-type alias LevelWith layer tileset =
+type alias LevelWith customProperties layer tileset =
     { height : Int
     , infinite : Bool
     , layers : List layer
@@ -28,11 +29,17 @@ type alias LevelWith layer tileset =
     , kind : String
     , version : Int
     , width : Int
+    , properties : customProperties
     }
 
 
 init : Level
 init =
+    initWith {}
+
+
+initWith : props -> LevelWith props layer tileset
+initWith props =
     { height = 0
     , infinite = False
     , layers = []
@@ -46,30 +53,36 @@ init =
     , kind = ""
     , version = 0
     , width = 0
+    , properties = props
     }
 
 
-decodeWith : { b | layer : Json.Decode.Decoder a, tileset : Json.Decode.Decoder a1 } -> Json.Decode.Decoder (LevelWith a a1)
-decodeWith { layer, tileset } =
+decodeWith : { c | defaultCustomProperties : b, layer : Json.Decode.Decoder a, properties : b -> Json.Decode.Decoder b, tileset : Json.Decode.Decoder a1 } -> Json.Decode.Decoder (LevelWith b a a1)
+decodeWith { layer, tileset, properties, defaultCustomProperties } =
     Json.Decode.Pipeline.decode LevelWith
-        |> Json.Decode.Pipeline.required "height" Json.Decode.int
-        |> Json.Decode.Pipeline.required "infinite" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "layers" (Json.Decode.list layer)
-        |> Json.Decode.Pipeline.required "nextobjectid" Json.Decode.int
-        |> Json.Decode.Pipeline.required "orientation" Json.Decode.string
-        |> Json.Decode.Pipeline.required "renderorder" Json.Decode.string
-        |> Json.Decode.Pipeline.required "tiledversion" Json.Decode.string
-        |> Json.Decode.Pipeline.required "tileheight" Json.Decode.float
-        |> Json.Decode.Pipeline.required "tilesets" (Json.Decode.list tileset)
-        |> Json.Decode.Pipeline.required "tilewidth" Json.Decode.float
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "version" Json.Decode.int
-        |> Json.Decode.Pipeline.required "width" Json.Decode.int
+        |> required "height" Json.Decode.int
+        |> required "infinite" Json.Decode.bool
+        |> required "layers" (Json.Decode.list layer)
+        |> required "nextobjectid" Json.Decode.int
+        |> required "orientation" Json.Decode.string
+        |> required "renderorder" Json.Decode.string
+        |> required "tiledversion" Json.Decode.string
+        |> required "tileheight" Json.Decode.float
+        |> required "tilesets" (Json.Decode.list tileset)
+        |> required "tilewidth" Json.Decode.float
+        |> required "type" Json.Decode.string
+        |> required "version" Json.Decode.int
+        |> required "width" Json.Decode.int
+        |> optional "properties" (properties defaultCustomProperties) defaultCustomProperties
 
 
-defaultOptions : { layer : Json.Decode.Decoder Layer, tileset : Json.Decode.Decoder Tileset }
+defaultOptions : { defaultCustomProperties : {}, layer : Json.Decode.Decoder Layer, properties : a -> Json.Decode.Decoder {}, tileset : Json.Decode.Decoder Tileset }
 defaultOptions =
-    { layer = decodeLayer, tileset = decodeTileset }
+    { layer = decodeLayer
+    , tileset = decodeTileset
+    , properties = \_ -> Json.Decode.succeed {}
+    , defaultCustomProperties = {}
+    }
 
 
 decode : Json.Decode.Decoder Level
@@ -96,8 +109,8 @@ type alias SourceTileData =
 decodeSourceTileset : Json.Decode.Decoder Tileset
 decodeSourceTileset =
     Json.Decode.Pipeline.decode SourceTileData
-        |> Json.Decode.Pipeline.required "firstgid" Json.Decode.int
-        |> Json.Decode.Pipeline.required "source" Json.Decode.string
+        |> required "firstgid" Json.Decode.int
+        |> required "source" Json.Decode.string
         |> Json.Decode.map TilesetSource
 
 
@@ -114,25 +127,95 @@ type alias EmbeddedTileData =
     , tileheight : Int
     , tilewidth : Int
     , transparentcolor : String
+    , tiles : Dict Int TilesData
     }
 
 
 decodeEmbeddedTileset : Json.Decode.Decoder Tileset
 decodeEmbeddedTileset =
     Json.Decode.Pipeline.decode EmbeddedTileData
-        |> Json.Decode.Pipeline.required "columns" Json.Decode.int
-        |> Json.Decode.Pipeline.required "firstgid" Json.Decode.int
-        |> Json.Decode.Pipeline.required "image" Json.Decode.string
-        |> Json.Decode.Pipeline.required "imageheight" Json.Decode.int
-        |> Json.Decode.Pipeline.required "imagewidth" Json.Decode.int
-        |> Json.Decode.Pipeline.required "margin" Json.Decode.int
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "spacing" Json.Decode.int
-        |> Json.Decode.Pipeline.required "tilecount" Json.Decode.int
-        |> Json.Decode.Pipeline.required "tileheight" Json.Decode.int
-        |> Json.Decode.Pipeline.required "tilewidth" Json.Decode.int
-        |> Json.Decode.Pipeline.required "transparentcolor" Json.Decode.string
+        |> required "columns" Json.Decode.int
+        |> required "firstgid" Json.Decode.int
+        |> required "image" Json.Decode.string
+        |> required "imageheight" Json.Decode.int
+        |> required "imagewidth" Json.Decode.int
+        |> required "margin" Json.Decode.int
+        |> required "name" Json.Decode.string
+        |> required "spacing" Json.Decode.int
+        |> required "tilecount" Json.Decode.int
+        |> required "tileheight" Json.Decode.int
+        |> required "tilewidth" Json.Decode.int
+        |> required "transparentcolor" Json.Decode.string
+        |> optional "tiles" decodeTiles Dict.empty
         |> Json.Decode.map TilesetEmbedded
+
+
+decodeTiles : Json.Decode.Decoder (Dict Int TilesData)
+decodeTiles =
+    Json.Decode.keyValuePairs decodeTilesData
+        |> Json.Decode.andThen
+            (List.foldl
+                (\( i, data ) acc ->
+                    case String.toInt i of
+                        Ok index ->
+                            acc |> Json.Decode.andThen (Dict.insert index data >> Json.Decode.succeed)
+
+                        Err a ->
+                            Json.Decode.fail a
+                )
+                (Json.Decode.succeed Dict.empty)
+            )
+
+
+type alias TilesData =
+    { animation : Maybe (List SpriteAnimation)
+    , objectgroup : Maybe TilesDataObjectgroup
+    }
+
+
+type alias TilesDataObjectgroup =
+    { draworder : String
+    , name : String
+    , objects : List Object
+    , opacity : Int
+    , kind : String
+    , visible : Bool
+    , x : Int
+    , y : Int
+    }
+
+
+decodeTilesData : Json.Decode.Decoder TilesData
+decodeTilesData =
+    Json.Decode.map2 TilesData
+        (Json.Decode.maybe (field "animation" (Json.Decode.list decodeSpriteAnimation)))
+        (Json.Decode.maybe (field "objectgroup" decodeTilesDataObjectgroup))
+
+
+decodeTilesDataObjectgroup : Json.Decode.Decoder TilesDataObjectgroup
+decodeTilesDataObjectgroup =
+    Json.Decode.Pipeline.decode TilesDataObjectgroup
+        |> Json.Decode.Pipeline.required "draworder" Json.Decode.string
+        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+        |> Json.Decode.Pipeline.required "objects" (Json.Decode.list decodeObject)
+        |> Json.Decode.Pipeline.required "opacity" Json.Decode.int
+        |> Json.Decode.Pipeline.required "type" Json.Decode.string
+        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
+        |> Json.Decode.Pipeline.required "x" Json.Decode.int
+        |> Json.Decode.Pipeline.required "y" Json.Decode.int
+
+
+type alias SpriteAnimation =
+    { duration : Int
+    , tileid : Int
+    }
+
+
+decodeSpriteAnimation : Json.Decode.Decoder SpriteAnimation
+decodeSpriteAnimation =
+    Json.Decode.map2 SpriteAnimation
+        (field "duration" Json.Decode.int)
+        (field "tileid" Json.Decode.int)
 
 
 type Layer
@@ -175,13 +258,13 @@ type alias ImageLayerData =
 decodeImageLayer : Json.Decode.Decoder ImageLayerData
 decodeImageLayer =
     Json.Decode.Pipeline.decode ImageLayerData
-        |> Json.Decode.Pipeline.required "image" Json.Decode.string
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "opacity" Json.Decode.float
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "x" Json.Decode.int
-        |> Json.Decode.Pipeline.required "y" Json.Decode.int
+        |> required "image" Json.Decode.string
+        |> required "name" Json.Decode.string
+        |> required "opacity" Json.Decode.float
+        |> required "type" Json.Decode.string
+        |> required "visible" Json.Decode.bool
+        |> required "x" Json.Decode.int
+        |> required "y" Json.Decode.int
 
 
 type alias TileLayerData =
@@ -200,20 +283,20 @@ type alias TileLayerData =
 decodeTileLayer : Json.Decode.Decoder TileLayerData
 decodeTileLayer =
     Json.Decode.Pipeline.decode (,)
-        |> Json.Decode.Pipeline.required "encoding" Json.Decode.string
-        |> Json.Decode.Pipeline.optional "compression" Json.Decode.string "none"
+        |> required "encoding" Json.Decode.string
+        |> optional "compression" Json.Decode.string "none"
         |> Json.Decode.andThen
             (\( encoding, compression ) ->
                 Json.Decode.Pipeline.decode TileLayerData
-                    |> Json.Decode.Pipeline.required "data" (decodeTileLayerData encoding compression)
-                    |> Json.Decode.Pipeline.required "height" Json.Decode.int
-                    |> Json.Decode.Pipeline.required "name" Json.Decode.string
-                    |> Json.Decode.Pipeline.required "opacity" Json.Decode.float
-                    |> Json.Decode.Pipeline.required "type" Json.Decode.string
-                    |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-                    |> Json.Decode.Pipeline.required "width" Json.Decode.int
-                    |> Json.Decode.Pipeline.required "x" Json.Decode.int
-                    |> Json.Decode.Pipeline.required "y" Json.Decode.int
+                    |> required "data" (decodeTileLayerData encoding compression)
+                    |> required "height" Json.Decode.int
+                    |> required "name" Json.Decode.string
+                    |> required "opacity" Json.Decode.float
+                    |> required "type" Json.Decode.string
+                    |> required "visible" Json.Decode.bool
+                    |> required "width" Json.Decode.int
+                    |> required "x" Json.Decode.int
+                    |> required "y" Json.Decode.int
             )
 
 
@@ -297,14 +380,14 @@ type alias ObjectLayerData =
 decodeObjectLayer : Json.Decode.Decoder ObjectLayerData
 decodeObjectLayer =
     Json.Decode.Pipeline.decode ObjectLayerData
-        |> Json.Decode.Pipeline.required "draworder" Json.Decode.string
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "objects" (Json.Decode.list decodeObject)
-        |> Json.Decode.Pipeline.required "opacity" Json.Decode.float
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "x" Json.Decode.int
-        |> Json.Decode.Pipeline.required "y" Json.Decode.int
+        |> required "draworder" Json.Decode.string
+        |> required "name" Json.Decode.string
+        |> required "objects" (Json.Decode.list decodeObject)
+        |> required "opacity" Json.Decode.float
+        |> required "type" Json.Decode.string
+        |> required "visible" Json.Decode.bool
+        |> required "x" Json.Decode.int
+        |> required "y" Json.Decode.int
 
 
 type Object
@@ -318,9 +401,9 @@ decodeObject : Json.Decode.Decoder Object
 decodeObject =
     -- maybe use Json.Decode.Pipeline.resolve
     Json.Decode.Pipeline.decode (,,)
-        |> Json.Decode.Pipeline.optional "point" Json.Decode.bool False
-        |> Json.Decode.Pipeline.optional "ellipse" Json.Decode.bool False
-        |> Json.Decode.Pipeline.optional "polygon" (Json.Decode.list decodeObjectPolygonPoint) []
+        |> optional "point" Json.Decode.bool False
+        |> optional "ellipse" Json.Decode.bool False
+        |> optional "polygon" (Json.Decode.list decodeObjectPolygonPoint) []
         |> Json.Decode.andThen
             (\( point, ellipse, polygon ) ->
                 case ( point, ellipse, polygon ) of
@@ -368,16 +451,16 @@ decodeObjectPolygonPoint =
 decodeObjectPolygonData : Json.Decode.Decoder ObjectPolygonData
 decodeObjectPolygonData =
     Json.Decode.Pipeline.decode ObjectPolygonData
-        |> Json.Decode.Pipeline.required "height" Json.Decode.int
-        |> Json.Decode.Pipeline.required "id" Json.Decode.int
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "polygon" (Json.Decode.list decodeObjectPolygonPoint)
-        |> Json.Decode.Pipeline.required "rotation" Json.Decode.int
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "width" Json.Decode.int
-        |> Json.Decode.Pipeline.required "x" Json.Decode.float
-        |> Json.Decode.Pipeline.required "y" Json.Decode.float
+        |> required "height" Json.Decode.int
+        |> required "id" Json.Decode.int
+        |> required "name" Json.Decode.string
+        |> required "polygon" (Json.Decode.list decodeObjectPolygonPoint)
+        |> required "rotation" Json.Decode.int
+        |> required "type" Json.Decode.string
+        |> required "visible" Json.Decode.bool
+        |> required "width" Json.Decode.int
+        |> required "x" Json.Decode.float
+        |> required "y" Json.Decode.float
 
 
 type alias ObjectRectangleData =
@@ -396,15 +479,15 @@ type alias ObjectRectangleData =
 decodeObjectRectangle : Json.Decode.Decoder ObjectRectangleData
 decodeObjectRectangle =
     Json.Decode.Pipeline.decode ObjectRectangleData
-        |> Json.Decode.Pipeline.required "height" Json.Decode.float
-        |> Json.Decode.Pipeline.required "id" Json.Decode.int
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "rotation" Json.Decode.int
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "width" Json.Decode.float
-        |> Json.Decode.Pipeline.required "x" Json.Decode.float
-        |> Json.Decode.Pipeline.required "y" Json.Decode.float
+        |> required "height" Json.Decode.float
+        |> required "id" Json.Decode.int
+        |> required "name" Json.Decode.string
+        |> required "rotation" Json.Decode.int
+        |> required "type" Json.Decode.string
+        |> required "visible" Json.Decode.bool
+        |> required "width" Json.Decode.float
+        |> required "x" Json.Decode.float
+        |> required "y" Json.Decode.float
 
 
 type alias ObjectPointData =
@@ -421,10 +504,10 @@ type alias ObjectPointData =
 decodeObjectPoint : Json.Decode.Decoder ObjectPointData
 decodeObjectPoint =
     Json.Decode.Pipeline.decode ObjectPointData
-        |> Json.Decode.Pipeline.required "id" Json.Decode.int
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "rotation" Json.Decode.int
-        |> Json.Decode.Pipeline.required "type" Json.Decode.string
-        |> Json.Decode.Pipeline.required "visible" Json.Decode.bool
-        |> Json.Decode.Pipeline.required "x" Json.Decode.float
-        |> Json.Decode.Pipeline.required "y" Json.Decode.float
+        |> required "id" Json.Decode.int
+        |> required "name" Json.Decode.string
+        |> required "rotation" Json.Decode.int
+        |> required "type" Json.Decode.string
+        |> required "visible" Json.Decode.bool
+        |> required "x" Json.Decode.float
+        |> required "y" Json.Decode.float

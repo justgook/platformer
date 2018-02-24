@@ -90,7 +90,7 @@ fragmentShader =
         void main() {
             vec2 point = levelPoint(tilesPerUnit, vcoord, viewportOffset);
             vec2 look = floor(point); // or add precision here ?
-            float tileIndex = ((texture2D(lut, vec2(look.x / lutSize.x, look.y / lutSize.y)).z * 255.0));
+            float tileIndex = (texture2D(lut, vec2(look.x / lutSize.x, look.y / lutSize.y)).z * 255.0);
             //int tileIndex = 2;
             if (tileIndex == 0.0) { //empty
                 discard;

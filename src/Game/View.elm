@@ -1,13 +1,16 @@
 module Game.View exposing (view)
 
 import Array
+import Game.Logic.World as Logic
 import Game.Model as Game
 import Game.TextureLoader as TextureLoader
 import Game.View.Object as ObjectView
+import Game.View.Object.Animated as AnimatedObject
 import Game.View.TileLayer as TileLayer
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import QuadTree
+import Slime
 import Util.Level as Level
 import WebGL exposing (Mesh, Shader, Texture)
 
@@ -64,25 +67,76 @@ view model =
 
                             Level.ObjectLayer _ ->
                                 let
-                                    folding { data } acc =
+                                    -- Animated
+                                    animations =
+                                        (Slime.entities2 Logic.sprites Logic.boundingBoxes).getter model.world
+                                            |> List.foldr foldingAnimations []
+
+                                    -- TODO MOVE THAT LOGIC TO Game.LevelLoaded
+                                    foldingAnimations { a, b } acc =
+                                        let
+                                            { boundingBox } =
+                                                b
+                                        in
+                                        case
+                                            ( TextureLoader.get ("Tiles::" ++ a.name) model.textures
+                                            , List.filter
+                                                (\item_ ->
+                                                    case item_ of
+                                                        Level.TilesetEmbedded item ->
+                                                            item.name == a.name
+
+                                                        _ ->
+                                                            False
+                                                )
+                                                model.level.tilesets
+                                            )
+                                        of
+                                            ( Just image, [ Level.TilesetEmbedded tileset ] ) ->
+                                                acc
+                                                    ++ [ AnimatedObject.render
+                                                            { widthRatio = model.widthRatio
+                                                            , x = boundingBox.horizontal.low
+                                                            , y = boundingBox.vertical.low
+                                                            , width = QuadTree.width boundingBox
+                                                            , height = QuadTree.height boundingBox
+                                                            , sprite = image
+                                                            , runtime = model.world.runtime
+                                                            , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 0.0 0.0 0.0)
+
+                                                            --tilesPerUnit * tileSize
+                                                            , pixelsPerUnit = 160.0
+                                                            }
+                                                       ]
+
+                                            _ ->
+                                                acc
+
+                                    foldingObjects { a } acc =
+                                        let
+                                            { boundingBox } =
+                                                a
+                                        in
                                         acc
                                             ++ [ ObjectView.render
                                                     { widthRatio = model.widthRatio
-                                                    , x = data.x
-                                                    , y = data.y
-                                                    , width = data.width
-                                                    , height = data.height
+                                                    , x = boundingBox.horizontal.low
+                                                    , y = boundingBox.vertical.low
+                                                    , width = QuadTree.width boundingBox
+                                                    , height = QuadTree.height boundingBox
 
                                                     --tilesPerUnit * tileSize
                                                     , pixelsPerUnit = 160.0
                                                     }
                                                ]
 
-                                    result =
-                                        QuadTree.getAllItems model.collision
-                                            |> Array.foldr folding []
+                                    boundingBoxes =
+                                        (Slime.entities Logic.boundingBoxes).getter model.world
+                                            |> List.foldr foldingObjects []
                                 in
-                                result ++ acc
+                                animations
+                                    -- ++ boundingBoxes
+                                    ++ acc
 
                             Level.TileLayer data ->
                                 case

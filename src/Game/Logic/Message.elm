@@ -1,4 +1,4 @@
-module Game.ECS.Message exposing (Message(..))
+module Game.Logic.Message exposing (Message(..))
 
 import Keyboard.Extra
 

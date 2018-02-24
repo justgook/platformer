@@ -1,12 +1,13 @@
 module Game.Message exposing (Message(..))
 
+import Game.Logic.Message as Logic
+import Game.Model as Game
 import Game.TextureLoader as Texture
 import Http
-import Time exposing (Time)
-import Util.Level exposing (Level)
+import Slime.Engine
 
 
 type Message
-    = LevelLoaded (Result Http.Error Level)
+    = LevelLoaded (Result Http.Error Game.Level)
     | Texture Texture.Message
-    | Animate Time
+    | Logic (Slime.Engine.Message Logic.Message)

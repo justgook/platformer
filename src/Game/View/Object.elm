@@ -1,7 +1,8 @@
-module Game.View.Object exposing (render)
+module Game.View.Object exposing (fragmentShader, mesh, render, vertexShader)
+
+-- import Math.Vector3 exposing (Vec3, vec3)
 
 import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
 import WebGL exposing (Mesh, Shader, Texture)
 import WebGL.Settings as WebGL
 import WebGL.Settings.Blend as Blend
@@ -38,6 +39,7 @@ type alias Vertex =
     { position : Vec2 }
 
 
+fragmentShader : Shader a b { vcoord : Vec2 }
 fragmentShader =
     [glsl|
         precision mediump float;
@@ -49,6 +51,7 @@ fragmentShader =
     |]
 
 
+vertexShader : Shader { a | position : Vec2 } { b | height : Float, pixelsPerUnit : Float, width : Float, widthRatio : Float, x : Float, y : Float } { vcoord : Vec2 }
 vertexShader =
     [glsl|
         attribute vec2 position;
@@ -78,8 +81,10 @@ vertexShader =
 		 			         0, 0,-1, 0,
 		 			        -1,-1, 0, 1);
         void main () {
-          vcoord = vec2(position * vec2(width * px, height * px));
-          float yPos = 1.0 - (height + y) * px; //Reverse it becouse Tiled is TopLeft - GLSL BottomLeft
-          gl_Position = viewport * translate(x * px, yPos, 0.0) * vec4(vcoord, 0, 1.0);
+            vcoord = position;
+            float yPos = 1.0 - (height + y) * px; //Reverse it becouse Tiled is TopLeft - GLSL BottomLeft
+            gl_Position = viewport * translate(x * px, yPos, 0.0) * vec4(
+              vec2(position * vec2(width * px, height * px)),
+              0, 1.0);
         }
     |]

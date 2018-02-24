@@ -2,7 +2,7 @@ module Game.Main exposing (load)
 
 import Game.Message exposing (Message(..))
 import Http
-import Util.Level as Level
+import Util.Level.Special as Level
 
 
 load : String -> Cmd Message
