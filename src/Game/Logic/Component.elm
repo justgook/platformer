@@ -1,4 +1,4 @@
-module Game.Logic.Component exposing (BoundingBox, Collision, Input, Sprite, Velocity)
+module Game.Logic.Component exposing (BoundingBox, Collision, Input, Jump, Sprite, Velocity)
 
 import Keyboard.Extra exposing (Direction, Key)
 import QuadTree exposing (QuadTree)
@@ -14,7 +14,12 @@ type alias Velocity =
     , speed : Float
     , acc : Float
     , maxSpeed : Float
-    , direction : Direction
+    }
+
+
+type alias Jump =
+    { maxHight : Float
+    , startHeight : Float
     }
 
 

@@ -1,6 +1,5 @@
 module Game.Logic.Entity exposing (spawnCollectable, spawnPlayer, spawnWall)
 
-import Game.Logic.Component as Component
 import Game.Logic.World as World exposing (World)
 import Keyboard.Extra exposing (Direction(..), Key(ArrowDown, ArrowLeft, ArrowRight, ArrowUp))
 import QuadTree
@@ -29,13 +28,13 @@ spawnPlayer ({ x, y, width, height, name } as data) world =
         ( _, updatedWorld ) =
             Slime.forNewEntity world
                 &=> ( World.sprites, { name = name } )
+                &=> ( World.jumps, { maxHight = 64, startHeight = 0 } )
                 &=> ( World.velocities
                     , { vx = 0
                       , vy = 0
                       , speed = 100
                       , acc = 200
                       , maxSpeed = 500
-                      , direction = NoDirection
                       }
                     )
                 &=> ( World.boundingBoxes, { boundingBox = QuadTree.boundingBox x (x + width) y (y + height) } )

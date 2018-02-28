@@ -1,4 +1,4 @@
-module Game.Logic.World exposing (World, boundingBoxes, collisions, inputs, sprites, velocities, world)
+module Game.Logic.World exposing (World, boundingBoxes, collisions, init, inputs, jumps, sprites, velocities)
 
 import Array exposing (Array)
 import Game.Logic.Component as Component
@@ -18,6 +18,7 @@ type alias World =
         { velocities : Slime.ComponentSet Component.Velocity
         , inputs : Slime.ComponentSet Component.Input
         , collisions : Slime.ComponentSet Component.Collision
+        , jumps : Slime.ComponentSet Component.Jump
         , pressedKeys : List Key
         , boundingBoxes : QuadTree Component.BoundingBox
         , boundingBoxes_ : Slime.ComponentSet Component.BoundingBox
@@ -27,12 +28,13 @@ type alias World =
         }
 
 
-world : World
-world =
+init : World
+init =
     { idSource = Slime.initIdSource
     , velocities = Slime.initComponents
     , inputs = Slime.initComponents
     , collisions = Slime.initComponents
+    , jumps = Slime.initComponents
     , pressedKeys = []
     , gravity = 60 -- pixels per frame
     , boundingBoxes = QuadTree.emptyQuadTree (QuadTree.boundingBox 0 0 0 0) 0
@@ -78,13 +80,20 @@ boundingBoxes =
                                     |> QuadTree.insertMany items
 
                             -- |> flip (Array.foldr (\a b -> QuadTree.insert a b)) items
-                            _ =
-                                Debug.log "boundingBoxes" (QuadTree.length result)
+                            -- _ =
+                            --     Debug.log "boundingBoxes" (QuadTree.length result)
                         in
                         result
 
                     -- |> QuadTree.reset
                 }
+    }
+
+
+jumps : Slime.ComponentSpec Component.Jump World
+jumps =
+    { getter = .jumps
+    , setter = \comps world -> { world | jumps = comps }
     }
 
 

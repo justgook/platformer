@@ -1,4 +1,4 @@
-module Game.View.TileLayer exposing (render)
+module Game.View.TileLayer exposing (Model, render)
 
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
@@ -87,10 +87,17 @@ fragmentShader =
 
         vec2 levelPoint(float tilesPerUnit, vec2 vcoord, vec2 viewportOffset);
         vec4 pixelFromTile(sampler2D image, vec2 size, float index, vec2 fragmentOffset, bool readFromTop);
+        float color2float(vec4 c){
+            return c.z * 255.0
+            + c.y * 256.0 * 255.0
+            + c.x * 256.0 * 256.0 * 255.0
+            ;
+        }
         void main() {
-            vec2 point = levelPoint(tilesPerUnit, vcoord, viewportOffset);
+            vec2 point = levelPoint(tilesPerUnit, vcoord, viewportOffset / tileSize.y);
             vec2 look = floor(point); // or add precision here ?
-            float tileIndex = (texture2D(lut, vec2(look.x / lutSize.x, look.y / lutSize.y)).z * 255.0);
+            //TODO ADD HERE NOT ONLY BLUE
+            float tileIndex = color2float(texture2D(lut, vec2(look.x / lutSize.x, look.y / lutSize.y)));
             //int tileIndex = 2;
             if (tileIndex == 0.0) { //empty
                 discard;

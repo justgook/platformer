@@ -27,7 +27,7 @@ type alias LevelWith customProperties layer tileset =
     , tilesets : List tileset
     , tilewidth : Float
     , kind : String
-    , version : Int
+    , version : Float
     , width : Int
     , properties : customProperties
     }
@@ -71,7 +71,7 @@ decodeWith { layer, tileset, properties, defaultCustomProperties } =
         |> required "tilesets" (Json.Decode.list tileset)
         |> required "tilewidth" Json.Decode.float
         |> required "type" Json.Decode.string
-        |> required "version" Json.Decode.int
+        |> required "version" Json.Decode.float
         |> required "width" Json.Decode.int
         |> optional "properties" (properties defaultCustomProperties) defaultCustomProperties
 
@@ -152,24 +152,43 @@ decodeEmbeddedTileset =
 
 decodeTiles : Json.Decode.Decoder (Dict Int TilesData)
 decodeTiles =
-    Json.Decode.keyValuePairs decodeTilesData
-        |> Json.Decode.andThen
-            (List.foldl
-                (\( i, data ) acc ->
-                    case String.toInt i of
-                        Ok index ->
-                            acc |> Json.Decode.andThen (Dict.insert index data >> Json.Decode.succeed)
+    let
+        newFormat =
+            Json.Decode.list decodeTilesDataNew
+                |> Json.Decode.andThen
+                    (List.foldl
+                        (\data acc ->
+                            acc |> Json.Decode.andThen (Dict.insert data.id { animation = data.animation, objectgroup = data.objectgroup } >> Json.Decode.succeed)
+                        )
+                        (Json.Decode.succeed Dict.empty)
+                    )
 
-                        Err a ->
-                            Json.Decode.fail a
-                )
-                (Json.Decode.succeed Dict.empty)
-            )
+        oldFormat =
+            Json.Decode.keyValuePairs decodeTilesData
+                |> Json.Decode.andThen
+                    (List.foldl
+                        (\( i, data ) acc ->
+                            case String.toInt i of
+                                Ok index ->
+                                    acc |> Json.Decode.andThen (Dict.insert index data >> Json.Decode.succeed)
+
+                                Err a ->
+                                    Json.Decode.fail a
+                        )
+                        (Json.Decode.succeed Dict.empty)
+                    )
+    in
+    Json.Decode.oneOf [ oldFormat, newFormat ]
 
 
 type alias TilesData =
-    { animation : Maybe (List SpriteAnimation)
-    , objectgroup : Maybe TilesDataObjectgroup
+    TilesDataPlain {}
+
+
+type alias TilesDataPlain a =
+    { a
+        | animation : Maybe (List SpriteAnimation)
+        , objectgroup : Maybe TilesDataObjectgroup
     }
 
 
@@ -187,9 +206,17 @@ type alias TilesDataObjectgroup =
 
 decodeTilesData : Json.Decode.Decoder TilesData
 decodeTilesData =
-    Json.Decode.map2 TilesData
+    Json.Decode.map2 (\a b -> { animation = a, objectgroup = b })
         (Json.Decode.maybe (field "animation" (Json.Decode.list decodeSpriteAnimation)))
         (Json.Decode.maybe (field "objectgroup" decodeTilesDataObjectgroup))
+
+
+decodeTilesDataNew : Json.Decode.Decoder (TilesDataPlain { id : Int })
+decodeTilesDataNew =
+    Json.Decode.map3 (\a b c -> { animation = a, objectgroup = b, id = c })
+        (Json.Decode.maybe (field "animation" (Json.Decode.list decodeSpriteAnimation)))
+        (Json.Decode.maybe (field "objectgroup" decodeTilesDataObjectgroup))
+        (field "id" Json.Decode.int)
 
 
 decodeTilesDataObjectgroup : Json.Decode.Decoder TilesDataObjectgroup
@@ -250,8 +277,8 @@ type alias ImageLayerData =
     , opacity : Float
     , kind : String
     , visible : Bool
-    , x : Int
-    , y : Int
+    , x : Float
+    , y : Float
     }
 
 
@@ -263,8 +290,8 @@ decodeImageLayer =
         |> required "opacity" Json.Decode.float
         |> required "type" Json.Decode.string
         |> required "visible" Json.Decode.bool
-        |> required "x" Json.Decode.int
-        |> required "y" Json.Decode.int
+        |> required "x" Json.Decode.float
+        |> required "y" Json.Decode.float
 
 
 type alias TileLayerData =
@@ -283,7 +310,7 @@ type alias TileLayerData =
 decodeTileLayer : Json.Decode.Decoder TileLayerData
 decodeTileLayer =
     Json.Decode.Pipeline.decode (,)
-        |> required "encoding" Json.Decode.string
+        |> optional "encoding" Json.Decode.string "none"
         |> optional "compression" Json.Decode.string "none"
         |> Json.Decode.andThen
             (\( encoding, compression ) ->

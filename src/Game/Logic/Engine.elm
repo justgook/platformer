@@ -16,9 +16,10 @@ engine =
 
         systems =
             [ Slime.Engine.timedSystem System.runtime
-            , Slime.Engine.timedSystem System.control
             , Slime.Engine.untimedSystem System.collision
             , Slime.Engine.timedSystem System.gravity
+            , Slime.Engine.timedSystem System.control
+            , Slime.Engine.timedSystem System.jumping
             , Slime.Engine.timedSystem System.movement
             ]
 

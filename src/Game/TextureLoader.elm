@@ -2,7 +2,7 @@ module Game.TextureLoader exposing (Message, Model, get, init, load, update)
 
 import Dict exposing (Dict)
 import Task
-import WebGL.Texture as Texture exposing (Error, Texture, Wrap, defaultOptions, nearest, nonPowerOfTwoOptions)
+import WebGL.Texture as Texture exposing (Error, Texture, Wrap, defaultOptions, linear, nearest, nonPowerOfTwoOptions)
 
 
 type alias Model =
@@ -20,6 +20,7 @@ load key url =
         (Texture.loadWith
             { nonPowerOfTwoOptions
                 | magnify = nearest
+                , minify = nearest
             }
             url
         )

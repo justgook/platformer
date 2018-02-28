@@ -1,4 +1,4 @@
-module Game.Logic.System exposing (collision, control, gravity, inputListener, movement, runtime)
+module Game.Logic.System exposing (collision, control, gravity, inputListener, jumping, movement, runtime)
 
 import Array
 import Game.Logic.Message exposing (Message)
@@ -13,37 +13,71 @@ collision : World -> World
 collision world =
     -- https://developer.mozilla.org/kab/docs/Games/Techniques/2D_collision_detection
     -- https://gamedev.stackexchange.com/a/29796
-    --     var rect1 = {x: 5, y: 5, width: 50, height: 50}
-    -- var rect2 = {x: 20, y: 10, width: 10, height: 10}
-    -- if (rect1.x < rect2.x + rect2.width &&
-    --    rect1.x + rect1.width > rect2.x &&
-    --    rect1.y < rect2.y + rect2.height &&
-    --    rect1.height + rect1.y > rect2.y) {
-    --     // collision detected!
-    -- }
-    -- I suggest computing the Minkowski sum of B and A, which is a new rectangle, and checking where the centre of A lies relatively to the diagonals of that rectangle:
-    -- float wy = (A.width() + B.width()) * (A.centerY() - B.centerY());
-    -- float hx = (A.height() + B.height()) * (A.centerX() - B.centerX());
-    -- if (wy > hx)
-    --     if (wy > -hx)
-    --         /* top */
-    --     else
-    --         /* left */
-    -- else
-    --     if (wy > -hx)
-    --         /* right */
-    --     else
-    --         /* bottom */
     world
         |> Slime.stepEntities (Slime.entities2 World.collisions World.boundingBoxes)
             (\({ a, b } as ent2) ->
-                if
-                    --TODO add 1px on each side - to intersect when it not touches.. or round that part..
-                    QuadTree.findIntersecting ent2.b world.boundingBoxes |> Array.length |> (<) 1
-                then
-                    { ent2 | a = { a | bottom = True } }
-                else
-                    { ent2 | a = { a | bottom = False } }
+                let
+                    -- https://ellie-app.com/q9NDyszHBa1/0
+                    --collisionSide a b acc =
+                    -- let
+                    --     aLeft = a.center.x - a.width / 2
+                    --     aRight = a.center.x + a.width / 2
+                    --     aTop = a.center.y - a.height / 2
+                    --     aBottom = a.center.y + a.height / 2
+                    --     bLeft = b.center.x - b.width / 2
+                    --     bRight = b.center.x + b.width / 2
+                    --     bTop = b.center.y - b.height / 2
+                    --     bBottom = b.center.y + b.height / 2
+                    --     collidesOnTop =
+                    --         aTop >= bTop && aTop < bBottom
+                    --     collidesOnLeft =
+                    --         aLeft >= bLeft && aLeft < bRight
+                    --     collidesOnRight =
+                    --         aRight <= bRight && aRight > bLeft
+                    --     collidesOnBottom =
+                    --         aBottom <= bBottom && aBottom > bTop
+                    -- in
+                    -- { acc
+                    --     | top = collidesOnTop
+                    --     , left = collidesOnLeft
+                    --     , right = collidesOnRight
+                    --     , bottom = collidesOnBottom
+                    -- }
+                    collisionSide a b acc =
+                        let
+                            centerA =
+                                QuadTree.center a
+
+                            centerB =
+                                QuadTree.center b
+
+                            wy =
+                                (QuadTree.width a + QuadTree.width b) * (centerA.y - centerB.y)
+
+                            hx =
+                                (QuadTree.height a + QuadTree.height b) * (centerA.x - centerB.x)
+                        in
+                        if wy > hx then
+                            if wy > -hx then
+                                { acc | top = True }
+                            else
+                                { acc | left = True }
+                        else if wy > -hx then
+                            { acc | right = True }
+                        else
+                            { acc | bottom = True }
+                in
+                QuadTree.findIntersecting ent2.b world.boundingBoxes
+                    |> Array.foldl
+                        (\({ boundingBox } as box) acc ->
+                            if ent2.b.boundingBox /= box.boundingBox then
+                                collisionSide ent2.b.boundingBox boundingBox acc
+                            else
+                                acc
+                        )
+                        { top = False, right = False, bottom = False, left = False }
+                    |> (\a -> { ent2 | a = a })
+                    -- |> Debug.log "collision"
             )
 
 
@@ -55,7 +89,7 @@ runtime delta world =
 gravity : Time -> World -> World
 gravity delta world =
     let
-        updateVelocity { bottom } velocity =
+        updateVelocity { top, right, bottom, left } velocity =
             if not bottom then
                 { velocity | vy = world.gravity }
             else
@@ -66,16 +100,21 @@ gravity delta world =
         world
 
 
+jumping : Time -> World -> World
+jumping delta world =
+    let
+        test =
+            Slime.stepEntities (Slime.entities3 World.jumps World.velocities World.collisions)
+                (\ent3 -> ent3)
+                world
+    in
+    world
+
+
 movement : Time -> World -> World
 movement delta =
     let
-        addVelocity velocity position delta =
-            { position
-                | x = position.x + velocity.vx * delta
-                , y = position.y + velocity.vy * delta
-            }
-
-        addVelocity2 velocity ({ boundingBox } as data) delta =
+        addVelocity velocity ({ boundingBox } as data) collision delta =
             let
                 ( x, y ) =
                     ( boundingBox.horizontal.low + velocity.vx * delta
@@ -85,20 +124,32 @@ movement delta =
             { data
                 | boundingBox =
                     { horizontal =
-                        { low = x
-                        , high = boundingBox.horizontal.high - boundingBox.horizontal.low + x
-                        }
+                        if
+                            (x > boundingBox.horizontal.low && not collision.left)
+                                || (x < boundingBox.horizontal.low && not collision.right)
+                        then
+                            { low = x
+                            , high = boundingBox.horizontal.high - boundingBox.horizontal.low + x
+                            }
+                        else
+                            boundingBox.horizontal
                     , vertical =
-                        { low = y
-                        , high = boundingBox.vertical.high - boundingBox.vertical.low + y
-                        }
+                        if
+                            (y > boundingBox.vertical.low && not collision.bottom)
+                                || (y < boundingBox.vertical.low && not collision.top)
+                        then
+                            { low = y
+                            , high = boundingBox.vertical.high - boundingBox.vertical.low + y
+                            }
+                        else
+                            boundingBox.vertical
                     }
             }
     in
-    Slime.stepEntities (Slime.entities2 World.velocities World.boundingBoxes)
-        (\ent2 ->
-            { ent2
-                | b = addVelocity2 ent2.a ent2.b delta
+    Slime.stepEntities (Slime.entities3 World.velocities World.boundingBoxes World.collisions)
+        (\ent3 ->
+            { ent3
+                | b = addVelocity ent3.a ent3.b ent3.c delta
             }
         )
 
@@ -121,6 +172,12 @@ control delta =
                     else
                         vx
 
+                vy_ =
+                    if y > 0 then
+                        -100
+                    else
+                        vy
+
                 curentSpeed =
                     if x /= 0 then
                         if abs vx_ < speed then
@@ -135,11 +192,8 @@ control delta =
                         curentSpeed
                     else
                         maxSpeed * x
-
-                -- _ =
-                --     Debug.log "Speed" result
             in
-            { ent2 | b = { b | vx = result, vy = ent2.b.vy + toFloat ent2.a.y } }
+            { ent2 | b = { b | vx = result, vy = vy_ } }
         )
 
 

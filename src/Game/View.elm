@@ -1,6 +1,5 @@
 module Game.View exposing (view)
 
-import Array
 import Game.Logic.World as Logic
 import Game.Model as Game
 import Game.TextureLoader as TextureLoader
@@ -15,29 +14,6 @@ import Util.Level as Level
 import WebGL exposing (Mesh, Shader, Texture)
 
 
-hexColor2Vec3 : String -> Result String Vec3
-hexColor2Vec3 str =
-    let
-        withoutHash =
-            if String.startsWith "#" str then
-                String.dropLeft 1 str
-            else
-                str
-    in
-    case String.toList withoutHash of
-        [ r1, r2, g1, g2, b1, b2 ] ->
-            let
-                makeFloat a b =
-                    String.fromList [ '0', 'x', a, b ]
-                        |> String.toInt
-                        |> Result.map (\i -> toFloat i / 255)
-            in
-            Result.map3 vec3 (makeFloat r1 r2) (makeFloat g1 g2) (makeFloat b1 b2)
-
-        _ ->
-            "Can not parse hex color:" ++ str |> Result.Err
-
-
 getAt : Int -> List a -> Maybe a
 getAt idx xs =
     if idx < 0 then
@@ -50,14 +26,59 @@ getAt idx xs =
 -- Add linght raycasting
 -- https://stackoverflow.com/questions/34708021/how-to-implement-2d-raycasting-light-effect-in-glsl
 --https://github.com/mattdesl/lwjgl-basics/wiki/2D-Pixel-Perfect-Shadows
+-- renderGame : { a | widthRatio : Float, pixelsPerUnit : Float } -> List Game.RenderData -> List WebGL.Entity
+
+
+renderGame : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> List Game.RenderData -> List WebGL.Entity
+renderGame { widthRatio, pixelsPerUnit, viewportOffset } =
+    List.foldr
+        (\layer acc ->
+            case layer of
+                Game.ImageLayerRenderData _ ->
+                    acc
+
+                Game.TileLayerRenderData data ->
+                    TileLayer.render
+                        { widthRatio = widthRatio
+                        , viewportOffset = viewportOffset
+                        , pixelsPerUnit = pixelsPerUnit
+                        , lut = data.lutTexture
+                        , lutSize = data.lutSize
+                        , tileSet = data.tileSetTexture
+                        , tileSetSize = data.tileSetSize
+                        , tileSize = data.tileSize
+                        , transparentcolor = data.transparentcolor
+                        }
+                        :: acc
+
+                _ ->
+                    acc
+        )
+        []
 
 
 view : Game.Model -> List WebGL.Entity
 view model =
+    case model.renderData of
+        Game.Success data ->
+            renderGame
+                { widthRatio = model.widthRatio
+                , pixelsPerUnit = 160.0
+                , viewportOffset = vec2 (sin model.world.runtime * 16) (cos model.world.runtime * 16)
+                }
+                data
+
+        _ ->
+            []
+
+
+view_old : Game.Model -> List WebGL.Entity
+view_old model =
     if model.level.layers == [] then
         []
     else
         let
+            -- model.renderData
             result =
                 List.foldr
                     (\layer acc ->
@@ -102,7 +123,7 @@ view model =
                                                             , height = QuadTree.height boundingBox
                                                             , sprite = image
                                                             , runtime = model.world.runtime
-                                                            , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 0.0 0.0 0.0)
+                                                            , transparentcolor = vec3 0.0 0.0 0.0
 
                                                             --tilesPerUnit * tileSize
                                                             , pixelsPerUnit = 160.0
@@ -157,7 +178,7 @@ view model =
                                             , tileSet = image
                                             , tileSetSize = vec2 (toFloat tileset.imagewidth / toFloat tileset.tilewidth) (toFloat tileset.imageheight / toFloat tileset.tileheight)
                                             , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                            , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 0.0 0.0 0.0)
+                                            , transparentcolor = vec3 0.0 0.0 0.0
                                             }
                                             :: acc
 
