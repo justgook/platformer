@@ -217,6 +217,6 @@ main : Html.Html msg
 main =
     img
         [ style [ ( "width", "400px" ) ]
-        , src (bmp24 3 2 [ 0x00FF0000, 0x00 ])
+        , src (bmp24 100 20 [ 0x00FF0000, 0x00 ])
         ]
         []

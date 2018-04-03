@@ -1,156 +1,124 @@
-module Game.Logic.World exposing (World, boundingBoxes, collisions, init, inputs, jumps, sprites, velocities)
+module Game.Logic.World
+    exposing
+        ( World
+        , WorldProperties
+        , animations
+        , characterAnimations
+        , collisions
+        , init
+        , inputs
+        , parseWorldProperties
+        , sprites
+        )
 
-import Array exposing (Array)
+import Dict
+import Game.Logic.Collision.Map as Collision
+import Game.Logic.Collision.Shape exposing (Shape)
 import Game.Logic.Component as Component
 import Keyboard.Extra exposing (Key)
-import QuadTree exposing (QuadTree)
 import Slime
+import Tiled.Decode as Tiled
 import Time exposing (Time)
-
-
-items_per_branch : Int
-items_per_branch =
-    8
+import WebGL
 
 
 type alias World =
     Slime.EntitySet
-        { velocities : Slime.ComponentSet Component.Velocity
-        , inputs : Slime.ComponentSet Component.Input
-        , collisions : Slime.ComponentSet Component.Collision
-        , jumps : Slime.ComponentSet Component.Jump
+        { animations : Slime.ComponentSet (Component.AnimationData WebGL.Texture)
+        , characterAnimations : Slime.ComponentSet (Component.CharacterAnimationData WebGL.Texture)
+        , collisions : Slime.ComponentSet Shape
+        , sprites : Slime.ComponentSet (Component.SpriteData WebGL.Texture)
         , pressedKeys : List Key
-        , boundingBoxes : QuadTree Component.BoundingBox
-        , boundingBoxes_ : Slime.ComponentSet Component.BoundingBox
-        , sprites : Slime.ComponentSet Component.Sprite
-        , runtime : Time
+        , runtime_ : Time
+        , frame : Int
+        , inputs : Slime.ComponentSet Component.InputData
         , gravity : Float
+        , pixelsPerUnit : Float
+        , collisionMap : Collision.Map
         }
 
 
-init : World
-init =
+init : WorldProperties -> Collision.Map -> World
+init props collisionMap =
     { idSource = Slime.initIdSource
-    , velocities = Slime.initComponents
-    , inputs = Slime.initComponents
+    , animations = Slime.initComponents
+    , characterAnimations = Slime.initComponents
     , collisions = Slime.initComponents
-    , jumps = Slime.initComponents
-    , pressedKeys = []
-    , gravity = 60 -- pixels per frame
-    , boundingBoxes = QuadTree.emptyQuadTree (QuadTree.boundingBox 0 0 0 0) 0
-    , boundingBoxes_ = Slime.initComponents
     , sprites = Slime.initComponents
-    , runtime = 0
+    , inputs = Slime.initComponents
+    , runtime_ = 0
+    , frame = 0
+    , pressedKeys = []
+    , gravity = props.gravity
+    , pixelsPerUnit = props.pixelsPerUnit
+    , collisionMap = collisionMap
     }
 
 
-boundingBoxes : Slime.ComponentSpec Component.BoundingBox World
-boundingBoxes =
-    let
-        restTree comps =
-            comps
-                |> Array.foldl
-                    (\a ( acc, size ) ->
-                        case a of
-                            Nothing ->
-                                ( acc, size )
-
-                            Just item ->
-                                ( Array.push item acc, getMinMax item size )
-                    )
-                    ( Array.empty, ( 0, 0, 0, 0 ) )
-    in
-    { getter = .boundingBoxes_
-    , setter =
-        \comps world ->
-            if world.boundingBoxes_ == comps then
-                { world
-                    | boundingBoxes_ = comps
-                }
-            else
-                { world
-                    | boundingBoxes_ = comps
-                    , boundingBoxes =
-                        let
-                            ( items, size ) =
-                                restTree comps.contents
-
-                            result =
-                                QuadTree.emptyQuadTree (uncurry4 QuadTree.boundingBox size) items_per_branch
-                                    |> QuadTree.insertMany items
-
-                            -- |> flip (Array.foldr (\a b -> QuadTree.insert a b)) items
-                            -- _ =
-                            --     Debug.log "boundingBoxes" (QuadTree.length result)
-                        in
-                        result
-
-                    -- |> QuadTree.reset
-                }
+type alias WorldProperties =
+    { gravity : Float
+    , pixelsPerUnit : Float
     }
 
 
-jumps : Slime.ComponentSpec Component.Jump World
-jumps =
-    { getter = .jumps
-    , setter = \comps world -> { world | jumps = comps }
+parseWorldProperties : Tiled.CustomProperties -> WorldProperties
+parseWorldProperties props =
+    -- let
+    --     _ =
+    --         Debug.log "level props parsing" props
+    -- in
+    { gravity = getFloatProp "gravity" 1 props
+    , pixelsPerUnit = getFloatProp "pixelsPerUnit" 120 props
     }
 
 
-collisions : Slime.ComponentSpec Component.Collision World
+{-| TODO move me to Tiled.Decode
+-}
+getFloatProp : String -> Float -> Dict.Dict String Tiled.Property -> Float
+getFloatProp propName default dict =
+    Dict.get propName dict
+        |> Maybe.andThen
+            (\prop ->
+                case prop of
+                    Tiled.PropFloat a ->
+                        Just a
+
+                    _ ->
+                        Nothing
+            )
+        |> Maybe.withDefault default
+
+
+animations : Slime.ComponentSpec (Component.AnimationData WebGL.Texture) World
+animations =
+    { getter = .animations
+    , setter = \comps world -> { world | animations = comps }
+    }
+
+
+characterAnimations : Slime.ComponentSpec (Component.CharacterAnimationData WebGL.Texture) World
+characterAnimations =
+    { getter = .characterAnimations
+    , setter = \comps world -> { world | characterAnimations = comps }
+    }
+
+
+collisions : Slime.ComponentSpec Shape World
 collisions =
     { getter = .collisions
     , setter = \comps world -> { world | collisions = comps }
     }
 
 
-inputs : Slime.ComponentSpec Component.Input World
-inputs =
-    { getter = .inputs
-    , setter = \comps world -> { world | inputs = comps }
-    }
-
-
-sprites : Slime.ComponentSpec Component.Sprite World
+sprites : Slime.ComponentSpec (Component.SpriteData WebGL.Texture) World
 sprites =
     { getter = .sprites
     , setter = \comps world -> { world | sprites = comps }
     }
 
 
-velocities : Slime.ComponentSpec Component.Velocity World
-velocities =
-    { getter = .velocities
-    , setter = \comps world -> { world | velocities = comps }
+inputs : Slime.ComponentSpec Component.InputData World
+inputs =
+    { getter = .inputs
+    , setter = \comps world -> { world | inputs = comps }
     }
-
-
-
---- HELPER FUNCTIONS!!
-
-
-indexedFoldl : (Int -> a -> b -> b) -> b -> Array a -> b
-indexedFoldl func acc list =
-    let
-        step x ( i, acc ) =
-            ( i + 1, func i x acc )
-    in
-    Tuple.second (Array.foldl step ( 0, acc ) list)
-
-
-getMinMax : Component.BoundingBox -> ( Float, Float, Float, Float ) -> ( Float, Float, Float, Float )
-getMinMax item ( minX, maxX, minY, maxY ) =
-    let
-        { horizontal, vertical } =
-            item.boundingBox
-    in
-    ( min (horizontal.low - 1) minX
-    , max (horizontal.high + 1) maxX
-    , min (vertical.low - 1) minY
-    , max (vertical.high + 1) maxY
-    )
-
-
-uncurry4 : (a -> b -> c -> d -> e) -> ( a, b, c, d ) -> e
-uncurry4 func ( a, b, c, d ) =
-    func a b c d

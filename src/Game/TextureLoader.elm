@@ -6,8 +6,7 @@ import WebGL.Texture as Texture exposing (Error, Texture, Wrap, defaultOptions, 
 
 
 type alias Model =
-    { images : Dict String Texture
-    }
+    Dict String Texture
 
 
 type Message
@@ -27,20 +26,20 @@ load key url =
 
 
 get : String -> Model -> Maybe Texture
-get key { images } =
+get key images =
     Dict.get key images
 
 
 init : Model
 init =
-    Model Dict.empty
+    Dict.empty
 
 
 update : Message -> Model -> Model
 update msg model =
     case msg of
         TextureLoaded key (Ok texture) ->
-            { model | images = Dict.insert key texture model.images }
+            Dict.insert key texture model
 
         TextureLoaded key (Err error) ->
             let

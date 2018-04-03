@@ -10,6 +10,8 @@ logs
 # Yarn Integrity file
 .yarn-integrity
 
+#caches
+.rpt2_cache
 
 #OS stuff
 .DS_Store
@@ -19,4 +21,5 @@ logs
 
 #Build
 /dist
+/assets
 /WIP

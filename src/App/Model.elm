@@ -22,14 +22,15 @@ init : Json.Value -> ( Model, Cmd Message )
 init flags =
     let
         pixelRatio =
-            flags
-                |> Json.decodeValue (Json.field "devicePixelRatio" Json.float)
-                |> Result.withDefault 1
+            1
 
+        -- flags
+        --     |> Json.decodeValue (Json.field "devicePixelRatio" Json.float)
+        --     |> Result.withDefault 1
         levelUrl =
             flags
                 |> Json.decodeValue (Json.field "levelUrl" Json.string)
-                |> Result.withDefault "http://localhost:8080/WIP/level1/level.json"
+                |> Result.withDefault "default.json"
     in
     defaultModel pixelRatio ! [ requestWindowSize, Cmd.map Message.Game (Game.load levelUrl) ]
 

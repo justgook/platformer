@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Development of platformer</title>
+
+  <meta charset="UTF-8">
+  <style type="text/css">
+    @import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro);
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="/_compile/src/Main.elm"></script>
+  <script src="/node_modules/howler/dist/howler.js"></script>
+  <script type="module">
+    import { start } from "./src/start.js"
+    if (Elm.Errors) {
+      runElmProgram();
+    }
+    if (Elm.Main) {
+      start(Elm, { Howl, Howler });
+    }
+  </script>
+</body>
+
+</html>

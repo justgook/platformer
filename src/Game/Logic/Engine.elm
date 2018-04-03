@@ -11,16 +11,19 @@ engine : Slime.Engine.Engine World Message
 engine =
     let
         deletor =
-            Slime.deleteEntity World.collisions
-                &-> World.boundingBoxes
+            Slime.deleteEntity World.sprites
+                &-> World.animations
+                &-> World.characterAnimations
+                &-> World.collisions
+                &-> World.inputs
 
         systems =
-            [ Slime.Engine.timedSystem System.runtime
-            , Slime.Engine.untimedSystem System.collision
-            , Slime.Engine.timedSystem System.gravity
-            , Slime.Engine.timedSystem System.control
-            , Slime.Engine.timedSystem System.jumping
-            , Slime.Engine.timedSystem System.movement
+            [ -- , Slime.Engine.untimedSystem System.collision
+              -- , Slime.Engine.timedSystem System.gravity
+              -- , Slime.Engine.timedSystem System.control
+              -- , Slime.Engine.timedSystem System.jumping
+              Slime.Engine.untimedSystem System.movement
+            , Slime.Engine.untimedSystem System.animationsChanger
             ]
 
         listeners =
