@@ -41,7 +41,8 @@ install:
   - elm-package install -y
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  - [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - |
+    [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
   # - cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 2>>/dev/null
   # - cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm ||:
   ####
