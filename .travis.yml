@@ -5,9 +5,8 @@ cache:
     - node_modules
     # Cache build artifacts to avoid constantly rebuilding. See:
     # https://8thlight.com/blog/rob-looby/2016/04/07/caching-elm-builds-on-travis-ci.html
-    - elm-stuff/build-artifacts
+    - elm-stuff
     - node_modules
-    # - examples/elm-stuff/build-artifacts
     # Install and cache sysconfcpus
     - sysconfcpus
 
@@ -21,7 +20,6 @@ before_install:
     then
       git clone https://github.com/obmarg/libsysconfcpus.git;
       cd libsysconfcpus;
-      # git checkout 8cb9da66020fa4058e550bfae1182a12ac1e4eab;
       ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus;
       make && make install;
       cd ..;
@@ -32,21 +30,18 @@ install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - node --version
   - npm --version
-  # - export prefix=$(npm config get prefix)
   - yarn config set cache-folder ./yarn-cache
   - yarn --version
   - yarn global add elm@$ELM_VERSION
-  - yarn global add elm-format
-  - yarn global add elm-test
+  # - yarn global add elm-format
+  # - yarn global add elm-test
+  - yarn
   - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
   - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(yarn global bin)/elm-make
   - chmod +x $(yarn global bin)/elm-make
-  - yarn
-  # - cd example
-  # - elm package install --yes
-  # - cd ..
+  - elm-package install -y
 
 script:
   # - yes | make all
   - elm-format --validate src/
-  - elm-test
+  - yarn test
