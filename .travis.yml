@@ -41,9 +41,9 @@ install:
   - elm-package install -y
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm 2>/dev/null
-  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 2>/dev/null
-  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm 2>/dev/null
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm 1>/dev/null
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 1>/dev/null
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm 1>/dev/null
   ####
 
 script:
@@ -52,9 +52,9 @@ script:
   - elm-package install -y
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm 2>/dev/null
-  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 2>/dev/null
-  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm 2>/dev/null
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm 1>/dev/null
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 1>/dev/null
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm 1>/dev/null
   #####
   - cd ..
   - yarn test
