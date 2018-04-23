@@ -41,7 +41,7 @@ install:
   - elm-package install -y
   #Slime fix
   - cd elm-stuff/packages/seurimas/slime/2.1.1/
-  - curl https://github.com/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
+  - curl https://patch-diff.githubusercontent.com/raw/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
   - cd -
   ####
 
@@ -51,7 +51,7 @@ script:
   - elm-package install -y
   #Slime fix
   - cd elm-stuff/packages/seurimas/slime/2.1.1/
-  - curl https://github.com/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
+  - curl https://patch-diff.githubusercontent.com/raw/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
   - cd -
   #####
   - cd ..
