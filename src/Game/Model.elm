@@ -1,10 +1,21 @@
-module Game.Model exposing (Data(..), LoaderData(..), Model, Repeat(..), init, loadingToSuccess)
+module Game.Model
+    exposing
+        ( Data(..)
+        , LoaderData(..)
+        , Model
+        , Repeat(..)
+        , init
+        , loadingToSuccess
+        , updateCameraWidthRatio
+        , updateWidthRatio
+        )
 
 -- import RemoteData exposing (WebData)
 -- import Util.Level.Special as Level exposing (LevelProps, SpecialLayer)
 -- import Tiled.Decode exposing (Layer, LevelWith, Tileset)
+-- import Game.Logic.Collision.Map exposing (Map)
 
-import Game.Logic.Collision.Map exposing (Map)
+import Game.Logic.Camera.Model as Camera
 import Game.Logic.Component as Component exposing (Component)
 import Game.Logic.World as World exposing (World, WorldProperties)
 import Game.TextureLoader as TextureLoader
@@ -25,6 +36,7 @@ type alias RenderData =
         WhileLoading
         { data : List (Data WebGL.Texture)
         , world : World
+        , checkPoint : World
         }
 
 
@@ -33,6 +45,38 @@ init =
     { widthRatio = 1
     , renderData = NotAsked
     }
+
+
+updateWidthRatio : { a | height : Int, width : Int } -> Model -> Model
+updateWidthRatio size model =
+    let
+        widthRatio =
+            toFloat size.width / toFloat size.height
+
+        renderData =
+            updateCameraWidthRatio widthRatio model.renderData
+    in
+    { model | widthRatio = widthRatio, renderData = renderData }
+
+
+updateCameraWidthRatio : Float -> RenderData -> RenderData
+updateCameraWidthRatio widthRatio renderData =
+    case renderData of
+        Success data ->
+            let
+                world =
+                    data.world
+            in
+            Success
+                { data
+                    | world =
+                        { world
+                            | camera = Camera.setWidthRatio widthRatio world.camera
+                        }
+                }
+
+        _ ->
+            renderData
 
 
 type LoaderData error loadingData resultData
@@ -46,7 +90,7 @@ type alias WhileLoading =
     { data : List (Data String)
     , properties : WorldProperties
     , textures : TextureLoader.Model
-    , collisionMap : Map
+    , collisionMap : World.CollisionMap
     }
 
 
@@ -142,8 +186,14 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                                                 Component.Collision data ->
                                                     Just (Component.Collision data)
 
+                                                Component.Velocity data ->
+                                                    Just (Component.Velocity data)
+
                                                 Component.Input data ->
                                                     Just (Component.Input data)
+
+                                                Component.Camera data ->
+                                                    Just (Component.Camera data)
                                         )
                         in
                         Maybe.map2
@@ -169,15 +219,20 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
             income.data
             |> Maybe.map
                 (\data ->
+                    let
+                        world =
+                            createWorld data properties collisionMap
+                    in
                     Success
                         { data = data
-                        , world = createWorld data properties collisionMap
+                        , world = world
+                        , checkPoint = world
                         }
                 )
             |> Maybe.withDefault (Loading income)
 
 
-createWorld : List (Data WebGL.Texture) -> WorldProperties -> Map -> World
+createWorld : List (Data WebGL.Texture) -> WorldProperties -> World.CollisionMap -> World
 createWorld layers props collisionMap =
     List.foldr spawn (World.init props collisionMap) layers
 
@@ -194,27 +249,60 @@ spawn layer world =
 
 spawnOne : List (Component WebGL.Texture) -> World -> World
 spawnOne entity world =
-    List.foldl
-        (\comp ->
-            case comp of
-                Component.Animation data ->
-                    flip (&=>) ( World.animations, data )
+    let
+        ( entityId, newWorld ) =
+            List.foldl
+                (\comp acc ->
+                    case comp of
+                        Component.Animation data ->
+                            acc &=> ( World.animations, data )
 
-                Component.CharacterAnimation data ->
-                    flip (&=>) ( World.characterAnimations, data )
+                        Component.CharacterAnimation data ->
+                            acc &=> ( World.characterAnimations, data )
 
-                Component.Sprite data ->
-                    flip (&=>) ( World.sprites, data )
+                        Component.Sprite data ->
+                            acc &=> ( World.sprites, data )
 
-                Component.Collision data ->
-                    flip (&=>) ( World.collisions, data )
+                        Component.Collision data ->
+                            acc &=> ( World.collisions, data )
 
-                Component.Input data ->
-                    flip (&=>) ( World.inputs, data )
-        )
-        (Slime.forNewEntity world)
-        entity
-        |> Tuple.second
+                        Component.Input data ->
+                            acc &=> ( World.inputs, data )
+
+                        Component.Velocity data ->
+                            acc &=> ( World.velocities, data )
+
+                        Component.Camera (Camera.Follow data) ->
+                            let
+                                ( entityId, world_ ) =
+                                    acc
+
+                                camera =
+                                    world_.camera
+
+                                newWorld =
+                                    entityId
+                                        |> Maybe.map
+                                            (\id ->
+                                                { world_ | camera = { camera | behavior = Camera.Follow { data | id = id } } }
+                                            )
+                                        |> Maybe.withDefault world_
+                            in
+                            ( entityId, newWorld )
+
+                        Component.Camera data ->
+                            let
+                                _ =
+                                    Debug.log "IMPLEMENT logic for other type of cameras" data
+
+                                -- Debug.log "Add camera parsing here!!!" world_.camera.behavior
+                            in
+                            acc
+                )
+                (Slime.forNewEntity world)
+                entity
+    in
+    newWorld
 
 
 componentTransform : (a -> Maybe b) -> List (List a) -> Maybe (List (List b))

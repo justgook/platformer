@@ -2,9 +2,10 @@ module Game.Logic.Collision.Shape
     exposing
         ( AabbData
         , Shape(..)
-        , aabb
+        , WithShape
         , aabbData
-        , boolean
+          -- , boolean
+        , createAABB
         , position
         , response
         , setPosition
@@ -20,6 +21,12 @@ type Shape
     | Point { p : Vec2 }
 
 
+type alias WithShape a =
+    { a
+        | shape : Shape
+    }
+
+
 type AabbData
     = AabbData
         { p : Vec2
@@ -33,8 +40,8 @@ type AabbData
         }
 
 
-aabbData : Shape -> { p : Vec2, xw : Vec2, yw : Vec2 }
-aabbData shape =
+aabbData : WithShape a -> { p : Vec2, xw : Vec2, yw : Vec2 }
+aabbData { shape } =
     case shape of
         AABB (AabbData { p, xw, yw }) ->
             { p = p, xw = xw, yw = yw }
@@ -46,8 +53,8 @@ aabbData shape =
             { p = p, xw = vec2 0 0, yw = vec2 0 0 }
 
 
-position : Shape -> Vec2
-position shape =
+position : WithShape a -> Vec2
+position { shape } =
     case shape of
         AABB (AabbData { p }) ->
             p
@@ -59,34 +66,34 @@ position shape =
             p
 
 
-setPosition : Vec2 -> Shape -> Shape
-setPosition p shape =
+setPosition : Vec2 -> WithShape a -> WithShape a
+setPosition p ({ shape } as shaped) =
     case shape of
         AABB (AabbData data) ->
-            aabb { data | p = p }
+            { shaped | shape = createAABB { data | p = p } }
 
         Point data ->
-            Point { p = p }
+            { shaped | shape = Point { p = p } }
 
         Circle data ->
-            Circle { data | p = p }
+            { shaped | shape = Circle { data | p = p } }
 
 
-updatePosition : Vec2 -> Shape -> Shape
-updatePosition p shape =
+updatePosition : Vec2 -> WithShape a -> WithShape a
+updatePosition p ({ shape } as shaped) =
     case shape of
         AABB (AabbData data) ->
-            aabb { data | p = Vec2.add data.p p }
+            { shaped | shape = createAABB { data | p = Vec2.add data.p p } }
 
         Point data ->
-            Point { p = Vec2.add data.p p }
+            { shaped | shape = Point { p = Vec2.add data.p p } }
 
         Circle data ->
-            Circle { data | p = Vec2.add data.p p }
+            { shaped | shape = Circle { data | p = Vec2.add data.p p } }
 
 
-aabb : { a | p : Vec2, xw : Vec2, yw : Vec2 } -> Shape
-aabb { p, xw, yw } =
+createAABB : { a | p : Vec2, xw : Vec2, yw : Vec2 } -> Shape
+createAABB { p, xw, yw } =
     let
         sum_ =
             Vec2.add xw yw
@@ -102,15 +109,15 @@ aabb { p, xw, yw } =
         |> AABB
 
 
-boolean : Shape -> Shape -> Bool
-boolean a b =
-    response a b /= Nothing
+
+-- boolean : Shape -> Shape -> Bool
+-- boolean a b =
+--     response a b /= Nothing
 
 
-response : Shape -> Shape -> Maybe Vec2
+response : WithShape a -> WithShape b -> Maybe Vec2
 response a b =
-    --Find why i need to swap
-    case ( b, a ) of
+    case ( a.shape, b.shape ) of
         ( AABB (AabbData data1), AABB (AabbData data2) ) ->
             let
                 difference =

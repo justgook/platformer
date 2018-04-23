@@ -1,9 +1,9 @@
 module Game.View exposing (view)
 
-import Array
+import Array.Hamt as Array exposing (Array)
 import Game.Logic.Collision.Map as Collision
-import Game.Logic.Collision.Shape as Shape exposing (Shape(..), aabbData)
-import Game.Logic.World as Logic
+import Game.Logic.Collision.Shape as Collision exposing (Shape(..), aabbData)
+import Game.Logic.World as World exposing (World)
 import Game.Model as Game
 import Game.View.ImageLayer as ImageLayer
 import Game.View.Object as ObjectView
@@ -19,6 +19,7 @@ import WebGL exposing (Mesh, Shader, Texture)
 -- https://github.com/mattdesl/lwjgl-basics/wiki/2D-Pixel-Perfect-Shadows
 
 
+renderGame : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float, world : World } -> List (Game.Data Texture) -> List WebGL.Entity
 renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
     List.foldr
         (\layer acc ->
@@ -39,7 +40,7 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                 Game.ActionLayer data ->
                     let
                         stepObjects { a } acc_ =
-                            case a of
+                            case a.shape of
                                 AABB data_ ->
                                     let
                                         a_ =
@@ -77,7 +78,7 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                                             0
 
                                 p =
-                                    Shape.position a
+                                    Collision.position a
                             in
                             AnimatedObject.render
                                 { widthRatio = widthRatio
@@ -101,8 +102,8 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                                 :: acc_
                     in
                     acc
-                        |> flip (List.foldr stepObjects) ((Slime.entities Logic.collisions).getter world)
-                        |> flip (List.foldr stepAnimations) ((Slime.entities2 Logic.collisions Logic.animations).getter world)
+                        |> flip (List.foldr stepObjects) ((Slime.entities World.collisions).getter world)
+                        |> flip (List.foldr stepAnimations) ((Slime.entities2 World.collisions World.animations).getter world)
 
                 Game.TileLayer1 data ->
                     TileLayer.render
@@ -129,25 +130,29 @@ view model =
         Game.Success { data, world } ->
             let
                 debug =
-                    debugCollisionView { widthRatio = model.widthRatio, pixelsPerUnit = world.pixelsPerUnit, viewportOffset = vec2 0 0 } world.collisionMap
+                    debugCollisionView
+                        { widthRatio = world.camera.widthRatio
+                        , pixelsPerUnit = world.camera.pixelsPerUnit
+                        , viewportOffset = world.camera.offset
+                        }
+                        world.collisionMap
             in
             renderGame
                 { world = world
-                , widthRatio = model.widthRatio
-                , pixelsPerUnit = world.pixelsPerUnit
-                , viewportOffset = vec2 0 0
-
-                -- , viewportOffset = vec2 ((toFloat world.frame / 60) * 75) (cos (toFloat world.frame / 60) * 5)
-                -- , viewportOffset = vec2 (sin (toFloat world.frame / 60) * 16) (cos (toFloat world.frame / 60) * 16)
+                , widthRatio = world.camera.widthRatio
+                , pixelsPerUnit = world.camera.pixelsPerUnit
+                , viewportOffset = world.camera.offset
                 }
                 data
                 ++ debug
 
+        -- Game.Loading _ ->
+        --     []
         _ ->
             []
 
 
-debugCollisionView : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> Collision.Map -> List WebGL.Entity
+debugCollisionView : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> World.CollisionMap -> List WebGL.Entity
 debugCollisionView baseData collisionMap =
     Collision.table collisionMap
         |> Array.foldr
@@ -168,9 +173,9 @@ debugCollisionView baseData collisionMap =
             []
 
 
-debugCollisionViewItem : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> Shape -> List WebGL.Entity
+debugCollisionViewItem : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> Collision.WithShape b -> List WebGL.Entity
 debugCollisionViewItem { widthRatio, viewportOffset, pixelsPerUnit } obj =
-    case obj of
+    case obj.shape of
         AABB data_ ->
             let
                 a_ =

@@ -6,18 +6,18 @@ import Keyboard.Extra exposing (Key)
 arrows : { down : Key, left : Key, right : Key, up : Key } -> List Key -> { x : Int, y : Int }
 arrows { up, right, down, left } keys =
     let
-        toInt key =
-            keys
-                |> List.member key
-                |> boolToInt
-
         x =
-            toInt right - toInt left
+            toInt right keys - toInt left keys
 
         y =
-            toInt up - toInt down
+            toInt up keys - toInt down keys
     in
     { x = x, y = y }
+
+
+toInt : a -> List a -> Int
+toInt key =
+    List.member key >> boolToInt
 
 
 boolToInt : Bool -> Int

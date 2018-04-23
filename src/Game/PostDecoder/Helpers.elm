@@ -28,7 +28,7 @@ shapeById relative2absolute id tiles =
                         case a.objects of
                             (Tiled.ObjectRectangle data) :: [] ->
                                 Just
-                                    (Shape.aabb
+                                    (Shape.createAABB
                                         { p = relative2absolute (vec2 data.x data.y)
                                         , xw = vec2 (data.width / 2) 0
                                         , yw = vec2 0 (data.height / 2)

@@ -1,7 +1,8 @@
 module Game.PostDecoder.ObjectLayer exposing (parse)
 
 import Dict exposing (Dict)
-import Game.Logic.Collision.Shape as Shape exposing (AabbData, Shape(..), aabb)
+import Game.Logic.Camera.Model as Camera
+import Game.Logic.Collision.Shape as Shape exposing (AabbData, Shape(..))
 import Game.Logic.Component as Component
 import Game.Model as Model exposing (LoaderData(..), Model)
 import Game.PostDecoder.Helpers exposing (findTileSet, getFloatProp, hexColor2Vec3, scrollRatio, shapeById, tileSetInfo)
@@ -26,6 +27,11 @@ parse data tilesets =
             )
 
 
+wrapCollsionData : Shape -> Component.CollisionData
+wrapCollsionData shape =
+    { shape = shape, response = vec2 0 0 }
+
+
 parse2 : List Tiled.Tileset -> Tiled.Object -> ( List (List (Component.Component String)), Dict String String ) -> ( List (List (Component.Component String)), Dict String String )
 parse2 tilesets o ( acc, cmds ) =
     let
@@ -41,11 +47,12 @@ parse2 tilesets o ( acc, cmds ) =
             --     "Collectable" ->
             --         ( acc, cmds )
             --     _ ->
-            ( [ aabb
+            ( [ Shape.createAABB
                     { p = vec2 data.x data.y
                     , xw = vec2 (data.width / 2) 0
                     , yw = vec2 0 (data.height / 2)
                     }
+                    |> wrapCollsionData
                     |> Component.Collision
               ]
                 :: acc
@@ -71,6 +78,7 @@ parse2 tilesets o ( acc, cmds ) =
                         shape =
                             shapeById relative2absolute (data.gid - tileset.firstgid) tileset.tiles
                                 |> Maybe.withDefault (position data)
+                                |> wrapCollsionData
                                 |> Component.Collision
 
                         delme =
@@ -87,6 +95,8 @@ parse2 tilesets o ( acc, cmds ) =
                                             , down = ArrowDown
                                             }
                                     }
+                                , Component.Velocity (vec2 0 0)
+                                , Component.Camera (Camera.Follow { id = 0 })
                                 ]
                             else
                                 []

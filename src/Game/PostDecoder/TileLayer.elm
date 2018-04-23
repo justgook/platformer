@@ -2,6 +2,7 @@ module Game.PostDecoder.TileLayer exposing (parse)
 
 import Dict
 import Game.Logic.Collision.Map as Collision
+import Game.Logic.World as World
 import Game.Model as Model exposing (LoaderData(..), Model)
 import Game.PostDecoder.Helpers
     exposing
@@ -25,7 +26,7 @@ test =
         >> Vec2.add (vec2 2 2)
 
 
-parse : Tiled.Level -> Collision.Map -> Tiled.TileLayerData -> Result String ( Model.Data String, Collision.Map, Dict.Dict String String )
+parse : Tiled.Level -> World.CollisionMap -> Tiled.TileLayerData -> Result String ( Model.Data String, World.CollisionMap, Dict.Dict String String )
 parse ({ tilesets, tileheight, tilewidth } as level) collisionMap data =
     case tileSetInfo tilesets data.data |> Dict.values of
         tileset :: [] ->
@@ -63,7 +64,7 @@ parse ({ tilesets, tileheight, tilewidth } as level) collisionMap data =
                                 else
                                     case shapeById (relative2absolute i) id tileset.tiles of
                                         Just item ->
-                                            Collision.insert item acc
+                                            Collision.insert { shape = item } acc
 
                                         Nothing ->
                                             acc

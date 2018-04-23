@@ -4,8 +4,8 @@ logs
 
 
 #Dependencies
-/node_modules
-/elm-stuff
+node_modules/
+elm-stuff/
 
 # Yarn Integrity file
 .yarn-integrity

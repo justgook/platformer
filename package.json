@@ -12,6 +12,7 @@
   "private": true,
   "devDependencies": {
     "audiosprite": "0.7.1",
+    "elm-test": "0.18.12",
     "rollup": "0.57.1",
     "rollup-plugin-commonjs": "9.1.0",
     "rollup-plugin-elm": "1.0.4",

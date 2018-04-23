@@ -2,8 +2,6 @@ module Game.View.Object.Animated exposing (render)
 
 import Game.View.Main exposing (mesh)
 import Game.View.Object exposing (vertexShader)
-import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
 import WebGL exposing (Mesh, Shader, Texture)
 import WebGL.Settings as WebGL
 import WebGL.Settings.Blend as Blend
@@ -34,10 +32,8 @@ fragmentShader =
         uniform vec2 frameSize;
         uniform float columns;
         uniform int mirror;
-        //TODO FIXME
-        float runtime = float(frame - started) / 60.;
-        float framesPerSecond = 10.;
-        float LUTpixel = floor(mod(abs(runtime) * framesPerSecond, frames));
+        float runtime = abs(float(frame - started));
+        float LUTpixel = floor(mod(runtime, frames));
 
         float color2float(vec4 c){
             return c.z * 255.0

@@ -18,16 +18,19 @@ engine =
                 &-> World.inputs
 
         systems =
-            [ -- , Slime.Engine.untimedSystem System.collision
-              -- , Slime.Engine.timedSystem System.gravity
-              -- , Slime.Engine.timedSystem System.control
-              -- , Slime.Engine.timedSystem System.jumping
-              Slime.Engine.untimedSystem System.movement
+            [ Slime.Engine.untimedSystem System.gravity
+            , Slime.Engine.untimedSystem System.collision
+            , Slime.Engine.untimedSystem System.rightLeft
+            , Slime.Engine.untimedSystem System.jump
             , Slime.Engine.untimedSystem System.animationsChanger
+            , Slime.Engine.untimedSystem System.camera
             ]
 
+        --
+        -- systemWith { timing = untimed, options = deletes } scoreBalls
         listeners =
-            [ Slime.Engine.listener System.inputListener
+            [ -- Slime.Engine.listener System.inputListener
+              Slime.Engine.listenerWith { options = Slime.Engine.cmds } System.inputListener
             ]
     in
     Slime.Engine.initEngine deletor systems listeners

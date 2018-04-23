@@ -1,13 +1,14 @@
 module Game.PostDecoder exposing (DecodedData, decode)
 
 import Dict
-import Game.Logic.Collision.Map as Map exposing (Map)
-import Game.Logic.World as World exposing (WorldProperties, parseWorldProperties)
+import Game.Logic.Collision.Map as Collision
+import Game.Logic.World as World exposing (WorldProperties)
 import Game.Model as Model exposing (LoaderData(..), Model)
 import Game.PostDecoder.ImageLayer as ImageLayerParser
 import Game.PostDecoder.ObjectLayer as ObjectLayerParser
 import Game.PostDecoder.TileLayer as TileLayerParser
 import Json.Decode
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Tiled.Decode as Tiled
 
 
@@ -15,7 +16,7 @@ type alias DecodedData =
     { layersData : List (Model.Data String)
     , commands : List ( String, String )
     , properties : WorldProperties
-    , collisionMap : Map
+    , collisionMap : World.CollisionMap
     }
 
 
@@ -137,10 +138,32 @@ prepareRenderData level =
                                         Debug.log err
                                             ( acc, collisionMap, cmds )
                     )
-                    ( [], Map.empty ( level.tilewidth, level.tileheight ), Dict.empty )
+                    ( [], Collision.empty ( level.tilewidth, level.tileheight ), Dict.empty )
     in
     { layersData = layersData
     , commands = Dict.toList commands
     , properties = parseWorldProperties level.properties
     , collisionMap = collisionMap
     }
+
+
+parseWorldProperties : Tiled.CustomProperties -> WorldProperties
+parseWorldProperties props =
+    { gravity = vec2 0 (getFloatProp "gravity" 1 props)
+    , pixelsPerUnit = getFloatProp "pixelsPerUnit" 120 props
+    }
+
+
+getFloatProp : String -> Float -> Dict.Dict String Tiled.Property -> Float
+getFloatProp propName default dict =
+    Dict.get propName dict
+        |> Maybe.andThen
+            (\prop ->
+                case prop of
+                    Tiled.PropFloat a ->
+                        Just a
+
+                    _ ->
+                        Nothing
+            )
+        |> Maybe.withDefault default

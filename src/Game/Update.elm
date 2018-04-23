@@ -1,5 +1,6 @@
 module Game.Update exposing (update)
 
+import Game.Logic.Camera.Model as Camera
 import Game.Logic.Update as Logic
 import Game.Message as Message exposing (Message)
 import Game.Model as Model exposing (LoaderData(..), Model)
@@ -15,6 +16,10 @@ update msg model =
                 |> Tuple.mapSecond (Cmd.map Message.Logic)
 
         ( Message.Logic msg, _ ) ->
+            let
+                _ =
+                    Debug.log "Got message when world isn't loaded" msg
+            in
             ( model, Cmd.none )
 
         ( Message.LevelLoaded (Ok { layersData, commands, properties, collisionMap }), _ ) ->
@@ -40,9 +45,13 @@ update msg model =
             let
                 textures =
                     Texture.update m data.textures
+
+                renderData =
+                    Model.loadingToSuccess { data | textures = textures }
+                        |> Model.updateCameraWidthRatio model.widthRatio
             in
             ( { model
-                | renderData = Model.loadingToSuccess { data | textures = textures }
+                | renderData = renderData
               }
             , Cmd.none
             )

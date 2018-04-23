@@ -38,7 +38,8 @@ export function start(Elm, { Howl, Howler }) {
 
   Elm.Main.fullscreen({
     devicePixelRatio: window.devicePixelRatio || 1,
-    levelUrl: "/assets/level.json"
+    levelUrl: "/assets/level2.json",
+    seed: Math.floor(Math.random() * 0xFFFFFFFF)
   })
   // if (Elm.Errors) {
   //   Elm.Errors.fullscreen("dasdas")

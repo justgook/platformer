@@ -1,92 +1,94 @@
 module Game.Logic.World
     exposing
-        ( World
+        ( CollisionMap
+        , GameFlow(..)
+        , World
         , WorldProperties
         , animations
         , characterAnimations
         , collisions
         , init
         , inputs
-        , parseWorldProperties
         , sprites
+        , velocities
         )
 
-import Dict
+import Game.Logic.Camera.Model as Camera
 import Game.Logic.Collision.Map as Collision
 import Game.Logic.Collision.Shape exposing (Shape)
 import Game.Logic.Component as Component
 import Keyboard.Extra exposing (Key)
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Random.Pcg as Random exposing (Generator)
 import Slime
-import Tiled.Decode as Tiled
 import Time exposing (Time)
 import WebGL
+
+
+type alias CollisionMap =
+    Collision.Map {}
 
 
 type alias World =
     Slime.EntitySet
         { animations : Slime.ComponentSet (Component.AnimationData WebGL.Texture)
         , characterAnimations : Slime.ComponentSet (Component.CharacterAnimationData WebGL.Texture)
-        , collisions : Slime.ComponentSet Shape
+        , collisions : Slime.ComponentSet Component.CollisionData
         , sprites : Slime.ComponentSet (Component.SpriteData WebGL.Texture)
+        , velocities : Slime.ComponentSet Component.VelocityData
         , pressedKeys : List Key
         , runtime_ : Time
         , frame : Int
         , inputs : Slime.ComponentSet Component.InputData
-        , gravity : Float
-        , pixelsPerUnit : Float
-        , collisionMap : Collision.Map
+        , gravity : Vec2
+        , camera : Camera.Model
+        , collisionMap : CollisionMap
+        , seed0 : Random.Seed
+        , flow : GameFlow
         }
 
 
-init : WorldProperties -> Collision.Map -> World
+init : WorldProperties -> CollisionMap -> World
 init props collisionMap =
+    let
+        _ =
+            Debug.log "init World" "asdas"
+    in
     { idSource = Slime.initIdSource
     , animations = Slime.initComponents
     , characterAnimations = Slime.initComponents
     , collisions = Slime.initComponents
     , sprites = Slime.initComponents
     , inputs = Slime.initComponents
+    , velocities = Slime.initComponents
     , runtime_ = 0
     , frame = 0
     , pressedKeys = []
     , gravity = props.gravity
-    , pixelsPerUnit = props.pixelsPerUnit
+    , camera = Camera.init props
     , collisionMap = collisionMap
+    , seed0 = Random.initialSeed 227852860
+    , flow = SlowMotion { frames = 60, fps = 20 }
     }
 
 
+type GameFlow
+    = Running
+    | Pause
+    | SlowMotion { frames : Int, fps : Int }
+
+
 type alias WorldProperties =
-    { gravity : Float
+    { gravity : Vec2
     , pixelsPerUnit : Float
     }
 
 
-parseWorldProperties : Tiled.CustomProperties -> WorldProperties
-parseWorldProperties props =
-    -- let
-    --     _ =
-    --         Debug.log "level props parsing" props
-    -- in
-    { gravity = getFloatProp "gravity" 1 props
-    , pixelsPerUnit = getFloatProp "pixelsPerUnit" 120 props
+velocities : Slime.ComponentSpec Component.VelocityData World
+velocities =
+    { getter = .velocities
+    , setter = \comps world -> { world | velocities = comps }
     }
-
-
-{-| TODO move me to Tiled.Decode
--}
-getFloatProp : String -> Float -> Dict.Dict String Tiled.Property -> Float
-getFloatProp propName default dict =
-    Dict.get propName dict
-        |> Maybe.andThen
-            (\prop ->
-                case prop of
-                    Tiled.PropFloat a ->
-                        Just a
-
-                    _ ->
-                        Nothing
-            )
-        |> Maybe.withDefault default
 
 
 animations : Slime.ComponentSpec (Component.AnimationData WebGL.Texture) World
@@ -103,7 +105,7 @@ characterAnimations =
     }
 
 
-collisions : Slime.ComponentSpec Shape World
+collisions : Slime.ComponentSpec Component.CollisionData World
 collisions =
     { getter = .collisions
     , setter = \comps world -> { world | collisions = comps }

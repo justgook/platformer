@@ -2,6 +2,7 @@ module App.Update exposing (update)
 
 import App.Message as Message exposing (Message)
 import App.Model exposing (Model)
+import Game.Model as Game
 import Game.Update as Game
 import Html.Attributes exposing (height, style, width)
 import Window exposing (Size)
@@ -20,12 +21,7 @@ update msg model =
                 result =
                     updateCanvas size model
             in
-            ( { result | game = updateWidthRatio size result.game }, Cmd.none )
-
-
-updateWidthRatio : { a | height : Int, width : Int } -> { c | widthRatio : b } -> { c | widthRatio : Float }
-updateWidthRatio size model =
-    { model | widthRatio = toFloat size.width / toFloat size.height }
+            ( { result | game = Game.updateWidthRatio size result.game }, Cmd.none )
 
 
 updateCanvas : Size -> Model -> Model
