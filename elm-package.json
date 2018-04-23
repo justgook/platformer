@@ -10,7 +10,6 @@
   ],
   "exposed-modules": [],
   "dependencies": {
-    "Luftzig/elm-quadtree": "1.0.0 <= v < 2.0.0",
     "NoRedInk/elm-decode-pipeline": "3.0.0 <= v < 4.0.0",
     "Skinney/elm-array-exploration": "2.0.5 <= v < 3.0.0",
     "eeue56/elm-lazy-list": "1.0.0 <= v < 2.0.0",

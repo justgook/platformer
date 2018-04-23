@@ -89,7 +89,10 @@ parse ({ tilesets, tileheight, tilewidth } as level) collisionMap data =
                     |> Dict.insert ("Layer.Data-USE INDEX::" ++ data.name) (bmp24 data.width data.height data.data)
                 )
 
-        data ->
+        [] ->
+            Err ("No tileset found for Tile layer (" ++ data.name ++ ")")
+
+        otherData ->
             Err "Multiple tileset for one layer not yet supported"
 
 
