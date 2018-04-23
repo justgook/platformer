@@ -43,8 +43,10 @@ install:
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
   - |
     [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
-  # - cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime 2>>/dev/null
-  # - cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm ||:
+  - |
+    [[ -e ${slimeSrcPrefix}slime ]] && cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - |
+    [[ -e ${slimeSrcPrefix}Slime/engine.elm ]] && cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   ####
 
 script:
@@ -52,10 +54,13 @@ script:
   - cd tests
   - elm-package install -y
   #Slime fix
-  # - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  # - cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm ||:
-  # - cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime ||:
-  # - cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm ||:
+  - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
+  - |
+    [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - |
+    [[ -e ${slimeSrcPrefix}slime ]] && cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - |
+    [[ -e ${slimeSrcPrefix}Slime/engine.elm ]] && cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
     #####
   - cd ..
   - yarn test
