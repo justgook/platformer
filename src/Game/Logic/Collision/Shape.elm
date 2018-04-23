@@ -98,15 +98,15 @@ createAABB { p, xw, yw } =
         sum_ =
             Vec2.add xw yw
     in
-    AabbData
-        { p = p
-        , xw = xw
-        , yw = yw
-        , sum_ = sum_
-        , projX_ = projection sum_ (vec2 1 0)
-        , projY_ = projection sum_ (vec2 0 1)
-        }
-        |> AABB
+        AabbData
+            { p = p
+            , xw = xw
+            , yw = yw
+            , sum_ = sum_
+            , projX_ = projection sum_ (vec2 1 0)
+            , projY_ = projection sum_ (vec2 0 1)
+            }
+            |> AABB
 
 
 
@@ -136,19 +136,19 @@ response a b =
                         |> applyIf Vec2.negate (Vec2.getX difference < 0)
                         |> Vec2.sub projX
             in
-            if Vec2.getX testX /= 0 && signCheck Vec2.getX testX projX then
-                let
-                    testY =
-                        Vec2.add data1.projY_ data2.projY_
-                            |> applyIf Vec2.negate (Vec2.getY difference < 0)
-                            |> Vec2.sub projY
-                in
-                if Vec2.getY testY /= 0 && signCheck Vec2.getY testY projY then
-                    Just (smallerByLength testY testX)
+                if Vec2.getX testX /= 0 && signCheck Vec2.getX testX projX then
+                    let
+                        testY =
+                            Vec2.add data1.projY_ data2.projY_
+                                |> applyIf Vec2.negate (Vec2.getY difference < 0)
+                                |> Vec2.sub projY
+                    in
+                        if Vec2.getY testY /= 0 && signCheck Vec2.getY testY projY then
+                            Just (smallerByLength testY testX)
+                        else
+                            Nothing
                 else
                     Nothing
-            else
-                Nothing
 
         _ ->
             Nothing
@@ -179,7 +179,7 @@ signCheck getter a_ b_ =
         b =
             getter b_
     in
-    (a >= 0) /= (b >= 0)
+        (a >= 0) /= (b >= 0)
 
 
 {-| projecting vector a onto vector b
@@ -208,4 +208,4 @@ projection a b =
         y =
             (dp / (bx * bx + by * by)) * by
     in
-    vec2 x y
+        vec2 x y

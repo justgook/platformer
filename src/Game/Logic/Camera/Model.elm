@@ -61,7 +61,7 @@ setCenter center ({ widthRatio, pixelsPerUnit, offset } as camera) =
                 |> doIf (lengthLessThan (vec2 0.5 0.5)) lerp
                 |> Vec2.add offset
     in
-    { camera | offset = newOffset2 }
+        { camera | offset = newOffset2 }
 
 
 init : { b | pixelsPerUnit : Float } -> Model

@@ -56,7 +56,7 @@ updateWidthRatio size model =
         renderData =
             updateCameraWidthRatio widthRatio model.renderData
     in
-    { model | widthRatio = widthRatio, renderData = renderData }
+        { model | widthRatio = widthRatio, renderData = renderData }
 
 
 updateCameraWidthRatio : Float -> RenderData -> RenderData
@@ -67,13 +67,13 @@ updateCameraWidthRatio widthRatio renderData =
                 world =
                     data.world
             in
-            Success
-                { data
-                    | world =
-                        { world
-                            | camera = Camera.setWidthRatio widthRatio world.camera
-                        }
-                }
+                Success
+                    { data
+                        | world =
+                            { world
+                                | camera = Camera.setWidthRatio widthRatio world.camera
+                            }
+                    }
 
         _ ->
             renderData
@@ -159,46 +159,46 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                                                         (TextureLoader.get texture textures)
                                                         (TextureLoader.get lut textures)
                                             in
-                                            case comp of
-                                                Component.Animation ({ texture, lut } as data) ->
-                                                    animationData data texture lut
-                                                        |> Maybe.map Component.Animation
+                                                case comp of
+                                                    Component.Animation ({ texture, lut } as data) ->
+                                                        animationData data texture lut
+                                                            |> Maybe.map Component.Animation
 
-                                                -- `andMap = map2 (|>)` and do
-                                                -- ```Maybe.map yourFunction maybe1
-                                                --   |> andMap maybe2
-                                                --   |> andMap maybe3
-                                                --   [..]
-                                                --   |> andMap maybe6```
-                                                Component.CharacterAnimation data ->
-                                                    Maybe.map3
-                                                        (\l r s -> { left = l, right = r, stand = s })
-                                                        (animationData data.left data.left.texture data.left.lut)
-                                                        (animationData data.right data.right.texture data.right.lut)
-                                                        (animationData data.stand data.stand.texture data.stand.lut)
-                                                        |> Maybe.map Component.CharacterAnimation
+                                                    -- `andMap = map2 (|>)` and do
+                                                    -- ```Maybe.map yourFunction maybe1
+                                                    --   |> andMap maybe2
+                                                    --   |> andMap maybe3
+                                                    --   [..]
+                                                    --   |> andMap maybe6```
+                                                    Component.CharacterAnimation data ->
+                                                        Maybe.map3
+                                                            (\l r s -> { left = l, right = r, stand = s })
+                                                            (animationData data.left data.left.texture data.left.lut)
+                                                            (animationData data.right data.right.texture data.right.lut)
+                                                            (animationData data.stand data.stand.texture data.stand.lut)
+                                                            |> Maybe.map Component.CharacterAnimation
 
-                                                Component.Sprite ({ texture } as data) ->
-                                                    Maybe.map
-                                                        (\t -> Component.Sprite { data | texture = t })
-                                                        (TextureLoader.get texture textures)
+                                                    Component.Sprite ({ texture } as data) ->
+                                                        Maybe.map
+                                                            (\t -> Component.Sprite { data | texture = t })
+                                                            (TextureLoader.get texture textures)
 
-                                                Component.Collision data ->
-                                                    Just (Component.Collision data)
+                                                    Component.Collision data ->
+                                                        Just (Component.Collision data)
 
-                                                Component.Velocity data ->
-                                                    Just (Component.Velocity data)
+                                                    Component.Velocity data ->
+                                                        Just (Component.Velocity data)
 
-                                                Component.Input data ->
-                                                    Just (Component.Input data)
+                                                    Component.Input data ->
+                                                        Just (Component.Input data)
 
-                                                Component.Camera data ->
-                                                    Just (Component.Camera data)
+                                                    Component.Camera data ->
+                                                        Just (Component.Camera data)
                                         )
                         in
-                        Maybe.map2
-                            (\ents acc -> ActionLayer { actionLayer | components = ents } :: acc)
-                            result
+                            Maybe.map2
+                                (\ents acc -> ActionLayer { actionLayer | components = ents } :: acc)
+                                result
 
                     ImageLayer ({ texture } as data) ->
                         Maybe.map2
@@ -223,11 +223,11 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                         world =
                             createWorld data properties collisionMap
                     in
-                    Success
-                        { data = data
-                        , world = world
-                        , checkPoint = world
-                        }
+                        Success
+                            { data = data
+                            , world = world
+                            , checkPoint = world
+                            }
                 )
             |> Maybe.withDefault (Loading income)
 
@@ -288,7 +288,7 @@ spawnOne entity world =
                                             )
                                         |> Maybe.withDefault world_
                             in
-                            ( entityId, newWorld )
+                                ( entityId, newWorld )
 
                         Component.Camera data ->
                             let
@@ -297,12 +297,12 @@ spawnOne entity world =
 
                                 -- Debug.log "Add camera parsing here!!!" world_.camera.behavior
                             in
-                            acc
+                                acc
                 )
                 (Slime.forNewEntity world)
                 entity
     in
-    newWorld
+        newWorld
 
 
 componentTransform : (a -> Maybe b) -> List (List a) -> Maybe (List (List b))
@@ -322,4 +322,4 @@ traverse f =
                 Just x ->
                     Maybe.map ((::) x) acc
     in
-    List.foldr step (Just [])
+        List.foldr step (Just [])

@@ -38,16 +38,16 @@ update msg world =
                                     else
                                         ( World.SlowMotion { current | frames = framesLeft }, newWorld.runtime_ )
                             in
-                            ( { newWorld | flow = flow, runtime_ = runtime }, countOfFrames_ )
+                                ( { newWorld | flow = flow, runtime_ = runtime }, countOfFrames_ )
             in
-            if countOfFrames > 0 then
-                updaterFunc
-                    (flip (Slime.Engine.applySystems engine) delta)
-                    countOfFrames
+                if countOfFrames > 0 then
+                    updaterFunc
+                        (flip (Slime.Engine.applySystems engine) delta)
+                        countOfFrames
+                        ( worldWithUpdatedRuntime, Cmd.none )
+                        |> Tuple.mapSecond (Cmd.map Slime.Engine.Msg)
+                else
                     ( worldWithUpdatedRuntime, Cmd.none )
-                    |> Tuple.mapSecond (Cmd.map Slime.Engine.Msg)
-            else
-                ( worldWithUpdatedRuntime, Cmd.none )
 
         Slime.Engine.Msg (Message.Exception Message.Pause) ->
             let
@@ -59,27 +59,27 @@ update msg world =
                         _ ->
                             ( World.Pause, world.runtime_ )
             in
-            ( { world | flow = flow, runtime_ = runtime }
-            , Cmd.none
-            )
+                ( { world | flow = flow, runtime_ = runtime }
+                , Cmd.none
+                )
 
         Slime.Engine.Msg (Message.Exception msg) ->
             let
                 _ =
                     Debug.log "Slime.Engine.Msg Message.Exception" msg
             in
-            ( world
-            , Cmd.none
-            )
+                ( world
+                , Cmd.none
+                )
 
         Slime.Engine.Msg msg ->
             let
                 ( updatedWorld, commands ) =
                     Slime.Engine.applyListeners engine world msg
             in
-            ( updatedWorld
-            , Cmd.map Slime.Engine.Msg commands
-            )
+                ( updatedWorld
+                , Cmd.map Slime.Engine.Msg commands
+                )
 
 
 resetRuntime : Float -> Int -> Float
@@ -105,7 +105,7 @@ updateRuntime world delta fps =
                 |> min (fps * thresholdTime)
                 |> round
     in
-    ( { world | runtime_ = newRuntime }, countOfFrames )
+        ( { world | runtime_ = newRuntime }, countOfFrames )
 
 
 updaterFunc : (World -> ( World, Cmd Message )) -> Int -> ( World, Cmd Message ) -> ( World, Cmd Message )
@@ -120,4 +120,4 @@ updaterFunc customFunction count ( world, cmd ) =
             combinedCmd =
                 Cmd.batch [ cmd, newCmd ]
         in
-        updaterFunc customFunction (count - 1) ( { newWorld | frame = newWorld.frame + 1 }, combinedCmd )
+            updaterFunc customFunction (count - 1) ( { newWorld | frame = newWorld.frame + 1 }, combinedCmd )

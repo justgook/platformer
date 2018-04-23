@@ -33,4 +33,4 @@ engine =
               Slime.Engine.listenerWith { options = Slime.Engine.cmds } System.inputListener
             ]
     in
-    Slime.Engine.initEngine deletor systems listeners
+        Slime.Engine.initEngine deletor systems listeners

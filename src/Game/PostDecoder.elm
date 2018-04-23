@@ -97,13 +97,13 @@ decode urlPrefix =
                                             layer
                                 )
                 in
-                Json.Decode.succeed
-                    (prepareRenderData
-                        { level
-                            | tilesets = tilesets
-                            , layers = layers
-                        }
-                    )
+                    Json.Decode.succeed
+                        (prepareRenderData
+                            { level
+                                | tilesets = tilesets
+                                , layers = layers
+                            }
+                        )
             )
 
 
@@ -120,14 +120,14 @@ prepareRenderData level =
                                     ( reslt, images ) =
                                         ObjectLayerParser.parse data level.tilesets
                                 in
-                                ( reslt :: acc, collisionMap, Dict.union cmds images )
+                                    ( reslt :: acc, collisionMap, Dict.union cmds images )
 
                             Tiled.ImageLayer data ->
                                 let
                                     ( reslt, images ) =
                                         ImageLayerParser.parse data
                                 in
-                                ( reslt :: acc, collisionMap, Dict.union cmds images )
+                                    ( reslt :: acc, collisionMap, Dict.union cmds images )
 
                             Tiled.TileLayer data ->
                                 case TileLayerParser.parse level collisionMap data of
@@ -140,11 +140,11 @@ prepareRenderData level =
                     )
                     ( [], Collision.empty ( level.tilewidth, level.tileheight ), Dict.empty )
     in
-    { layersData = layersData
-    , commands = Dict.toList commands
-    , properties = parseWorldProperties level.properties
-    , collisionMap = collisionMap
-    }
+        { layersData = layersData
+        , commands = Dict.toList commands
+        , properties = parseWorldProperties level.properties
+        , collisionMap = collisionMap
+        }
 
 
 parseWorldProperties : Tiled.CustomProperties -> WorldProperties

@@ -20,7 +20,7 @@ update msg model =
                 _ =
                     Debug.log "Got message when world isn't loaded" msg
             in
-            ( model, Cmd.none )
+                ( model, Cmd.none )
 
         ( Message.LevelLoaded (Ok { layersData, commands, properties, collisionMap }), _ ) ->
             { model
@@ -39,7 +39,7 @@ update msg model =
                 _ =
                     Debug.log "Message.LoadMetadata ERROR" data
             in
-            ( model, Cmd.none )
+                ( model, Cmd.none )
 
         ( Message.Texture m, Loading data ) ->
             let
@@ -50,15 +50,15 @@ update msg model =
                     Model.loadingToSuccess { data | textures = textures }
                         |> Model.updateCameraWidthRatio model.widthRatio
             in
-            ( { model
-                | renderData = renderData
-              }
-            , Cmd.none
-            )
+                ( { model
+                    | renderData = renderData
+                  }
+                , Cmd.none
+                )
 
         ( Message.Texture m, _ ) ->
             let
                 _ =
                     Debug.log "Texture Loaded after game start" m
             in
-            ( model, Cmd.none )
+                ( model, Cmd.none )

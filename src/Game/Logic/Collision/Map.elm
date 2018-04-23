@@ -49,7 +49,7 @@ stepSize (Map { cellSize }) =
         ( w, h ) =
             cellSize
     in
-    min (toFloat w / 2) (toFloat h / 2)
+        min (toFloat w / 2) (toFloat h / 2)
 
 
 get : ( Int, Int ) -> Map a -> Tile a
@@ -103,9 +103,9 @@ insert shape (Map ({ cellSize, table } as data)) =
                 |> Maybe.map (flip (Array.set yCell) newTable)
                 |> Maybe.withDefault newTable
     in
-    case shape of
-        _ ->
-            Map { data | table = newTable2 }
+        case shape of
+            _ ->
+                Map { data | table = newTable2 }
 
 
 intersection : WithShape a -> Map b -> List (WithShape b)
@@ -138,12 +138,12 @@ intersection shape ((Map { table, cellSize }) as collisionMap) =
                 |> (List.drop 1 >> List.reverse >> List.drop 1 >> List.reverse)
                 |> List.concatMap (\y -> [ ( x1, y ), ( x2, y ) ])
     in
-    (sides ++ topBottomRow)
-        |> List.foldr
-            (\p acc ->
-                maybeAdd (get p collisionMap) acc
-            )
-            []
+        (sides ++ topBottomRow)
+            |> List.foldr
+                (\p acc ->
+                    maybeAdd (get p collisionMap) acc
+                )
+                []
 
 
 getCell : Vec2 -> ( Int, Int ) -> ( Int, Int )
@@ -163,7 +163,7 @@ getCell p cellSize =
             (y / toFloat cellHeight)
                 |> floor
     in
-    ( xCell, yCell )
+        ( xCell, yCell )
 
 
 reorderCorners : List a -> List a

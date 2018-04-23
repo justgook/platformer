@@ -36,12 +36,12 @@ camera world =
                         _ =
                             Debug.log "System for camera not implemented"
                     in
-                    world.camera
+                        world.camera
 
         -- , viewportOffset = vec2 ((toFloat world.frame / 60) * 75) (cos (toFloat world.frame / 60) * 5)
         -- , viewportOffset = vec2 (sin (toFloat world.frame / 60) * 16) (cos (toFloat world.frame / 60) * 16)
     in
-    { world | camera = camera }
+        { world | camera = camera }
 
 
 gravity : World -> World
@@ -72,7 +72,7 @@ jump world =
                     else
                         y
             in
-            { ent | a = vec2 x newVelY }
+                { ent | a = vec2 x newVelY }
         )
         world
 
@@ -98,7 +98,7 @@ rightLeft world =
                     else
                         0
             in
-            { ent | a = vec2 newVelX y }
+                { ent | a = vec2 newVelX y }
         )
         world
 
@@ -131,10 +131,10 @@ collision world =
                     else
                         velocity
             in
-            { ent
-                | a = updatedShape
-                , b = newVel
-            }
+                { ent
+                    | a = updatedShape
+                    , b = newVel
+                }
         )
         world
 
@@ -145,34 +145,34 @@ response3 vel shape collisionMap =
         distance =
             Vec2.length vel
     in
-    if distance == 0 then
-        shape
-    else
-        let
-            _ =
-                Collision.cellSize collisionMap
-
-            setpSize =
-                Collision.stepSize collisionMap
-
-            samplingCount =
-                distance / setpSize
-
-            normal =
-                Vec2.normalize vel
-
-            result =
-                sampler3
-                    (stepFunc3 collisionMap)
-                    normal
-                    setpSize
-                    samplingCount
-                    shape
-        in
-        if result /= shape then
-            result
-        else
+        if distance == 0 then
             shape
+        else
+            let
+                _ =
+                    Collision.cellSize collisionMap
+
+                setpSize =
+                    Collision.stepSize collisionMap
+
+                samplingCount =
+                    distance / setpSize
+
+                normal =
+                    Vec2.normalize vel
+
+                result =
+                    sampler3
+                        (stepFunc3 collisionMap)
+                        normal
+                        setpSize
+                        samplingCount
+                        shape
+            in
+                if result /= shape then
+                    result
+                else
+                    shape
 
 
 sampler3 : (Vec2 -> Component.CollisionData -> Component.CollisionData) -> Vec2 -> Float -> Float -> Component.CollisionData -> Component.CollisionData
@@ -203,7 +203,7 @@ stepFunc3 collisionMap vec_ shape_ =
             Collision.position newShape
                 |> Vec2.sub (Collision.position result)
     in
-    { result | response = newResponse }
+        { result | response = newResponse }
 
 
 collisionFolder3 : Collision.WithShape a -> Component.CollisionData -> Component.CollisionData
@@ -214,7 +214,7 @@ collisionFolder3 tile acc =
                 |> Maybe.map (flip Collision.updatePosition acc)
                 |> Maybe.withDefault acc
     in
-    result
+        result
 
 
 
@@ -240,7 +240,7 @@ inputListener income world =
                         { x, y } =
                             a.parse keys
                     in
-                    { a | x = x, y = y }
+                        { a | x = x, y = y }
 
                 --TODO find better solution
                 cmd =
@@ -249,11 +249,11 @@ inputListener income world =
                     else
                         Cmd.none
             in
-            ( Slime.stepEntities (Slime.entities World.inputs)
-                (\ent -> { ent | a = updateInputs ent.a updatedWorld.pressedKeys })
-                updatedWorld
-            , cmd
-            )
+                ( Slime.stepEntities (Slime.entities World.inputs)
+                    (\ent -> { ent | a = updateInputs ent.a updatedWorld.pressedKeys })
+                    updatedWorld
+                , cmd
+                )
 
         _ ->
             ( world, Cmd.none )
@@ -272,7 +272,7 @@ maxMove a b =
         ( ( x1, y1 ), ( x2, y2 ) ) =
             ( Vec2.toTuple a, Vec2.toTuple b )
     in
-    vec2 (absMax x1 x2) (absMax y1 y2)
+        vec2 (absMax x1 x2) (absMax y1 y2)
 
 
 absMax : Float -> Float -> Float
@@ -313,9 +313,9 @@ animationsChanger world =
 
                 -- getComponent : ComponentSet a -> EntityID -> Maybe a
             in
-            if ( newAnim.lut, newAnim.mirror ) /= ( a.lut, a.mirror ) then
-                { reuslt | a = { newAnim | started = world.frame } }
-            else
-                reuslt
+                if ( newAnim.lut, newAnim.mirror ) /= ( a.lut, a.mirror ) then
+                    { reuslt | a = { newAnim | started = world.frame } }
+                else
+                    reuslt
         )
         world

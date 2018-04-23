@@ -40,7 +40,7 @@ shapeById relative2absolute id tiles =
                                     _ =
                                         Debug.log "Implement Other Shapes (not only Tiled.ObjectRectangl)" tile
                                 in
-                                Nothing
+                                    Nothing
                     )
                     tile.objectgroup
             )
@@ -84,9 +84,9 @@ scrollRatio data =
         default =
             getFloatProp "scrollRatio" 1 data.properties
     in
-    vec2
-        (getFloatProp "scrollRatio.x" default data.properties)
-        (getFloatProp "scrollRatio.y" default data.properties)
+        vec2
+            (getFloatProp "scrollRatio.x" default data.properties)
+            (getFloatProp "scrollRatio.y" default data.properties)
 
 
 {-| TODO move me to Tiled.Decode
@@ -134,18 +134,18 @@ hexColor2Vec3 str =
             else
                 str
     in
-    case String.toList withoutHash of
-        [ r1, r2, g1, g2, b1, b2 ] ->
-            let
-                makeFloat a b =
-                    String.fromList [ '0', 'x', a, b ]
-                        |> String.toInt
-                        |> Result.map (\i -> toFloat i / 255)
-            in
-            Result.map3 vec3 (makeFloat r1 r2) (makeFloat g1 g2) (makeFloat b1 b2)
+        case String.toList withoutHash of
+            [ r1, r2, g1, g2, b1, b2 ] ->
+                let
+                    makeFloat a b =
+                        String.fromList [ '0', 'x', a, b ]
+                            |> String.toInt
+                            |> Result.map (\i -> toFloat i / 255)
+                in
+                    Result.map3 vec3 (makeFloat r1 r2) (makeFloat g1 g2) (makeFloat b1 b2)
 
-        _ ->
-            "Can not parse hex color:" ++ str |> Result.Err
+            _ ->
+                "Can not parse hex color:" ++ str |> Result.Err
 
 
 tileSetInfo : List Tiled.Tileset -> List Int -> Dict.Dict Int Tiled.EmbeddedTileData

@@ -35,7 +35,7 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                             , widthRatio = widthRatio
                             }
                     in
-                    ImageLayer.render data_ :: acc
+                        ImageLayer.render data_ :: acc
 
                 Game.ActionLayer data ->
                     let
@@ -46,17 +46,17 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                                         a_ =
                                             aabbData a
                                     in
-                                    ObjectView.render
-                                        { widthRatio = widthRatio
-                                        , viewportOffset = viewportOffset
-                                        , pixelsPerUnit = pixelsPerUnit
-                                        , x = Vec2.getX a_.p
-                                        , y = Vec2.getY a_.p
-                                        , width = Vec2.length a_.xw * 2 --b.width
-                                        , height = Vec2.length a_.yw * 2 --b.height
-                                        , scrollRatio = data.scrollRatio
-                                        }
-                                        :: acc_
+                                        ObjectView.render
+                                            { widthRatio = widthRatio
+                                            , viewportOffset = viewportOffset
+                                            , pixelsPerUnit = pixelsPerUnit
+                                            , x = Vec2.getX a_.p
+                                            , y = Vec2.getY a_.p
+                                            , width = Vec2.length a_.xw * 2 --b.width
+                                            , height = Vec2.length a_.yw * 2 --b.height
+                                            , scrollRatio = data.scrollRatio
+                                            }
+                                            :: acc_
 
                                 _ ->
                                     acc
@@ -80,30 +80,30 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                                 p =
                                     Collision.position a
                             in
-                            AnimatedObject.render
-                                { widthRatio = widthRatio
-                                , viewportOffset = viewportOffset
-                                , pixelsPerUnit = pixelsPerUnit
-                                , frame = world.frame
-                                , x = Vec2.getX p
-                                , y = Vec2.getY p
-                                , width = b.width
-                                , height = b.height
-                                , sprite = b.texture
-                                , frameSize = b.frameSize
-                                , columns = b.columns
-                                , frames = b.frames
-                                , started = b.started
-                                , lut = b.lut
-                                , transparentcolor = b.transparentcolor
-                                , mirror = mirror
-                                , scrollRatio = data.scrollRatio
-                                }
-                                :: acc_
+                                AnimatedObject.render
+                                    { widthRatio = widthRatio
+                                    , viewportOffset = viewportOffset
+                                    , pixelsPerUnit = pixelsPerUnit
+                                    , frame = world.frame
+                                    , x = Vec2.getX p
+                                    , y = Vec2.getY p
+                                    , width = b.width
+                                    , height = b.height
+                                    , sprite = b.texture
+                                    , frameSize = b.frameSize
+                                    , columns = b.columns
+                                    , frames = b.frames
+                                    , started = b.started
+                                    , lut = b.lut
+                                    , transparentcolor = b.transparentcolor
+                                    , mirror = mirror
+                                    , scrollRatio = data.scrollRatio
+                                    }
+                                    :: acc_
                     in
-                    acc
-                        |> flip (List.foldr stepObjects) ((Slime.entities World.collisions).getter world)
-                        |> flip (List.foldr stepAnimations) ((Slime.entities2 World.collisions World.animations).getter world)
+                        acc
+                            |> flip (List.foldr stepObjects) ((Slime.entities World.collisions).getter world)
+                            |> flip (List.foldr stepAnimations) ((Slime.entities2 World.collisions World.animations).getter world)
 
                 Game.TileLayer1 data ->
                     TileLayer.render
@@ -137,14 +137,14 @@ view model =
                         }
                         world.collisionMap
             in
-            renderGame
-                { world = world
-                , widthRatio = world.camera.widthRatio
-                , pixelsPerUnit = world.camera.pixelsPerUnit
-                , viewportOffset = world.camera.offset
-                }
-                data
-                ++ debug
+                renderGame
+                    { world = world
+                    , widthRatio = world.camera.widthRatio
+                    , pixelsPerUnit = world.camera.pixelsPerUnit
+                    , viewportOffset = world.camera.offset
+                    }
+                    data
+                    ++ debug
 
         -- Game.Loading _ ->
         --     []
@@ -181,17 +181,17 @@ debugCollisionViewItem { widthRatio, viewportOffset, pixelsPerUnit } obj =
                 a_ =
                     aabbData obj
             in
-            [ ObjectView.render
-                { widthRatio = widthRatio
-                , viewportOffset = viewportOffset
-                , pixelsPerUnit = pixelsPerUnit
-                , x = Vec2.getX a_.p
-                , y = Vec2.getY a_.p
-                , width = Vec2.length a_.xw * 2 --b.width
-                , height = Vec2.length a_.yw * 2 --b.height
-                , scrollRatio = vec2 1 1
-                }
-            ]
+                [ ObjectView.render
+                    { widthRatio = widthRatio
+                    , viewportOffset = viewportOffset
+                    , pixelsPerUnit = pixelsPerUnit
+                    , x = Vec2.getX a_.p
+                    , y = Vec2.getY a_.p
+                    , width = Vec2.length a_.xw * 2 --b.width
+                    , height = Vec2.length a_.yw * 2 --b.height
+                    , scrollRatio = vec2 1 1
+                    }
+                ]
 
         _ ->
             []

@@ -13,10 +13,10 @@ view { style, game } =
         result =
             Game.view game
     in
-    WebGL.toHtmlWith
-        [ WebGL.alpha False
-        , WebGL.depth 1
-        , WebGL.clearColor 0 0 0 1
-        ]
-        style
-        result
+        WebGL.toHtmlWith
+            [ WebGL.alpha False
+            , WebGL.depth 1
+            , WebGL.clearColor 0 0 0 1
+            ]
+            style
+            result

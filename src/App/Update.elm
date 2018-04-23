@@ -21,7 +21,7 @@ update msg model =
                 result =
                     updateCanvas size model
             in
-            ( { result | game = Game.updateWidthRatio size result.game }, Cmd.none )
+                ( { result | game = Game.updateWidthRatio size result.game }, Cmd.none )
 
 
 updateCanvas : Size -> Model -> Model
@@ -30,10 +30,10 @@ updateCanvas size model =
         device =
             model.device
     in
-    { model
-        | style =
-            [ toFloat size.width * device.pixelRatio |> round |> width
-            , toFloat size.height * device.pixelRatio |> round |> height
-            , style [ ( "display", "block" ), ( "width", toString size.width ++ "px" ), ( "height", toString size.height ++ "px" ) ]
-            ]
-    }
+        { model
+            | style =
+                [ toFloat size.width * device.pixelRatio |> round |> width
+                , toFloat size.height * device.pixelRatio |> round |> height
+                , style [ ( "display", "block" ), ( "width", toString size.width ++ "px" ), ( "height", toString size.height ++ "px" ) ]
+                ]
+        }

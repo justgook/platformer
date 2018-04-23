@@ -48,8 +48,8 @@ parse ({ tilesets, tileheight, tilewidth } as level) collisionMap data =
                                 |> (*) tileheight
                                 |> toFloat
                     in
-                    Vec2.scale 0.5
-                        >> Vec2.sub (Vec2.add start (vec2 x y))
+                        Vec2.scale 0.5
+                            >> Vec2.sub (Vec2.add start (vec2 x y))
 
                 newCollisionMap =
                     data.data
@@ -59,35 +59,35 @@ parse ({ tilesets, tileheight, tilewidth } as level) collisionMap data =
                                     id =
                                         id_ - tileset.firstgid
                                 in
-                                if id < 0 then
-                                    acc
-                                else
-                                    case shapeById (relative2absolute i) id tileset.tiles of
-                                        Just item ->
-                                            Collision.insert { shape = item } acc
+                                    if id < 0 then
+                                        acc
+                                    else
+                                        case shapeById (relative2absolute i) id tileset.tiles of
+                                            Just item ->
+                                                Collision.insert { shape = item } acc
 
-                                        Nothing ->
-                                            acc
+                                            Nothing ->
+                                                acc
                             )
                             collisionMap
             in
-            Ok
-                ( Model.TileLayer1
-                    { lutTexture = "Layer.Data-USE INDEX::" ++ data.name
-                    , tileSetTexture = tileset.image
-                    , firstgid = tileset.firstgid
-                    , lutSize = vec2 (toFloat data.width) (toFloat data.height)
-                    , tileSetSize = vec2 (toFloat tileset.imagewidth / toFloat tileset.tilewidth) (toFloat tileset.imageheight / toFloat tileset.tileheight)
-                    , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 1.0 0.0 1.0)
-                    , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                    , scrollRatio = scrollRatio data
-                    , repeat = repeat data
-                    }
-                , newCollisionMap
-                , Dict.empty
-                    |> Dict.insert tileset.image tileset.image
-                    |> Dict.insert ("Layer.Data-USE INDEX::" ++ data.name) (bmp24 data.width data.height data.data)
-                )
+                Ok
+                    ( Model.TileLayer1
+                        { lutTexture = "Layer.Data-USE INDEX::" ++ data.name
+                        , tileSetTexture = tileset.image
+                        , firstgid = tileset.firstgid
+                        , lutSize = vec2 (toFloat data.width) (toFloat data.height)
+                        , tileSetSize = vec2 (toFloat tileset.imagewidth / toFloat tileset.tilewidth) (toFloat tileset.imageheight / toFloat tileset.tileheight)
+                        , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 1.0 0.0 1.0)
+                        , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
+                        , scrollRatio = scrollRatio data
+                        , repeat = repeat data
+                        }
+                    , newCollisionMap
+                    , Dict.empty
+                        |> Dict.insert tileset.image tileset.image
+                        |> Dict.insert ("Layer.Data-USE INDEX::" ++ data.name) (bmp24 data.width data.height data.data)
+                    )
 
         [] ->
             Err ("No tileset found for Tile layer (" ++ data.name ++ ")")
@@ -105,4 +105,4 @@ indexedFoldr func acc list =
         step x ( i, acc ) =
             ( i - 1, func i x acc )
     in
-    Tuple.second (List.foldr step ( List.length list - 1, acc ) list)
+        Tuple.second (List.foldr step ( List.length list - 1, acc ) list)

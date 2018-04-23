@@ -151,7 +151,7 @@ bmp24With w h pixels { defaultColor, order } =
             result
                 |> BinaryBase64.encode
     in
-    "data:image/bmp;base64," ++ good
+        "data:image/bmp;base64," ++ good
 
 
 colorAdder : Int -> List Int -> List Int
@@ -185,15 +185,15 @@ lineFolder reverse w acc xs =
             -- [e1,e2,e3,e4] -> 12 bytes -> add 0 to get a multiple of 4
             folding colorAdder [] line ++ List.repeat (List.length line % 4) 0x00
     in
-    case ( List.take w xs, List.drop w xs ) of
-        ( [], [] ) ->
-            acc
+        case ( List.take w xs, List.drop w xs ) of
+            ( [], [] ) ->
+                acc
 
-        ( line, [] ) ->
-            acc ++ lineParser line
+            ( line, [] ) ->
+                acc ++ lineParser line
 
-        ( line, rest ) ->
-            lineFolder reverse w (acc ++ lineParser line) rest
+            ( line, rest ) ->
+                lineFolder reverse w (acc ++ lineParser line) rest
 
 
 int24LittleEndian : Int -> List Int

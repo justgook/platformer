@@ -12,7 +12,7 @@ arrows { up, right, down, left } keys =
         y =
             toInt up keys - toInt down keys
     in
-    { x = x, y = y }
+        { x = x, y = y }
 
 
 toInt : a -> List a -> Int

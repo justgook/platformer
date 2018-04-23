@@ -15,9 +15,9 @@ load url =
                 |> String.join "/"
                 |> flip (++) "/"
     in
-    decode prefix
-        |> Http.get url
-        |> Http.send LevelLoaded
+        decode prefix
+            |> Http.get url
+            |> Http.send LevelLoaded
 
 
 {-| <http://package.elm-lang.org/packages/elm-community/list-extra/7.1.0/List-Extra#init>

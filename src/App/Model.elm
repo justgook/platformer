@@ -36,7 +36,7 @@ init flags =
                 |> Json.decodeValue (Json.field "seed" Json.int)
                 |> Result.withDefault 227852860
     in
-    defaultModel pixelRatio ! [ requestWindowSize, Cmd.map Message.Game (Game.load levelUrl) ]
+        defaultModel pixelRatio ! [ requestWindowSize, Cmd.map Message.Game (Game.load levelUrl) ]
 
 
 defaultModel : Float -> Model

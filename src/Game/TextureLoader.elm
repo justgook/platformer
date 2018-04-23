@@ -46,4 +46,4 @@ update msg model =
                 _ =
                     Debug.log "TextureLoaded:Err" error
             in
-            model
+                model

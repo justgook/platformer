@@ -54,22 +54,22 @@ init props collisionMap =
         _ =
             Debug.log "init World" "asdas"
     in
-    { idSource = Slime.initIdSource
-    , animations = Slime.initComponents
-    , characterAnimations = Slime.initComponents
-    , collisions = Slime.initComponents
-    , sprites = Slime.initComponents
-    , inputs = Slime.initComponents
-    , velocities = Slime.initComponents
-    , runtime_ = 0
-    , frame = 0
-    , pressedKeys = []
-    , gravity = props.gravity
-    , camera = Camera.init props
-    , collisionMap = collisionMap
-    , seed0 = Random.initialSeed 227852860
-    , flow = SlowMotion { frames = 60, fps = 20 }
-    }
+        { idSource = Slime.initIdSource
+        , animations = Slime.initComponents
+        , characterAnimations = Slime.initComponents
+        , collisions = Slime.initComponents
+        , sprites = Slime.initComponents
+        , inputs = Slime.initComponents
+        , velocities = Slime.initComponents
+        , runtime_ = 0
+        , frame = 0
+        , pressedKeys = []
+        , gravity = props.gravity
+        , camera = Camera.init props
+        , collisionMap = collisionMap
+        , seed0 = Random.initialSeed 227852860
+        , flow = SlowMotion { frames = 60, fps = 20 }
+        }
 
 
 type GameFlow
