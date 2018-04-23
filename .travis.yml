@@ -1,5 +1,4 @@
 sudo: false
-os: osx
 cache:
   yarn: true
   directories:
@@ -38,9 +37,23 @@ install:
   - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
   - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(yarn global bin)/elm-make
   - chmod +x $(yarn global bin)/elm-make
+
   - elm-package install -y
+  #Slime fix
+  - cd elm-stuff/packages/seurimas/slime/2.1.1/
+  - curl https://github.com/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
+  - cd -
+  ####
 
 script:
   - yarn elm-format --validate src/
+  - cd tests
+  - elm-package install -y
+  #Slime fix
+  - cd elm-stuff/packages/seurimas/slime/2.1.1/
+  - curl https://github.com/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
+  - cd -
+  #####
+  - cd ..
   - yarn test
   # - yarn elm-analyse
