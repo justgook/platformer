@@ -4,9 +4,7 @@
   "repository": "https://github.com/user/project.git",
   "license": "BSD3",
   "source-directories": [
-    "./src",
-    "./src/Libraries",
-    "./WIP/elm-tiled-decode/src"
+    "./src"
   ],
   "exposed-modules": [],
   "dependencies": {
@@ -23,6 +21,7 @@
     "elm-lang/http": "1.0.0 <= v < 2.0.0",
     "elm-lang/keyboard": "1.0.1 <= v < 2.0.0",
     "elm-lang/window": "1.0.1 <= v < 2.0.0",
+    "justgook/elm-tiled-decode": "2.0.0 <= v < 3.0.0",
     "mgold/elm-random-pcg": "5.0.2 <= v < 6.0.0",
     "newlandsvalley/elm-binary-base64": "1.0.1 <= v < 2.0.0",
     "ohanhi/keyboard-extra": "3.0.4 <= v < 4.0.0",

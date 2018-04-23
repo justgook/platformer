@@ -4,7 +4,7 @@ import App.Message exposing (Message)
 import App.Model exposing (Model)
 import Game.View as Game
 import Html exposing (Html)
-import WebGL exposing (Mesh, Shader, Texture)
+import WebGL
 
 
 view : Model -> Html Message

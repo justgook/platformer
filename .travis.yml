@@ -33,8 +33,6 @@ install:
   - yarn config set cache-folder ./yarn-cache
   - yarn --version
   - yarn global add elm@$ELM_VERSION
-  - yarn global add elm-format
-  # - yarn global add elm-test
   - yarn
   - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
   - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(yarn global bin)/elm-make
@@ -43,5 +41,6 @@ install:
 
 script:
   # - yes | make all
-  - elm-format --validate src/
+  - yarn elm-format --validate src/
   - yarn test
+  - yarn elm-analyse

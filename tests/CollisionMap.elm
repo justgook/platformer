@@ -2,7 +2,6 @@ module CollisionMap exposing (..)
 
 import Array.Hamt as Array exposing (Array)
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
 import Game.Logic.Collision.Map as Collision
 import Game.Logic.Collision.Shape as Collision
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -24,7 +23,7 @@ suite =
                         _ =
                             Collision.empty ( 16, 16 )
                     in
-                    Expect.pass
+                        Expect.pass
             , test "inserting" <|
                 \_ ->
                     let
@@ -39,12 +38,12 @@ suite =
                             ]
                                 |> List.map wrapCollsionData
                     in
-                    List.foldl (\item acc -> Collision.insert item acc) table items
-                        |> Collision.table
-                        |> Array.get 0
-                        |> Maybe.withDefault Array.empty
-                        |> Array.length
-                        |> Expect.equal 4
+                        List.foldl (\item acc -> Collision.insert item acc) table items
+                            |> Collision.table
+                            |> Array.get 0
+                            |> Maybe.withDefault Array.empty
+                            |> Array.length
+                            |> Expect.equal 4
             , test "intersection" <|
                 \_ ->
                     let
@@ -66,9 +65,8 @@ suite =
                         collisionMap =
                             List.foldl (\item acc -> Collision.insert item acc) table items
                     in
-                    Collision.intersection shape collisionMap
-                        |> Debug.log "Collision.intersection"
-                        |> List.length
-                        |> Expect.equal 3
+                        Collision.intersection shape collisionMap
+                            |> List.length
+                            |> Expect.equal 3
             ]
         ]

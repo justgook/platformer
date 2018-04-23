@@ -4,9 +4,9 @@ import App.Message as Message exposing (Message)
 import Game.Main as Game
 import Game.Model as Game
 import Html
-import Json.Decode as Json exposing (list, string)
+import Json.Decode as Json
 import Task
-import Window exposing (Size)
+import Window
 
 
 type alias Model =
