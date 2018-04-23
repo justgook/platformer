@@ -9,6 +9,11 @@ import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Test exposing (..)
 
 
+wrapCollsionData : Collision.Shape -> Collision.WithShape {}
+wrapCollsionData shape =
+    { shape = shape }
+
+
 suite : Test
 suite =
     describe "Game.Logic.Collision.Map"
@@ -32,6 +37,7 @@ suite =
                             , Collision.createAABB { p = vec2 40 6.5, xw = vec2 8 0, yw = vec2 0 6.5 }
                             , Collision.createAABB { p = vec2 56 6.5, xw = vec2 8 0, yw = vec2 0 6.5 }
                             ]
+                                |> List.map wrapCollsionData
                     in
                     List.foldl (\item acc -> Collision.insert item acc) table items
                         |> Collision.table
@@ -51,9 +57,11 @@ suite =
                             , Collision.createAABB { p = vec2 40 6.5, xw = vec2 8 0, yw = vec2 0 6.5 }
                             , Collision.createAABB { p = vec2 56 6.5, xw = vec2 8 0, yw = vec2 0 6.5 }
                             ]
+                                |> List.map wrapCollsionData
 
                         shape =
                             Collision.createAABB { p = vec2 11 38, xw = vec2 22 0, yw = vec2 0 29 }
+                                |> wrapCollsionData
 
                         collisionMap =
                             List.foldl (\item acc -> Collision.insert item acc) table items

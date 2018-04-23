@@ -41,6 +41,6 @@ install:
   # - cd ..
 
 script:
-  - yes | make all
+  # - yes | make all
   - elm-format --validate src/
   - elm-test
