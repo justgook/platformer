@@ -41,9 +41,9 @@ install:
   - elm-package install -y
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  - "[ -f ${slimeSrcPrefix}slime.elm ] && mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm"
-  - "[ -f ${slimeSrcPrefix}slime ] && mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime"
-  - "[ -f ${slimeSrcPrefix}Slime/engine.elm ] && mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm"
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   ####
 
 script:
@@ -52,9 +52,9 @@ script:
   - elm-package install -y
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
-  - "[ -f ${slimeSrcPrefix}slime.elm ] && mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm"
-  - "[ -f ${slimeSrcPrefix}slime ] && mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime"
-  - "[ -f ${slimeSrcPrefix}Slime/engine.elm ] && mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm"
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   #####
   - cd ..
   - yarn test
