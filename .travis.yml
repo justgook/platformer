@@ -42,7 +42,8 @@ install:
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
   - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
-  - mv ${slimeSrcPrefix}slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   ####
 
 script:
@@ -52,7 +53,8 @@ script:
   #Slime fix
   - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
   - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
-  - mv ${slimeSrcPrefix}slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
+  - mv ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+  - mv ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   #####
   - cd ..
   - yarn test
