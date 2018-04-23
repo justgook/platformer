@@ -33,7 +33,7 @@ install:
   - yarn config set cache-folder ./yarn-cache
   - yarn --version
   - yarn global add elm@$ELM_VERSION
-  # - yarn global add elm-format
+  - yarn global add elm-format
   # - yarn global add elm-test
   - yarn
   - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
