@@ -32,15 +32,15 @@ install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash
   - node --version
   - npm --version
-  - export prefix=$(npm config get prefix)
+  # - export prefix=$(npm config get prefix)
   - yarn config set cache-folder ./yarn-cache
   - yarn --version
-  - yarn global add elm@$ELM_VERSION --prefix $prefix
-  - yarn global add elm-format --prefix $prefix
-  - yarn global add elm-test --prefix $prefix
-  - mv $(npm config get prefix)/bin/elm-make $(npm config get prefix)/bin/elm-make-old
-  - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(npm config get prefix)/bin/elm-make
-  - chmod +x $(npm config get prefix)/bin/elm-make
+  - yarn global add elm@$ELM_VERSION
+  - yarn global add elm-format
+  - yarn global add elm-test
+  - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
+  - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(yarn global bin)/elm-make
+  - chmod +x $(yarn global bin)/elm-make
   - yarn
   # - cd example
   # - elm package install --yes
