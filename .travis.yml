@@ -44,7 +44,7 @@ install:
   - |
     [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
   - |
-    [[ -e ${slimeSrcPrefix}slime ]] && cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+    [[ -e ${slimeSrcPrefix}slime ]] && cp -vnR ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
   - |
     [[ -e ${slimeSrcPrefix}Slime/engine.elm ]] && cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   ####
@@ -58,7 +58,7 @@ script:
   - |
     [[ -e ${slimeSrcPrefix}slime.elm ]] && cp -vn ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
   - |
-    [[ -e ${slimeSrcPrefix}slime ]] && cp -vn ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
+    [[ -e ${slimeSrcPrefix}slime ]] && cp -vnR ${slimeSrcPrefix}slime ${slimeSrcPrefix}Slime
   - |
     [[ -e ${slimeSrcPrefix}Slime/engine.elm ]] && cp -vn ${slimeSrcPrefix}Slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
     #####
