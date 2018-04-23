@@ -40,9 +40,9 @@ install:
 
   - elm-package install -y
   #Slime fix
-  - cd elm-stuff/packages/seurimas/slime/2.1.1/
-  - curl https://patch-diff.githubusercontent.com/raw/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
-  - cd -
+  - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - mv ${slimeSrcPrefix}slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   ####
 
 script:
@@ -50,9 +50,9 @@ script:
   - cd tests
   - elm-package install -y
   #Slime fix
-  - cd elm-stuff/packages/seurimas/slime/2.1.1/
-  - curl https://patch-diff.githubusercontent.com/raw/seurimas/slime/pull/3.patch --output 3.patch && git am 3.patch
-  - cd -
+  - export slimeSrcPrefix=elm-stuff/packages/seurimas/slime/2.1.1/src/
+  - mv ${slimeSrcPrefix}slime.elm ${slimeSrcPrefix}Slime.elm
+  - mv ${slimeSrcPrefix}slime/engine.elm ${slimeSrcPrefix}Slime/Engine.elm
   #####
   - cd ..
   - yarn test
