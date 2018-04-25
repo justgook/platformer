@@ -2,15 +2,15 @@ module Game.PostDecoder.ObjectLayer exposing (parse)
 
 import Dict exposing (Dict)
 import Game.Logic.Camera.Model as Camera
-import Game.Logic.Collision.Shape as Shape exposing (AabbData, Shape(..))
+import Game.Logic.Collision.Shape as Shape exposing (Shape(..))
 import Game.Logic.Component as Component
-import Game.Model as Model exposing (LoaderData(..), Model)
-import Game.PostDecoder.Helpers exposing (findTileSet, getFloatProp, hexColor2Vec3, scrollRatio, shapeById, tileSetInfo)
+import Game.Model as Model exposing (LoaderData(..))
+import Game.PostDecoder.Helpers exposing (findTileSet, hexColor2Vec3, scrollRatio, shapeById)
 import Keyboard.Extra exposing (Direction(..), Key(ArrowDown, ArrowLeft, ArrowRight, ArrowUp))
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Math.Vector2 as Vec2 exposing (vec2)
+import Math.Vector3 exposing (vec3)
 import Tiled.Decode as Tiled
-import Util.BMP exposing (bmp24)
+import Image.BMP exposing (encode24)
 import Util.KeysToDir exposing (arrows)
 
 
@@ -101,7 +101,7 @@ parse2 tilesets o ( acc, cmds ) =
                                 else
                                     []
                         in
-                            ( (comp ++ [ shape ] ++ delme) :: acc
+                            ( (comp ++ (shape :: delme)) :: acc
                             , Dict.fromList cmds_ |> Dict.union cmds
                             )
 
@@ -177,22 +177,23 @@ sprite data =
 
 getAnimationData : Tiled.EmbeddedTileData -> Int -> Maybe ( Component.AnimationData String, List ( String, String ) )
 getAnimationData tileset tileId =
-    let
-        animationData gid tileset anims =
-            ( { texture = tileset.image
-              , lut = "Anim_LUT" ++ gid
-              , frames = List.length anims |> toFloat
-              , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 1.0 0.0 1.0)
-              , started = 0
-              , width = toFloat tileset.tilewidth
-              , height = toFloat tileset.tileheight
-              , frameSize = vec2 (toFloat tileset.tilewidth / toFloat tileset.imagewidth) (toFloat tileset.tileheight / toFloat tileset.imageheight)
-              , columns = toFloat tileset.columns
-              , mirror = ( False, False )
-              }
-            , [ ( tileset.image, tileset.image ), ( "Anim_LUT" ++ gid, bmp24 (List.length anims) 1 (List.map .tileid anims) ) ]
-            )
-    in
-        Dict.get tileId tileset.tiles
-            |> Maybe.andThen .animation
-            |> Maybe.map (animationData (toString (tileId + tileset.firstgid)) tileset)
+    Dict.get tileId tileset.tiles
+        |> Maybe.andThen .animation
+        |> Maybe.map (animationData (toString (tileId + tileset.firstgid)) tileset)
+
+
+animationData : String -> Tiled.EmbeddedTileData -> List { b | tileid : Int } -> ( Component.AnimationData String, List ( String, String ) )
+animationData gid tileset anims =
+    ( { texture = tileset.image
+      , lut = "Anim_LUT" ++ gid
+      , frames = List.length anims |> toFloat
+      , transparentcolor = hexColor2Vec3 tileset.transparentcolor |> Result.withDefault (vec3 1.0 0.0 1.0)
+      , started = 0
+      , width = toFloat tileset.tilewidth
+      , height = toFloat tileset.tileheight
+      , frameSize = vec2 (toFloat tileset.tilewidth / toFloat tileset.imagewidth) (toFloat tileset.tileheight / toFloat tileset.imageheight)
+      , columns = toFloat tileset.columns
+      , mirror = ( False, False )
+      }
+    , [ ( tileset.image, tileset.image ), ( "Anim_LUT" ++ gid, encode24 (List.length anims) 1 (List.map .tileid anims) ) ]
+    )

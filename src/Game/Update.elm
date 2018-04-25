@@ -1,6 +1,5 @@
 module Game.Update exposing (update)
 
-import Game.Logic.Camera.Model as Camera
 import Game.Logic.Update as Logic
 import Game.Message as Message exposing (Message)
 import Game.Model as Model exposing (LoaderData(..), Model)
@@ -10,15 +9,15 @@ import Game.TextureLoader as Texture
 update : Message -> Model -> ( Model, Cmd Message )
 update msg model =
     case ( msg, model.renderData ) of
-        ( Message.Logic msg, Success ({ world } as renderData) ) ->
-            Logic.update msg world
+        ( Message.Logic msg_, Success ({ world } as renderData) ) ->
+            Logic.update msg_ world
                 |> Tuple.mapFirst (\world_ -> { model | renderData = Success { renderData | world = world_ } })
                 |> Tuple.mapSecond (Cmd.map Message.Logic)
 
-        ( Message.Logic msg, _ ) ->
+        ( Message.Logic msg_, _ ) ->
             let
                 _ =
-                    Debug.log "Got message when world isn't loaded" msg
+                    Debug.log "Got message when world isn't loaded" msg_
             in
                 ( model, Cmd.none )
 

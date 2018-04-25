@@ -12,9 +12,9 @@ module Game.PostDecoder.Helpers
 
 import Dict
 import Game.Logic.Collision.Shape as Shape exposing (Shape)
-import Game.Model as Model exposing (Repeat(..))
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Game.Model exposing (Repeat(..))
+import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Decode as Tiled
 
 

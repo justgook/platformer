@@ -11,9 +11,9 @@ module Game.Logic.Component
 
 import Game.Logic.Camera.Model as Camera
 import Game.Logic.Collision.Shape exposing (WithShape)
-import Keyboard.Extra exposing (Direction, Key)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Keyboard.Extra exposing (Key)
+import Math.Vector2 exposing (Vec2)
+import Math.Vector3 exposing (Vec3)
 
 
 type Component image
@@ -34,16 +34,20 @@ type alias VelocityData =
     Vec2
 
 
-{-| Some other ways to deal with collision are using penalty-force or impulse-based methods. Penalty methods use spring forces to pull objects out of collision. Impulse-based methods use instantaneous impulses (changes in velocity) to prevent objects from interpenetrating.
+{-|
+
+
+## Some other ways to deal with collision are using penalty-force or impulse-based methods. Penalty methods use spring forces to pull objects out of collision. Impulse-based methods use instantaneous impulses (changes in velocity) to prevent objects from interpenetrating.
 -}
-type CollisionResult
-    = Hit
-    | Pull
 
 
-type alias CollisionFlags =
-    { hits : Int -- remove some live from who step / touches it
-    }
+
+-- type CollisionResult
+--     = Hit
+--     | Pull
+-- type alias CollisionFlags =
+--     { hits : Int -- remove some live from who step / touches it
+--     }
 
 
 type alias AnimationData image =
@@ -76,5 +80,10 @@ type alias SpriteData image =
 type alias InputData =
     { x : Int
     , y : Int
-    , parse : List Key -> { x : Int, y : Int }
+    , parse :
+        List Key
+        ->
+            { x : Int
+            , y : Int
+            }
     }

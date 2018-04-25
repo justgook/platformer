@@ -2,11 +2,14 @@ module Game.View.Object.Animated exposing (render)
 
 import Game.View.Main exposing (mesh)
 import Game.View.Object exposing (vertexShader)
-import WebGL exposing (Mesh, Shader, Texture)
+import WebGL exposing (Shader, Texture)
 import WebGL.Settings as WebGL
 import WebGL.Settings.Blend as Blend
+import Math.Vector2 exposing (Vec2)
+import Math.Vector3 exposing (Vec3)
 
 
+render : Model -> WebGL.Entity
 render uniforms =
     WebGL.entityWith
         [ WebGL.cullFace WebGL.front
@@ -19,6 +22,28 @@ render uniforms =
         uniforms
 
 
+type alias Model =
+    { columns : Float
+    , frame : Int
+    , frameSize : Vec2
+    , frames : Float
+    , height : Float
+    , lut : Texture
+    , mirror : Int
+    , pixelsPerUnit : Float
+    , scrollRatio : Vec2
+    , sprite : Texture
+    , started : Int
+    , transparentcolor : Vec3
+    , viewportOffset : Vec2
+    , width : Float
+    , widthRatio : Float
+    , x : Float
+    , y : Float
+    }
+
+
+fragmentShader : Shader {} Model { vcoord : Vec2 }
 fragmentShader =
     [glsl|
         precision mediump float;

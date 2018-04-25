@@ -11,8 +11,8 @@ module Game.Logic.Collision.Map
         )
 
 import Array.Hamt as Array exposing (Array)
-import Game.Logic.Collision.Shape as Shape exposing (Shape, WithShape)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Game.Logic.Collision.Shape as Shape exposing (WithShape)
+import Math.Vector2 as Vec2 exposing (Vec2)
 
 
 -- http://www.metanetsoftware.com/2016/n-tutorial-b-broad-phase-collision
@@ -109,7 +109,7 @@ insert shape (Map ({ cellSize, table } as data)) =
 
 
 intersection : WithShape a -> Map b -> List (WithShape b)
-intersection shape ((Map { table, cellSize }) as collisionMap) =
+intersection shape ((Map { cellSize }) as collisionMap) =
     let
         { p, xw, yw } =
             Shape.aabbData shape

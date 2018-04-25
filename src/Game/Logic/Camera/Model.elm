@@ -10,8 +10,9 @@ type Behavior
     | Follow { id : EntityID } --TODO use linear interpolation (lerp smooth)
 
 
-type CameraEffects
-    = Shake { framesLeft : Int }
+
+-- type CameraEffects
+--     = Shake { framesLeft : Int }
 
 
 type alias Model =
@@ -86,15 +87,13 @@ lengthLessThan a b =
     Vec2.length a < Vec2.length b
 
 
-absMaxVec2 : Vec2 -> Vec2 -> Vec2
-absMaxVec2 a b =
-    if Vec2.length a > Vec2.length b then
-        a
-    else
-        b
 
-
-
+-- absMaxVec2 : Vec2 -> Vec2 -> Vec2
+-- absMaxVec2 a b =
+--     if Vec2.length a > Vec2.length b then
+--         a
+--     else
+--         b
 -- https://forum.unity.com/threads/screen-shake-effect.22886/
 -- https://en.wikipedia.org/wiki/Perlin_noise
 -- public AnimationCurve curve;

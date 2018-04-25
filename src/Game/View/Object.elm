@@ -3,8 +3,8 @@ module Game.View.Object exposing (render, vertexShader)
 -- import Math.Vector3 exposing (Vec3, vec3)
 
 import Game.View.Main exposing (fragmentShader, mesh)
-import Math.Vector2 exposing (Vec2, vec2)
-import WebGL exposing (Mesh, Shader, Texture)
+import Math.Vector2 exposing (Vec2)
+import WebGL exposing (Shader)
 import WebGL.Settings as WebGL
 import WebGL.Settings.Blend as Blend
 

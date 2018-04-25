@@ -19,8 +19,8 @@ import Game.Logic.Camera.Model as Camera
 import Game.Logic.Component as Component exposing (Component)
 import Game.Logic.World as World exposing (World, WorldProperties)
 import Game.TextureLoader as TextureLoader
-import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
+import Math.Vector2 exposing (Vec2)
+import Math.Vector3 exposing (Vec3)
 import Slime exposing ((&=>))
 import WebGL
 
@@ -146,9 +146,8 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                             entities =
                                 actionLayer.components
 
-                            func comp result =
-                                result
-
+                            -- func comp result =
+                            --     result
                             result =
                                 entities
                                     |> componentTransform
@@ -209,8 +208,8 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
 
                     TileLayer1 ({ lutTexture, tileSetTexture } as data) ->
                         Maybe.map3
-                            (\lutTexture tileSetTexture acc ->
-                                TileLayer1 { data | lutTexture = lutTexture, tileSetTexture = tileSetTexture } :: acc
+                            (\lutTexture_ tileSetTexture_ acc ->
+                                TileLayer1 { data | lutTexture = lutTexture_, tileSetTexture = tileSetTexture_ } :: acc
                             )
                             (TextureLoader.get lutTexture textures)
                             (TextureLoader.get tileSetTexture textures)
@@ -250,7 +249,7 @@ spawn layer world =
 spawnOne : List (Component WebGL.Texture) -> World -> World
 spawnOne entity world =
     let
-        ( entityId, newWorld ) =
+        ( _, newWorld ) =
             List.foldl
                 (\comp acc ->
                     case comp of
@@ -274,21 +273,21 @@ spawnOne entity world =
 
                         Component.Camera (Camera.Follow data) ->
                             let
-                                ( entityId, world_ ) =
+                                ( entityId_, world_ ) =
                                     acc
 
                                 camera =
                                     world_.camera
 
-                                newWorld =
-                                    entityId
+                                newWorld_ =
+                                    entityId_
                                         |> Maybe.map
                                             (\id ->
                                                 { world_ | camera = { camera | behavior = Camera.Follow { data | id = id } } }
                                             )
                                         |> Maybe.withDefault world_
                             in
-                                ( entityId, newWorld )
+                                ( entityId_, newWorld_ )
 
                         Component.Camera data ->
                             let
@@ -311,15 +310,20 @@ componentTransform func data =
 
 
 traverse : (a -> Maybe b) -> List a -> Maybe (List b)
-traverse f =
+traverse f list =
     -- Maybe.Extra.traverse
     let
-        step e acc =
-            case f e of
-                Nothing ->
-                    Nothing
+        inner rest acc =
+            case rest of
+                [] ->
+                    Just <| List.reverse acc
 
-                Just x ->
-                    Maybe.map ((::) x) acc
+                x :: xs ->
+                    case f x of
+                        Nothing ->
+                            Nothing
+
+                        Just b ->
+                            inner xs (b :: acc)
     in
-        List.foldr step (Just [])
+        inner list []

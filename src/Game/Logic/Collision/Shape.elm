@@ -72,7 +72,7 @@ setPosition p ({ shape } as shaped) =
         AABB (AabbData data) ->
             { shaped | shape = createAABB { data | p = p } }
 
-        Point data ->
+        Point _ ->
             { shaped | shape = Point { p = p } }
 
         Circle data ->

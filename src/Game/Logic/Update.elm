@@ -12,8 +12,8 @@ defaultFPS =
 
 
 update : Slime.Engine.Message Message -> World -> ( World, Cmd (Slime.Engine.Message Message) )
-update msg world =
-    case msg of
+update msg_ world =
+    case msg_ of
         Slime.Engine.Tick delta ->
             let
                 ( worldWithUpdatedRuntime, countOfFrames ) =
@@ -80,6 +80,11 @@ update msg world =
                 ( updatedWorld
                 , Cmd.map Slime.Engine.Msg commands
                 )
+
+        Slime.Engine.Noop ->
+            ( world
+            , Cmd.none
+            )
 
 
 resetRuntime : Float -> Int -> Float

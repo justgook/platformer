@@ -11,7 +11,7 @@ module Game.Logic.System
 
 import Game.Logic.Camera.Model as Camera
 import Game.Logic.Collision.Map as Collision
-import Game.Logic.Collision.Shape as Collision exposing (Shape)
+import Game.Logic.Collision.Shape as Collision
 import Game.Logic.Component as Component
 import Game.Logic.Message as Message exposing (Message)
 import Game.Logic.World as World exposing (World)
@@ -24,7 +24,7 @@ import Task
 camera : World -> World
 camera world =
     let
-        camera =
+        result =
             case world.camera.behavior of
                 Camera.Follow { id } ->
                     Slime.getComponent world.collisions id
@@ -34,14 +34,14 @@ camera world =
                 data ->
                     let
                         _ =
-                            Debug.log "System for camera not implemented"
+                            Debug.log "System for camera not implemented" data
                     in
                         world.camera
 
         -- , viewportOffset = vec2 ((toFloat world.frame / 60) * 75) (cos (toFloat world.frame / 60) * 5)
         -- , viewportOffset = vec2 (sin (toFloat world.frame / 60) * 16) (cos (toFloat world.frame / 60) * 16)
     in
-        { world | camera = camera }
+        { world | camera = result }
 
 
 gravity : World -> World
@@ -82,7 +82,7 @@ rightLeft world =
     Slime.stepEntities (Slime.entities2 World.velocities World.inputs)
         (\({ a, b } as ent) ->
             let
-                ( x, y ) =
+                ( _, y ) =
                     Vec2.toTuple a
 
                 --TODO make it based on props of character
@@ -232,6 +232,9 @@ inputListener income world =
     case income of
         Message.Input msg ->
             let
+                _ =
+                    Debug.log "DELETE ME" msg
+
                 updatedWorld =
                     { world | pressedKeys = Keyboard.Extra.update msg world.pressedKeys }
 
@@ -266,32 +269,26 @@ send msg =
         |> Task.perform identity
 
 
-maxMove : Vec2 -> Vec2 -> Vec2
-maxMove a b =
-    let
-        ( ( x1, y1 ), ( x2, y2 ) ) =
-            ( Vec2.toTuple a, Vec2.toTuple b )
-    in
-        vec2 (absMax x1 x2) (absMax y1 y2)
 
-
-absMax : Float -> Float -> Float
-absMax x y =
-    if abs x > abs y then
-        x
-    else
-        y
-
-
-absMaxVec2 : Vec2 -> Vec2 -> Vec2
-absMaxVec2 a b =
-    if Vec2.length a > Vec2.length b then
-        a
-    else
-        b
-
-
-
+-- maxMove : Vec2 -> Vec2 -> Vec2
+-- maxMove a b =
+--     let
+--         ( ( x1, y1 ), ( x2, y2 ) ) =
+--             ( Vec2.toTuple a, Vec2.toTuple b )
+--     in
+--         vec2 (absMax x1 x2) (absMax y1 y2)
+-- absMax : Float -> Float -> Float
+-- absMax x y =
+--     if abs x > abs y then
+--         x
+--     else
+--         y
+-- absMaxVec2 : Vec2 -> Vec2 -> Vec2
+-- absMaxVec2 a b =
+--     if Vec2.length a > Vec2.length b then
+--         a
+--     else
+--         b
 -- updageCollisions : Collision.WithShape a -> Maybe Vec2 -> Collision.WithShape a
 -- updageCollisions newShape vec =
 --     Maybe.map (flip Collision.updatePosition newShape) vec

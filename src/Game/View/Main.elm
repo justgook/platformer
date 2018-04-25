@@ -1,10 +1,7 @@
 module Game.View.Main exposing (fragmentShader, mesh, vertexShader)
 
 import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
-import WebGL exposing (Mesh, Shader, Texture)
-import WebGL.Settings as WebGL
-import WebGL.Settings.Blend as Blend
+import WebGL exposing (Mesh, Shader)
 
 
 type alias Vertex =

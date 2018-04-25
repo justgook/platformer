@@ -1,6 +1,6 @@
 module Game.View exposing (view)
 
-import Array.Hamt as Array exposing (Array)
+import Array.Hamt as Array
 import Game.Logic.Collision.Map as Collision
 import Game.Logic.Collision.Shape as Collision exposing (Shape(..), aabbData)
 import Game.Logic.World as World exposing (World)
@@ -11,7 +11,7 @@ import Game.View.Object.Animated as AnimatedObject
 import Game.View.TileLayer as TileLayer
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Slime
-import WebGL exposing (Mesh, Shader, Texture)
+import WebGL exposing (Texture)
 
 
 -- Add linght raycasting
@@ -41,7 +41,7 @@ renderGame { widthRatio, pixelsPerUnit, viewportOffset, world } =
                     let
                         stepObjects { a } acc_ =
                             case a.shape of
-                                AABB data_ ->
+                                AABB _ ->
                                     let
                                         a_ =
                                             aabbData a
@@ -176,7 +176,7 @@ debugCollisionView baseData collisionMap =
 debugCollisionViewItem : { a | pixelsPerUnit : Float, viewportOffset : Vec2, widthRatio : Float } -> Collision.WithShape b -> List WebGL.Entity
 debugCollisionViewItem { widthRatio, viewportOffset, pixelsPerUnit } obj =
     case obj.shape of
-        AABB data_ ->
+        AABB _ ->
             let
                 a_ =
                     aabbData obj

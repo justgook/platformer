@@ -3,12 +3,12 @@ module Game.PostDecoder exposing (DecodedData, decode)
 import Dict
 import Game.Logic.Collision.Map as Collision
 import Game.Logic.World as World exposing (WorldProperties)
-import Game.Model as Model exposing (LoaderData(..), Model)
+import Game.Model as Model exposing (LoaderData(..))
 import Game.PostDecoder.ImageLayer as ImageLayerParser
 import Game.PostDecoder.ObjectLayer as ObjectLayerParser
 import Game.PostDecoder.TileLayer as TileLayerParser
 import Json.Decode
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Math.Vector2 exposing (vec2)
 import Tiled.Decode as Tiled
 
 
@@ -68,10 +68,10 @@ decode urlPrefix =
                                                                 Tiled.ObjectPoint data ->
                                                                     Tiled.ObjectPoint { data | y = levelHeight - data.y }
 
-                                                                Tiled.ObjectPolygon data ->
+                                                                Tiled.ObjectPolygon _ ->
                                                                     object
 
-                                                                Tiled.ObjectPolyLine data ->
+                                                                Tiled.ObjectPolyLine _ ->
                                                                     object
 
                                                                 Tiled.ObjectEllipse data ->
@@ -110,7 +110,7 @@ decode urlPrefix =
 prepareRenderData : Tiled.Level -> DecodedData
 prepareRenderData level =
     let
-        ( layersData, collisionMap, commands ) =
+        ( layersData, collisionMap_, commands ) =
             level.layers
                 |> List.foldr
                     (\layer ( acc, collisionMap, cmds ) ->
@@ -143,7 +143,7 @@ prepareRenderData level =
         { layersData = layersData
         , commands = Dict.toList commands
         , properties = parseWorldProperties level.properties
-        , collisionMap = collisionMap
+        , collisionMap = collisionMap_
         }
 
 

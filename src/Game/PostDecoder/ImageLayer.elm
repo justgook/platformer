@@ -1,9 +1,9 @@
 module Game.PostDecoder.ImageLayer exposing (parse)
 
 import Dict
-import Game.Model as Model exposing (Model)
-import Game.PostDecoder.Helpers exposing (getFloatProp, hexColor2Vec3, repeat, scrollRatio)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Game.Model as Model
+import Game.PostDecoder.Helpers exposing (hexColor2Vec3, repeat, scrollRatio)
+import Math.Vector3 exposing (vec3)
 import Tiled.Decode as Tiled
 
 

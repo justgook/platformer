@@ -15,11 +15,10 @@ module Game.Logic.World
 
 import Game.Logic.Camera.Model as Camera
 import Game.Logic.Collision.Map as Collision
-import Game.Logic.Collision.Shape exposing (Shape)
 import Game.Logic.Component as Component
 import Keyboard.Extra exposing (Key)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Random.Pcg as Random exposing (Generator)
+import Math.Vector2 exposing (Vec2)
+import Random.Pcg as Random
 import Slime
 import Time exposing (Time)
 import WebGL

@@ -1,6 +1,6 @@
 module Game.Logic.Message exposing (Exception(..), Message(..))
 
-import Game.Logic.World as World exposing (World)
+import Game.Logic.World exposing (World)
 import Keyboard.Extra
 
 

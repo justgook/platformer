@@ -6,7 +6,7 @@ import Slime.Engine
 
 
 subscriptions_ : a -> Sub Message
-subscriptions_ model =
+subscriptions_ _ =
     Sub.map Input Keyboard.Extra.subscriptions
 
 
