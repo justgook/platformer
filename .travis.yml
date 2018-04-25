@@ -1,13 +1,15 @@
 sudo: false
 
 language: node_js
-
+node_js:
+ - "node"
 cache:
   yarn: true
   directories:
     # Cache build artifacts to avoid constantly rebuilding. See:
     # https://8thlight.com/blog/rob-looby/2016/04/07/caching-elm-builds-on-travis-ci.html
     - elm-stuff
+    - tests/elm-stuff
     - node_modules
     # Install and cache sysconfcpus
     - sysconfcpus
@@ -47,11 +49,10 @@ before_install:
 install:
   - nvm install $TARGET_NODE_VERSION
   - nvm use $TARGET_NODE_VERSION
-  - curl -o- -L https://yarnpkg.com/install.sh | bash
   - node --version
   - npm --version
-  - yarn config set cache-folder ./yarn-cache
   - yarn --version
+  - yarn config set cache-folder ./yarn-cache
   - yarn global add elm@$ELM_VERSION
   - yarn
   - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
