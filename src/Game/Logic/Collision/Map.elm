@@ -8,14 +8,21 @@ module Game.Logic.Collision.Map
         , intersection
         , stepSize
         , table
+        , Collider
+        , updatePosition
+        , position
         )
 
 import Array.Hamt as Array exposing (Array)
-import Game.Logic.Collision.Shape as Shape exposing (WithShape)
+import Game.Logic.Collision.Shape as Shape
 import Math.Vector2 as Vec2 exposing (Vec2)
 
 
 -- http://www.metanetsoftware.com/2016/n-tutorial-b-broad-phase-collision
+
+
+type alias Collider a =
+    { a | boundingBox : Shape.AabbData }
 
 
 type Map a
@@ -30,7 +37,29 @@ type alias Table a =
 
 
 type alias Tile a =
-    Maybe (WithShape a)
+    Maybe (Collider a)
+
+
+updatePosition : Vec2 -> Collider a -> Collider a
+updatePosition p_ ({ boundingBox } as collider) =
+    let
+        (Shape.AabbData ({ p } as data)) =
+            boundingBox
+    in
+        { collider | boundingBox = Shape.AabbData { data | p = Vec2.add p p_ } }
+
+
+position : Collider a -> Vec2
+position ({ boundingBox } as collider) =
+    let
+        (Shape.AabbData { p }) =
+            boundingBox
+    in
+        p
+
+
+
+-- { shaped | shape = createAABB { data | p = Vec2.add data.p p } }
 
 
 table : Map a -> Table a
@@ -70,11 +99,11 @@ empty size =
         }
 
 
-insert : WithShape a -> Map a -> Map a
-insert shape (Map ({ cellSize, table } as data)) =
+insert : Collider a -> Map a -> Map a
+insert ({ boundingBox } as shape) (Map ({ cellSize, table } as data)) =
     let
-        p =
-            Shape.position shape
+        (Shape.AabbData { p }) =
+            boundingBox
 
         ( xCell, yCell ) =
             getCell p cellSize
@@ -108,11 +137,11 @@ insert shape (Map ({ cellSize, table } as data)) =
                 Map { data | table = newTable2 }
 
 
-intersection : WithShape a -> Map b -> List (WithShape b)
-intersection shape ((Map { cellSize }) as collisionMap) =
+intersection : Collider a -> Map b -> List (Collider b)
+intersection ({ boundingBox } as shape) ((Map { cellSize }) as collisionMap) =
     let
-        { p, xw, yw } =
-            Shape.aabbData shape
+        (Shape.AabbData { p, xw, yw }) =
+            boundingBox
 
         sum =
             Vec2.add xw yw

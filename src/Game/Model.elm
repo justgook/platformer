@@ -10,11 +10,6 @@ module Game.Model
         , updateWidthRatio
         )
 
--- import RemoteData exposing (WebData)
--- import Util.Level.Special as Level exposing (LevelProps, SpecialLayer)
--- import Tiled.Decode exposing (Layer, LevelWith, Tileset)
--- import Game.Logic.Collision.Map exposing (Map)
-
 import Game.Logic.Camera.Model as Camera
 import Game.Logic.Component as Component exposing (Component)
 import Game.Logic.World as World exposing (World, WorldProperties)
@@ -23,6 +18,7 @@ import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import Slime exposing ((&=>))
 import WebGL
+import Dict exposing (Dict)
 
 
 type alias Model =
@@ -153,14 +149,14 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                                     |> componentTransform
                                         (\comp ->
                                             let
-                                                animationData data texture lut =
+                                                animationData data =
                                                     Maybe.map2 (\t l -> { data | texture = t, lut = l })
-                                                        (TextureLoader.get texture textures)
-                                                        (TextureLoader.get lut textures)
+                                                        (TextureLoader.get data.texture textures)
+                                                        (TextureLoader.get data.lut textures)
                                             in
                                                 case comp of
-                                                    Component.Animation ({ texture, lut } as data) ->
-                                                        animationData data texture lut
+                                                    Component.Animation data ->
+                                                        animationData data
                                                             |> Maybe.map Component.Animation
 
                                                     -- `andMap = map2 (|>)` and do
@@ -169,13 +165,16 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
                                                     --   |> andMap maybe3
                                                     --   [..]
                                                     --   |> andMap maybe6```
-                                                    Component.CharacterAnimation data ->
-                                                        Maybe.map3
-                                                            (\l r s -> { left = l, right = r, stand = s })
-                                                            (animationData data.left data.left.texture data.left.lut)
-                                                            (animationData data.right data.right.texture data.right.lut)
-                                                            (animationData data.stand data.stand.texture data.stand.lut)
-                                                            |> Maybe.map Component.CharacterAnimation
+                                                    Component.AnimationAtlas data ->
+                                                        data
+                                                            |> Dict.toList
+                                                            |> List.map
+                                                                (\( key, value ) ->
+                                                                    animationData value
+                                                                        |> Maybe.map (\v -> ( key, v ))
+                                                                )
+                                                            |> traverse identity
+                                                            |> Maybe.map (Dict.fromList >> Component.AnimationAtlas)
 
                                                     Component.Sprite ({ texture } as data) ->
                                                         Maybe.map
@@ -193,6 +192,9 @@ loadingToSuccess ({ textures, properties, collisionMap } as income) =
 
                                                     Component.Camera data ->
                                                         Just (Component.Camera data)
+
+                                                    Component.Jump data ->
+                                                        Just (Component.Jump data)
                                         )
                         in
                             Maybe.map2
@@ -256,8 +258,8 @@ spawnOne entity world =
                         Component.Animation data ->
                             acc &=> ( World.animations, data )
 
-                        Component.CharacterAnimation data ->
-                            acc &=> ( World.characterAnimations, data )
+                        Component.AnimationAtlas data ->
+                            acc &=> ( World.animationAtlas, data )
 
                         Component.Sprite data ->
                             acc &=> ( World.sprites, data )
@@ -270,6 +272,9 @@ spawnOne entity world =
 
                         Component.Velocity data ->
                             acc &=> ( World.velocities, data )
+
+                        Component.Jump data ->
+                            acc &=> ( World.jumps, data )
 
                         Component.Camera (Camera.Follow data) ->
                             let

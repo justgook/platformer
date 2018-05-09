@@ -1,13 +1,13 @@
 module Game.PostDecoder.ImageLayer exposing (parse)
 
-import Dict
+import Dict exposing (Dict)
 import Game.Model as Model
 import Game.PostDecoder.Helpers exposing (hexColor2Vec3, repeat, scrollRatio)
 import Math.Vector3 exposing (vec3)
 import Tiled.Decode as Tiled
 
 
-parse : Tiled.ImageLayerData -> ( Model.Data String, Dict.Dict String String )
+parse : Tiled.ImageLayerData -> ( Model.Data String, Dict String String )
 parse data =
     ( Model.ImageLayer
         { x = data.x

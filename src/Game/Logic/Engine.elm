@@ -13,24 +13,21 @@ engine =
         deletor =
             Slime.deleteEntity World.sprites
                 &-> World.animations
-                &-> World.characterAnimations
+                &-> World.animationAtlas
                 &-> World.collisions
                 &-> World.inputs
 
         systems =
             [ Slime.Engine.untimedSystem System.gravity
             , Slime.Engine.untimedSystem System.collision
-            , Slime.Engine.untimedSystem System.rightLeft
             , Slime.Engine.untimedSystem System.jump
-            , Slime.Engine.untimedSystem System.animationsChanger
+            , Slime.Engine.untimedSystem System.rightLeft
+            , Slime.Engine.systemWith { timing = Slime.Engine.untimed, options = Slime.Engine.cmds } System.animationsChanger
             , Slime.Engine.untimedSystem System.camera
             ]
 
-        --
-        -- systemWith { timing = untimed, options = deletes } scoreBalls
         listeners =
-            [ -- Slime.Engine.listener System.inputListener
-              Slime.Engine.listenerWith { options = Slime.Engine.cmds } System.inputListener
+            [ Slime.Engine.listenerWith { options = Slime.Engine.cmds } System.inputListener
             ]
     in
         Slime.Engine.initEngine deletor systems listeners

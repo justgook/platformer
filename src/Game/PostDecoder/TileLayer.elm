@@ -1,7 +1,9 @@
 module Game.PostDecoder.TileLayer exposing (parse)
 
-import Dict
+import Dict exposing (Dict)
 import Game.Logic.Collision.Map as Collision
+import Game.Logic.Collision.Shape as Collision
+import Game.Logic.Component as Component
 import Game.Logic.World as World
 import Game.Model as Model exposing (LoaderData(..))
 import Game.PostDecoder.Helpers
@@ -26,22 +28,24 @@ parse { tilesets, tileheight, tilewidth } collisionMap data =
                 start =
                     vec2 (toFloat tilewidth / 2) (toFloat tileheight / 2)
 
-                relative2absolute index =
+                relative2absolute index { p, xw, yw } =
                     let
-                        x =
-                            (index % data.width)
-                                |> (*) tilewidth
-                                |> toFloat
-
                         y =
                             (toFloat index / toFloat data.width)
                                 |> floor
                                 |> (-) (data.height - 1)
                                 |> (*) tileheight
                                 |> toFloat
+                                |> (+) (toFloat tileheight - Vec2.getY p - Vec2.getY yw)
+
+                        x =
+                            (index % data.width)
+                                |> (*) tilewidth
+                                |> toFloat
+                                |> (+) (Vec2.getX xw)
+                                |> (+) (Vec2.getX p)
                     in
-                        Vec2.scale 0.5
-                            >> Vec2.sub (Vec2.add start (vec2 x y))
+                        vec2 x y
 
                 newCollisionMap =
                     data.data
@@ -56,7 +60,11 @@ parse { tilesets, tileheight, tilewidth } collisionMap data =
                                     else
                                         case shapeById (relative2absolute i) id tileset.tiles of
                                             Just item ->
-                                                Collision.insert { shape = item } acc_
+                                                Collision.insert
+                                                    { boundingBox = Collision.aabbData { shape = item } |> Collision.createAABBData
+                                                    , effect = Component.SolidEffect
+                                                    }
+                                                    acc_
 
                                             Nothing ->
                                                 acc_

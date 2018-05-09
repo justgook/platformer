@@ -12,4 +12,5 @@ type Exception
 
 type Message
     = Input Keyboard.Extra.Msg
+    | Click { x : Int, y : Int, height : Int }
     | Exception Exception

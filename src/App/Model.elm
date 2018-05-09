@@ -1,16 +1,16 @@
-module App.Model exposing (Model, init)
+module App.Model exposing (Model, InputType(..), init)
 
 import App.Message as Message exposing (Message)
 import Game.Main as Game
 import Game.Model as Game
-import Html
 import Json.Decode as Json
 import Task
 import Window
 import Random.Pcg as Random exposing (Seed)
+import VirtualDom
 
 
-type Input
+type InputType
     = Keyboard
     | GamePad
     | Touch
@@ -19,9 +19,10 @@ type Input
 type alias Model =
     { device :
         { pixelRatio : Float
-        , inputType : Input
+        , inputType : InputType
         }
-    , style : List (Html.Attribute Message)
+    , style : List (VirtualDom.Property Message)
+    , height : Int
     , game : Game.Model
     , seed : Seed
     }
@@ -65,13 +66,14 @@ init flags =
         defaultModel pixelRatio input seed ! [ requestWindowSize, Cmd.map Message.Game (Game.load levelUrl) ]
 
 
-defaultModel : Float -> Input -> Seed -> Model
+defaultModel : Float -> InputType -> Seed -> Model
 defaultModel pixelRatio input seed =
     { device =
         { pixelRatio = pixelRatio
         , inputType = input
         }
     , style = []
+    , height = 0
     , game = Game.init
     , seed = seed
     }

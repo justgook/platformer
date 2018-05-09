@@ -25,6 +25,7 @@ render uniforms =
 vertexShader : Shader { a | position : Vec2 } { b | height : Float, pixelsPerUnit : Float, scrollRatio : Vec2, viewportOffset : Vec2, width : Float, widthRatio : Float, x : Float, y : Float } { vcoord : Vec2 }
 vertexShader =
     [glsl|
+        precision mediump float;
         attribute vec2 position;
         uniform float widthRatio;
         uniform float pixelsPerUnit;

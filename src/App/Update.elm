@@ -4,7 +4,7 @@ import App.Message as Message exposing (Message)
 import App.Model exposing (Model)
 import Game.Model as Game
 import Game.Update as Game
-import Html.Attributes exposing (height, style, width)
+import VirtualDom exposing (style, attribute)
 import Window exposing (Size)
 
 
@@ -21,7 +21,7 @@ update msg model =
                 result =
                     updateCanvas size model
             in
-                ( { result | game = Game.updateWidthRatio size result.game }, Cmd.none )
+                ( { result | height = size.height, game = Game.updateWidthRatio size result.game }, Cmd.none )
 
 
 updateCanvas : Size -> Model -> Model
@@ -37,3 +37,13 @@ updateCanvas size model =
                 , style [ ( "display", "block" ), ( "width", toString size.width ++ "px" ), ( "height", toString size.height ++ "px" ) ]
                 ]
         }
+
+
+width : Int -> VirtualDom.Property msg
+width value =
+    attribute "width" (toString value)
+
+
+height : Int -> VirtualDom.Property msg
+height value =
+    attribute "height" (toString value)

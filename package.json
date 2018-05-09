@@ -15,21 +15,21 @@
   "private": true,
   "devDependencies": {
     "audiosprite": "0.7.1",
-    "rollup": "0.58.1",
-    "rollup-plugin-commonjs": "9.1.0",
+    "rollup": "0.58.2",
+    "rollup-plugin-commonjs": "9.1.3",
     "rollup-plugin-elm": "1.0.4",
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-uglify": "3.0.0"
   },
   "dependencies": {
-    "howler": "2.0.9"
+    "howler": "2.0.12"
   },
   "optionalDependencies": {
-    "colors": "1.2.1",
+    "colors": "1.2.4",
     "elm-analyse": "0.14.2",
     "elm-format": "0.6.1-alpha",
     "elm-test": "0.18.12",
-    "fs-extra": "5.0.0",
+    "fs-extra": "6.0.0",
     "replace-in-file": "3.4.0"
   }
 }

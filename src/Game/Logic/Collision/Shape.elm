@@ -1,10 +1,10 @@
 module Game.Logic.Collision.Shape
     exposing
-        ( AabbData
+        ( AabbData(..)
+        , createAABBData
         , Shape(..)
         , WithShape
         , aabbData
-          -- , boolean
         , createAABB
         , position
         , response
@@ -34,6 +34,11 @@ type AabbData
         , yw : Vec2
 
         -- Precalculated data
+        -- , cache_ :
+        --     { sum_ : Vec2
+        --     , projX_ : Vec2
+        --     , projY_ : Vec2
+        --     }
         , sum_ : Vec2
         , projX_ : Vec2
         , projY_ : Vec2
@@ -93,7 +98,12 @@ updatePosition p ({ shape } as shaped) =
 
 
 createAABB : { a | p : Vec2, xw : Vec2, yw : Vec2 } -> Shape
-createAABB { p, xw, yw } =
+createAABB data =
+    createAABBData data |> AABB
+
+
+createAABBData : { a | p : Vec2, xw : Vec2, yw : Vec2 } -> AabbData
+createAABBData { p, xw, yw } =
     let
         sum_ =
             Vec2.add xw yw
@@ -106,7 +116,6 @@ createAABB { p, xw, yw } =
             , projX_ = projection sum_ (vec2 1 0)
             , projY_ = projection sum_ (vec2 0 1)
             }
-            |> AABB
 
 
 

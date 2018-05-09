@@ -11,7 +11,7 @@ module Game.Logic.System
 
 import Game.Logic.Camera.Model as Camera
 import Game.Logic.Collision.Map as Collision
-import Game.Logic.Collision.Shape as Collision
+import Game.Logic.Collision.Shape as Shape
 import Game.Logic.Component as Component
 import Game.Logic.Message as Message exposing (Message)
 import Game.Logic.World as World exposing (World)
@@ -19,6 +19,8 @@ import Keyboard.Extra
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Slime
 import Task
+import Dict
+import App.Port as Port
 
 
 camera : World -> World
@@ -64,11 +66,15 @@ jump world =
 
                 --TODO make it based on props of character
                 jumpImpulse =
-                    15
+                    8.5
 
                 newVelY =
                     if collision.y > 0 && b.y > 0 && y == 0 then
-                        jumpImpulse
+                        let
+                            _ =
+                                Debug.log "Jump" "Jump"
+                        in
+                            jumpImpulse
                     else
                         y
             in
@@ -149,9 +155,6 @@ response3 vel shape collisionMap =
             shape
         else
             let
-                _ =
-                    Collision.cellSize collisionMap
-
                 setpSize =
                     Collision.stepSize collisionMap
 
@@ -206,11 +209,12 @@ stepFunc3 collisionMap vec_ shape_ =
         { result | response = newResponse }
 
 
-collisionFolder3 : Collision.WithShape a -> Component.CollisionData -> Component.CollisionData
+collisionFolder3 : Collision.Collider a -> Component.CollisionData -> Component.CollisionData
 collisionFolder3 tile acc =
     let
+        --TODO Extract shapes here!
         result =
-            Collision.response tile acc
+            Shape.response { shape = Shape.AABB tile.boundingBox } { shape = Shape.AABB acc.boundingBox }
                 |> Maybe.map (flip Collision.updatePosition acc)
                 |> Maybe.withDefault acc
     in
@@ -232,9 +236,6 @@ inputListener income world =
     case income of
         Message.Input msg ->
             let
-                _ =
-                    Debug.log "DELETE ME" msg
-
                 updatedWorld =
                     { world | pressedKeys = Keyboard.Extra.update msg world.pressedKeys }
 
@@ -248,7 +249,10 @@ inputListener income world =
                 --TODO find better solution
                 cmd =
                     if pauseGame world.pressedKeys updatedWorld.pressedKeys Keyboard.Extra.Escape then
-                        Message.Exception Message.Pause |> send
+                        Message.Exception Message.Pause
+                            |> send
+                            |> flip (::) [ Port.play "test" ]
+                            |> Cmd.batch
                     else
                         Cmd.none
             in
@@ -293,26 +297,44 @@ send msg =
 -- updageCollisions newShape vec =
 --     Maybe.map (flip Collision.updatePosition newShape) vec
 --         |> Maybe.withDefault newShape
+-- animationsChanger : World -> World
+-- animationsChanger : World -> World
 
 
-animationsChanger : World -> World
+animationsChanger : World -> ( World, Cmd msg )
 animationsChanger world =
-    Slime.stepEntities (Slime.entities3 World.animations World.characterAnimations World.inputs)
-        (\({ a, b, c } as reuslt) ->
-            let
-                newAnim =
-                    if c.x > 0 then
-                        b.right
-                    else if c.x < 0 then
-                        b.left
-                    else
-                        b.stand
+    let
+        ( result, cmds_ ) =
+            Slime.stepEntitiesWith (Slime.entities3 World.animations World.animationAtlas World.velocities)
+                (\( { a, b, c } as reuslt, cmds ) ->
+                    let
+                        atlas =
+                            b
 
-                -- getComponent : ComponentSet a -> EntityID -> Maybe a
-            in
-                if ( newAnim.lut, newAnim.mirror ) /= ( a.lut, a.mirror ) then
-                    { reuslt | a = { newAnim | started = world.frame } }
-                else
-                    reuslt
-        )
-        world
+                        velocity =
+                            c |> Vec2.toRecord
+
+                        ( newAnim, newCmd ) =
+                            (if velocity.y > 0 && (velocity.x > 0 || String.right 1 a.name == "3") then
+                                ( Dict.get "jump3" b, [ Port.play "jump", Port.stop "steps" ] )
+                             else if velocity.y > 0 && (velocity.x < 0 || String.right 1 a.name == "7") then
+                                ( Dict.get "jump7" b, [ Port.play "jump", Port.stop "steps" ] )
+                             else if velocity.x > 0 && velocity.y == 0 then
+                                ( Dict.get "walk3" b, [ Port.play "steps" ] )
+                             else if velocity.x < 0 then
+                                ( Dict.get "walk7" b, [ Port.play "steps" ] )
+                             else if String.right 1 a.name == "7" then
+                                ( Dict.get "idle7" b, [ Port.stop "steps" ] )
+                             else
+                                ( Dict.get "idle3" b, [ Port.stop "steps" ] )
+                            )
+                                |> Tuple.mapFirst (Maybe.withDefault a)
+                    in
+                        if newAnim.name /= a.name then
+                            ( { reuslt | a = { newAnim | started = world.frame } }, newCmd ++ cmds )
+                        else
+                            ( reuslt, cmds )
+                )
+                ( world, [] )
+    in
+        ( result, Cmd.batch cmds_ )

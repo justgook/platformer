@@ -5,12 +5,13 @@ module Game.Logic.World
         , World
         , WorldProperties
         , animations
-        , characterAnimations
+        , animationAtlas
         , collisions
         , init
         , inputs
         , sprites
         , velocities
+        , jumps
         )
 
 import Game.Logic.Camera.Model as Camera
@@ -25,20 +26,22 @@ import WebGL
 
 
 type alias CollisionMap =
-    Collision.Map {}
+    Collision.Map { effect : Component.CollisionEffect }
 
 
 type alias World =
     Slime.EntitySet
         { animations : Slime.ComponentSet (Component.AnimationData WebGL.Texture)
-        , characterAnimations : Slime.ComponentSet (Component.CharacterAnimationData WebGL.Texture)
+        , animationAtlas : Slime.ComponentSet (Component.AnimationAtlasData WebGL.Texture)
         , collisions : Slime.ComponentSet Component.CollisionData
         , sprites : Slime.ComponentSet (Component.SpriteData WebGL.Texture)
         , velocities : Slime.ComponentSet Component.VelocityData
+        , jumps : Slime.ComponentSet Component.JumpData
         , pressedKeys : List Key
         , runtime_ : Time
         , frame : Int
         , inputs : Slime.ComponentSet Component.InputData
+        , inputs2 : { x : Int, y : Int }
         , gravity : Vec2
         , camera : Camera.Model
         , collisionMap : CollisionMap
@@ -55,11 +58,13 @@ init props collisionMap =
     in
         { idSource = Slime.initIdSource
         , animations = Slime.initComponents
-        , characterAnimations = Slime.initComponents
+        , animationAtlas = Slime.initComponents
         , collisions = Slime.initComponents
         , sprites = Slime.initComponents
         , inputs = Slime.initComponents
+        , inputs2 = { x = 0, y = 0 }
         , velocities = Slime.initComponents
+        , jumps = Slime.initComponents
         , runtime_ = 0
         , frame = 0
         , pressedKeys = []
@@ -67,7 +72,7 @@ init props collisionMap =
         , camera = Camera.init props
         , collisionMap = collisionMap
         , seed0 = Random.initialSeed 227852860
-        , flow = SlowMotion { frames = 60, fps = 20 }
+        , flow = Pause --Running -- SlowMotion { frames = 60, fps = 20 }
         }
 
 
@@ -80,6 +85,13 @@ type GameFlow
 type alias WorldProperties =
     { gravity : Vec2
     , pixelsPerUnit : Float
+    }
+
+
+jumps : Slime.ComponentSpec Component.JumpData World
+jumps =
+    { getter = .jumps
+    , setter = \comps world -> { world | jumps = comps }
     }
 
 
@@ -97,10 +109,10 @@ animations =
     }
 
 
-characterAnimations : Slime.ComponentSpec (Component.CharacterAnimationData WebGL.Texture) World
-characterAnimations =
-    { getter = .characterAnimations
-    , setter = \comps world -> { world | characterAnimations = comps }
+animationAtlas : Slime.ComponentSpec (Component.AnimationAtlasData WebGL.Texture) World
+animationAtlas =
+    { getter = .animationAtlas
+    , setter = \comps world -> { world | animationAtlas = comps }
     }
 
 

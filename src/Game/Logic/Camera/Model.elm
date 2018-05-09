@@ -44,6 +44,22 @@ setOffset offset camera =
     { camera | offset = offset }
 
 
+notOverGround : Vec2 -> Vec2
+notOverGround offset =
+    if Vec2.getY offset < 0 then
+        Vec2.setY 0 offset
+    else
+        offset
+
+
+notOverStart : Vec2 -> Vec2
+notOverStart offset =
+    if Vec2.getX offset < 0 then
+        Vec2.setX 0 offset
+    else
+        offset
+
+
 setCenter : Vec2 -> Model -> Model
 setCenter center ({ widthRatio, pixelsPerUnit, offset } as camera) =
     let
@@ -51,7 +67,10 @@ setCenter center ({ widthRatio, pixelsPerUnit, offset } as camera) =
             pixelsPerUnit / 2
 
         newOffset =
-            vec2 (widthRatio * half) half |> Vec2.sub center
+            vec2 (widthRatio * half) half
+                |> Vec2.sub center
+                |> notOverGround
+                |> notOverStart
 
         lerp =
             -- TODO Change to something more smart

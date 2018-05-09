@@ -1,6 +1,6 @@
 module Game.PostDecoder exposing (DecodedData, decode)
 
-import Dict
+import Dict exposing (Dict)
 import Game.Logic.Collision.Map as Collision
 import Game.Logic.World as World exposing (WorldProperties)
 import Game.Model as Model exposing (LoaderData(..))
@@ -149,7 +149,7 @@ prepareRenderData level =
 
 parseWorldProperties : Tiled.CustomProperties -> WorldProperties
 parseWorldProperties props =
-    { gravity = vec2 0 (getFloatProp "gravity" 1 props)
+    { gravity = vec2 0 (getFloatProp "gravity" -1 props)
     , pixelsPerUnit = getFloatProp "pixelsPerUnit" 120 props
     }
 

@@ -8,17 +8,18 @@ module Game.PostDecoder.Helpers
         , scrollRatio
         , shapeById
         , tileSetInfo
+        , findTileSetByName
         )
 
-import Dict
+import Dict exposing (Dict)
 import Game.Logic.Collision.Shape as Shape exposing (Shape)
 import Game.Model exposing (Repeat(..))
-import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Decode as Tiled
 
 
-shapeById : (Vec2 -> Vec2) -> Int -> Dict.Dict Int { b | objectgroup : Maybe { a | objects : List Tiled.Object } } -> Maybe Shape
+shapeById : ({ p : Vec2, xw : Vec2, yw : Vec2 } -> Vec2) -> Int -> Dict.Dict Int { b | objectgroup : Maybe { a | objects : List Tiled.Object } } -> Maybe Shape
 shapeById relative2absolute id tiles =
     Dict.get id tiles
         |> Maybe.andThen
@@ -27,13 +28,25 @@ shapeById relative2absolute id tiles =
                     (\a ->
                         case a.objects of
                             (Tiled.ObjectRectangle data) :: [] ->
-                                Just
-                                    (Shape.createAABB
-                                        { p = relative2absolute (vec2 data.x data.y)
-                                        , xw = vec2 (data.width / 2) 0
-                                        , yw = vec2 0 (data.height / 2)
+                                let
+                                    xw =
+                                        vec2 (data.width / 2) 0
+
+                                    yw =
+                                        vec2 0 (data.height / 2)
+
+                                    result =
+                                        { p =
+                                            relative2absolute
+                                                { p = vec2 data.x data.y
+                                                , xw = xw
+                                                , yw = yw
+                                                }
+                                        , xw = xw
+                                        , yw = yw
                                         }
-                                    )
+                                in
+                                    Just (Shape.createAABB result)
 
                             _ ->
                                 let
@@ -167,6 +180,27 @@ findTileSet id tilesets =
             case t of
                 Tiled.TilesetEmbedded tileset ->
                     if id >= tileset.firstgid && id <= (tileset.firstgid + tileset.tilecount) then
+                        Just
+                            ( tileset.firstgid
+                            , tileset
+                            )
+                    else
+                        acc
+
+                _ ->
+                    acc
+        )
+        Nothing
+        tilesets
+
+
+findTileSetByName : String -> List Tiled.Tileset -> Maybe ( Int, Tiled.EmbeddedTileData )
+findTileSetByName name tilesets =
+    List.foldl
+        (\t acc ->
+            case t of
+                Tiled.TilesetEmbedded tileset ->
+                    if tileset.name == name then
                         Just
                             ( tileset.firstgid
                             , tileset
