@@ -1,8 +1,0 @@
-{
-  "checks": {
-    "TriggerWords": false,
-    "SingleFieldRecord": false,
-    "DebugLog": false,
-    "UnusedDependency": false
-  }
-}

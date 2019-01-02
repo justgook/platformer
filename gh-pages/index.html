@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+</head>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+<style>
+  * {
+    margin: 0;
+    padding: 0
+  }
+</style>
+
+<body>
+  <!-- https://benpaulhanna.com/building-an-elm-project-with-parcel.html -->
+  <script>
+    (function () {
+      var redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      if (redirect && redirect != location.href) {
+        history.replaceState(null, null, redirect);
+      }
+    })();
+  </script>
+  <script src="/bundle.js"></script>
+  <script>
+    Elm.Main.init(
+      {
+        flags: {
+          devicePixelRatio: window.devicePixelRatio || 1,
+          // levelUrl: "/assets/cornercase.json",
+          levelUrl: "/assets/debug.json",
+          seed: Math.floor(Math.random() * 0xFFFFFFFF)
+        }
+      }
+    )</script>
+</body>
+
+</html>

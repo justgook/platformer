@@ -1,56 +1,59 @@
-sudo: false
+sudo: required
 
-language: node_js
-node_js:
- - "node"
+language: node
+
 cache:
-  yarn: true
   directories:
-    # Cache build artifacts to avoid constantly rebuilding. See:
-    # https://8thlight.com/blog/rob-looby/2016/04/07/caching-elm-builds-on-travis-ci.html
-    - elm-stuff
     - tests/elm-stuff
-    - node_modules
-    # Install and cache sysconfcpus
-    - sysconfcpus
-    - ./yarn-cache
+    - tests/node_modules
+    - tests/stats.json
+    - $HOME/.aerokube
+    - $HOME/.cm
 
-os:
-  - osx
-  - linux
+matrix:
+    include:
+        ### CHROME DRIVER ###
+        - os: linux
+          env: |
+            ELM_VERSION=latest
+            TARGET_NODE_VERSION=node
+            DRIVER_NAME="Chrome Linux"
+            ELM_HOME=$HOME/.elm-linux
+          services:
+            - docker
 
-env:
-  matrix:
-    - ELM_VERSION=0.18.0 TARGET_NODE_VERSION=node
-    # - ELM_VERSION=0.18.0 TARGET_NODE_VERSION=4.0
+        - os: osx
+          env: |
+            ELM_VERSION=latest
+            TARGET_NODE_VERSION=node
+            DRIVER_NAME="Chrome OSX"
+            ELM_HOME=$HOME/.elm-osx
+          addons:
+            chrome: stable
+
+
 
 before_install:
-  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-  - | # epic build time improvement - see https://github.com/elm-lang/elm-compiler/issues/1473#issuecomment-245704142
-    if [ ! -d sysconfcpus/bin ];
-    then
-      git clone https://github.com/obmarg/libsysconfcpus.git;
-      cd libsysconfcpus;
-      ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus;
-      make && make install;
-      cd ..;
-    fi
-
-install:
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH="$HOME/.yarn/bin:$PATH"
   - nvm install $TARGET_NODE_VERSION
   - nvm use $TARGET_NODE_VERSION
+
+install:
+  - yarn --cwd tests
+  - yarn global add elm@$ELM_VERSION
   - node --version
   - npm --version
   - yarn --version
-  - yarn config set cache-folder ./yarn-cache
-  - yarn global add elm@$ELM_VERSION
-  - yarn
-  - mv $(yarn global bin)/elm-make $(yarn global bin)/elm-make-old
-  - printf "#\041/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\n$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old \"\$@\"" > $(yarn global bin)/elm-make
-  - chmod +x $(yarn global bin)/elm-make
-  - elm-package install -y
+  - elm --version
+  - export PATH=$PATH:$PWD
+  # - if ! [ -f ./cm ]; then curl -s https://aerokube.com/cm/bash | bash; fi
+  - curl -s https://aerokube.com/cm/bash | bash;
+  - ./cm selenoid start --vnc --tmpfs 128
+
 
 script:
-  - yarn elm-format --validate src/
-  - yarn test
-  - yarn elm-analyse
+  # - elm-format --validate src/
+  - cd tests
+  - elm make ./src/Main.elm --optimize --output=bundle.js
+  - node ./ci.js

@@ -2,16 +2,13 @@
 logs
 *.log
 
-
 #Dependencies
 node_modules/
 elm-stuff/
-
+assets/
 # Yarn Integrity file
 .yarn-integrity
 
-#caches
-.rpt2_cache
 
 #OS stuff
 .DS_Store
@@ -19,7 +16,6 @@ elm-stuff/
 *.iml
 /.idea
 
-#Build
-/dist
-/assets
-/WIP
+#Other stuff
+documentation.json
+gh-pages/bundle.js
