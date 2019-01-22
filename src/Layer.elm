@@ -3,83 +3,82 @@ module Layer exposing (Layer(..), init, view)
 import Defaults exposing (default)
 import Dict exposing (Dict)
 import Environment exposing (Environment)
+import Http
+import Image exposing (Order(..))
+import Image.BMP exposing (encodeWith)
 import Layer.Common as Common
 import Layer.Image
 import Layer.Tiles
+import List.Extra as List
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
-import Tiled.Layer
-import Tiled.Level as Level exposing (Level)
-import Tiled.Tileset exposing (Tileset)
+import Task exposing (Task)
+import Tiled.Layer as Tiled
+import Tiled.Level as Tiled exposing (Level)
+import Tiled.Tileset as Tiled exposing (Tileset)
 import Tiled.Util
 import WebGL
-import WebGL.Texture exposing (Texture)
+import WebGL.Texture as WebGL exposing (Texture, linear, nearest, nonPowerOfTwoOptions)
 import World.Camera exposing (Camera)
 
 
-type Layer
+type Layer a
     = Tiles (Common.Individual Layer.Tiles.Model)
     | Image (Common.Individual Layer.Image.Model)
+    | Object a
 
 
-init : Level -> Dict String Texture -> List Layer
-init level textures =
+init : Level -> Task Http.Error (List (Layer a))
+init level =
     let
-        result =
-            level
-                |> Tiled.Util.layers
-                |> List.concatMap
-                    (\income ->
-                        case income of
-                            Tiled.Layer.Image layerData ->
-                                Dict.get layerData.image textures
-                                    |> Maybe.map
+        tilesets =
+            Tiled.Util.tilesets level
+
+        download im =
+            "/assets/" ++ im |> WebGL.loadWith default.textureOption
+    in
+    level
+        |> Tiled.Util.layers
+        |> List.concatMap
+            (\item ->
+                case item of
+                    Tiled.Image layerData ->
+                        let
+                            props =
+                                Tiled.Util.properties layerData
+
+                            result =
+                                download layerData.image
+                                    |> Task.map
                                         (\t ->
-                                            let
-                                                props =
-                                                    Tiled.Util.properties layerData
-                                            in
-                                            [ Image
+                                            Image
                                                 { image = t
                                                 , transparentcolor = props.color "transparentcolor" default.transparentcolor
                                                 , scrollRatio = scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) props
                                                 }
-                                            ]
                                         )
-                                    |> Maybe.withDefault []
+                        in
+                        [ result ]
 
-                            Tiled.Layer.Object layerData ->
-                                []
+                    Tiled.Tile layerData ->
+                        Tiled.Util.splitTileLayerByTileSet layerData tilesets
+                            |> tileLayerBuilder layerData
 
-                            Tiled.Layer.Tile layerData ->
-                                -- case Dict.get layerData.name lookUpTextures of
-                                --     Just lut ->
-                                --         let
-                                --             _ =
-                                --                 Debug.log "Parsing Tile layer" layerData
-                                --             -- _ =
-                                --             --     getTilesetsForLayer level layerData.data
-                                --         in
-                                --         [-- Tiles
-                                --          -- { lut = lut
-                                --          -- , lutSize = vec2 layerData.width layerData.height
-                                --          -- , tileSet = Texture
-                                --          -- , tileSetSize = Vec2
-                                --          -- , tileSize = Vec2
-                                --          -- , firstgid = Int
-                                --          -- }
-                                --         ]
-                                --     Nothing ->
-                                []
+                    Tiled.InfiniteTile layerData ->
+                        []
 
-                            Tiled.Layer.InfiniteTile layerData ->
-                                []
-                    )
-    in
-    result
+                    Tiled.Object layerData ->
+                        -- let
+                        --     _ =
+                        --         Debug.log "start" layerData
+                        -- in
+                        []
+            )
+        |> Task.sequence
+        |> Task.mapError (\_ -> Http.NetworkError)
 
 
-view : Environment -> Camera -> List Layer -> List WebGL.Entity
+view : Environment -> Camera -> List (Layer a) -> List WebGL.Entity
 view env camera layers =
     let
         common =
@@ -87,20 +86,24 @@ view env camera layers =
             , viewportOffset = camera.viewportOffset
             , widthRatio = env.widthRatio
             }
-
-        result =
-            layers
-                |> List.concatMap
-                    (\income ->
-                        case income of
-                            Tiles info ->
-                                []
-
-                            Image info ->
-                                [ Common.Layer common info |> Layer.Image.render ]
-                    )
     in
-    result
+    layers
+        |> List.concatMap
+            (\income ->
+                case income of
+                    Tiles info ->
+                        [ Common.Layer common info |> Layer.Tiles.render ]
+
+                    Image info ->
+                        [ Common.Layer common info |> Layer.Image.render ]
+
+                    Object info ->
+                        let
+                            _ =
+                                Debug.log "Here goes" "Object layer"
+                        in
+                        []
+            )
 
 
 scrollRatio : Bool -> Tiled.Util.PropertiesReader -> Vec2
@@ -110,3 +113,58 @@ scrollRatio dual props =
 
     else
         vec2 (props.float "scrollRatio" default.scrollRatio) (props.float "scrollRatio" default.scrollRatio)
+
+
+imageOptions =
+    let
+        opt =
+            Image.defaultOptions
+    in
+    { opt | order = RightDown }
+
+
+tileLayerBuilder layerData =
+    let
+        download im =
+            "/assets/" ++ im |> WebGL.loadWith default.textureOption
+    in
+    List.concatMap
+        (\i ->
+            case i of
+                ( Tiled.Embedded tileset, data ) ->
+                    let
+                        layerProps =
+                            Tiled.Util.properties layerData
+
+                        tilsetProps =
+                            Tiled.Util.properties tileset
+
+                        result =
+                            Task.succeed
+                                (\lut tileSetImage ->
+                                    Tiles
+                                        { lut = lut
+                                        , lutSize = vec2 (toFloat layerData.width) (toFloat layerData.height)
+                                        , tileSet = tileSetImage
+                                        , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
+                                        , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
+                                        , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                        , scrollRatio = scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                        }
+                                )
+                                |> andMap (encodeWith imageOptions layerData.width layerData.height data |> WebGL.loadWith default.textureOption)
+                                |> andMap (download tileset.image)
+                    in
+                    [ result ]
+
+                ( Tiled.Source _, _ ) ->
+                    []
+
+                ( Tiled.ImageCollection _, _ ) ->
+                    []
+        )
+
+
+andMap : Task x a -> Task x (a -> b) -> Task x b
+andMap =
+    Task.map2 (|>)

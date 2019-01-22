@@ -1,0 +1,13 @@
+{
+  "name": "platformer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:justgook/platformer.git",
+  "license": "MIT",
+  "scripts": {
+    "build": "foo=\"$(mktemp).js\" && elm make src/Main.elm --output=$foo && cat $foo | prepack "
+  },
+  "devDependencies": {
+    "prepack": "0.2.54"
+  }
+}

@@ -1,5 +1,6 @@
 module Layer.Image exposing (Model, render)
 
+import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
@@ -23,10 +24,7 @@ render (Layer common individual) =
     , image = individual.image
     }
         |> WebGL.entityWith
-            [ WebGL.cullFace WebGL.front
-            , Blend.add Blend.srcAlpha Blend.oneMinusSrcAlpha
-            , WebGL.colorMask True True True False
-            ]
+            default.entitySettings
             vertexShader
             fragmentShader
             mesh
@@ -48,9 +46,6 @@ fragmentShader =
 
         void main () {
             gl_FragColor = texture2D(image, mod(vcoord + viewportOffset * px * scrollRatio, 1.0) );
-            gl_FragColor.rgb *= gl_FragColor.a;
-            if (gl_FragColor.xyz == transparentcolor) {
-                discard;
-            }
+            gl_FragColor.rgb *= gl_FragColor.a;        
         }
     |]

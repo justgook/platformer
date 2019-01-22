@@ -1,7 +1,6 @@
 module Tiled.Util exposing
     ( PropertiesReader
     , firstgid
-    , getListOfImages
     , layers
     , levelProps
     , properties
@@ -17,14 +16,6 @@ import Tiled.Layer as Layer exposing (Layer)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Properties exposing (Properties, Property(..))
 import Tiled.Tileset as Tileset exposing (Tileset)
-
-
-getListOfImages : Level -> List String
-getListOfImages level =
-    List.concatMap fromLayer (layers level)
-        ++ List.concatMap fromTileset (tilesets level)
-        |> Set.fromList
-        |> Set.toList
 
 
 splitTileLayerByTileSet : Layer.TileData -> List Tileset -> List ( Tileset, List Int )
@@ -272,41 +263,6 @@ tilesets level =
 
         Level.Hexagonal info ->
             info.tilesets
-
-
-fromTileset : Tileset -> List String
-fromTileset income =
-    case income of
-        Tileset.Source info ->
-            let
-                _ =
-                    Debug.log "Tileset.Source" info
-            in
-            []
-
-        Tileset.Embedded info ->
-            [ info.image ]
-
-        Tileset.ImageCollection info ->
-            info.tiles
-                |> Dict.toList
-                |> List.map (Tuple.second >> .image)
-
-
-fromLayer : Layer -> List String
-fromLayer income =
-    case income of
-        Layer.Image info ->
-            [ info.image ]
-
-        Layer.Object info ->
-            []
-
-        Layer.Tile info ->
-            []
-
-        Layer.InfiniteTile info ->
-            []
 
 
 find : (a -> Bool) -> List a -> Maybe a

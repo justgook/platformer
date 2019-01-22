@@ -1,4 +1,4 @@
-module Layer.Tiles exposing (Model, render)
+module Layer.Tiles.Animated exposing (Model, render)
 
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
@@ -56,9 +56,12 @@ fragmentShader =
         uniform vec3 transparentcolor;
         uniform vec2 lutSize;
         uniform vec2 tileSetSize;
-        uniform float pixelsPerUnit;
+        
+        
         uniform vec2 tileSize;
+        
         uniform vec2 viewportOffset;
+        uniform float pixelsPerUnit;
         uniform vec2 scrollRatio;
         
 

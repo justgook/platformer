@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser exposing (Document, UrlRequest(..))
+import Browser.Events as Browser
 import Defaults exposing (default)
 import Environment exposing (Environment)
 import Http
@@ -19,8 +20,15 @@ main =
         , update = update
         , subscriptions =
             \model ->
-                Environment.subscriptions model.env
-                    |> Sub.map Environment
+                case model.loader of
+                    Success world ->
+                        [ Environment.subscriptions model.env |> Sub.map Environment
+                        , Browser.onAnimationFrameDelta Frame
+                        ]
+                            |> Sub.batch
+
+                    _ ->
+                        Environment.subscriptions model.env |> Sub.map Environment
         }
 
 
@@ -52,16 +60,28 @@ type alias Model =
 type Message
     = Environment Environment.Message
     | Loader (ResourceManager.RemoteData Http.Error World)
+    | Frame Float
 
 
 update : Message -> Model -> ( Model, Cmd Message )
 update msg model =
-    case msg of
-        Environment income ->
+    case ( msg, model.loader ) of
+        ( Frame delta, Success world ) ->
+            ( { model
+                | loader =
+                    Success (World.update delta world)
+              }
+            , Cmd.none
+            )
+
+        ( Environment income, _ ) ->
             ( { model | env = Environment.update income model.env }, Cmd.none )
 
-        Loader income ->
+        ( Loader income, _ ) ->
             ( { model | loader = income }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 view : Model -> Document Message

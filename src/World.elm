@@ -1,147 +1,96 @@
-module World exposing (World, init, view)
+module World exposing (World, init, update, view)
 
-import Defaults exposing (default)
-import Dict exposing (Dict)
+import Array exposing (Array)
+import Dict.Any as Dict exposing (AnyDict)
 import Environment exposing (Environment)
 import Http
-import Image.BMP exposing (encode24)
-import Layer
-import Task
-import Tiled.Layer as Tiled
+import Layer exposing (Layer)
+import Logic.Entity as Entity
+import Logic.GameFlow as Flow
+import Logic.System as System
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Math.Vector3 exposing (vec3)
+import Task exposing (Task)
 import Tiled.Level as Tiled
-import Tiled.Tileset as Tiled
-import Tiled.Util exposing (getListOfImages)
 import WebGL
-import WebGL.Texture as WebGL exposing (Texture, linear, nearest, nonPowerOfTwoOptions)
 import World.Camera as Camera exposing (Camera)
+import World.Component as Component
+import World.Model exposing (Model(..))
+import World.System as System
 
 
-type World
-    = World
-        { layers : List Layer.Layer
-        , camera : Camera
-        }
+type alias World =
+    World.Model.Model
+
+
+update : Float -> World -> World
+update delta (Model world) =
+    let
+        systems =
+            System.animationsChanger
+
+        newWorld =
+            Flow.update systems delta world
+
+        -- _ =
+        --     newWorld |> .positions |> Debug.log "World::update"
+    in
+    Model newWorld
+
+
+view : Environment -> World -> List WebGL.Entity
+view env (Model m) =
+    Layer.view env m.camera m.layers
 
 
 init : Tiled.Level -> Task.Task Http.Error World
 init level =
-    let
-        imagesToDownload =
-            addDownloadableImages level
-
-        generatedImages =
-            addLUTimages level
-    in
-    (imagesToDownload ++ generatedImages)
-        --TODO make Download in parallel
-        |> Task.sequence
-        |> Task.mapError (\_ -> Http.NetworkError)
-        |> Task.andThen
-            (\tilesetImages ->
-                let
-                    -- lut =
-                    --     lutImages
-                    --         |> Dict.fromList
-                    textures =
-                        tilesetImages |> Dict.fromList
-                in
-                World
-                    { layers = Layer.init level textures
+    Task.map
+        (\layers ->
+            let
+                world =
+                    { layers = layers
                     , camera = Camera.init level
+                    , frame = 0
+                    , runtime_ = 0
+                    , flow = Flow.Running
+                    , positions = Array.empty
+                    , dimensions = Array.empty
+                    , delme = Array.empty
+
+                    -- , animations = Dict.empty (\_ -> "a")
+                    , animations2 = Array.empty
+                    , velocities = Array.empty
                     }
-                    |> Task.succeed
-            )
+                        -- {- TEST STUFF -}
+                        |> Entity.create 1
+                        |> Entity.with ( Component.positions, vec2 11 11 )
+                        |> Entity.with ( Component.dimensions, vec2 12 12 )
+                        |> Tuple.second
+                        |> Entity.create 2
+                        |> Entity.with ( Component.positions, vec2 21 21 )
+                        |> Entity.with ( Component.dimensions, vec2 22 22 )
+                        |> Entity.with ( Component.velocities, vec2 23 23 )
+                        |> Entity.with ( Component.animations, vec2 24 24 )
+                        |> Entity.with ( Component.delme, vec3 25 25 25 )
+                        |> Tuple.second
+                        |> Entity.create 3
+                        |> Entity.with ( Component.positions, vec2 31 31 )
+                        |> Tuple.second
 
+                _ =
+                    world
+                        |> System.foldl2
+                            (\( a, seta ) ( b, setb ) acc ->
+                                acc
+                                    |> seta (vec2 0 0)
+                            )
+                            Component.positions
+                            Component.dimensions
 
-addDownloadableImages level =
-    level
-        |> getListOfImages
-        |> List.map
-            (\im ->
-                "/assets/"
-                    ++ im
-                    |> loadTexture
-                    |> Task.map (Tuple.pair im)
-            )
-
-
-addLUTimages level =
-    Tiled.Util.layers level
-        |> List.foldl
-            (\item acc ->
-                case item of
-                    Tiled.Image info ->
-                        []
-
-                    Tiled.Object info ->
-                        []
-
-                    Tiled.Tile info ->
-                        let
-                            _ =
-                                Tiled.Util.splitTileLayerByTileSet info (Tiled.Util.tilesets level)
-                                    |> getListOfLUT
-                        in
-                        []
-
-                    Tiled.InfiniteTile info ->
-                        []
-            )
-            []
-
-
-view : Environment -> World -> List WebGL.Entity
-view env (World m) =
-    Layer.view env m.camera m.layers
-
-
-loadTexture url =
-    WebGL.loadWith default.textureOption url
-
-
-getListOfLUT =
-    List.foldr
-        (\i acc ->
-            case i of
-                ( Tiled.Embedded info, data ) ->
-                    let
-                        image =
-                            encode24 info.imagewidth info.imageheight data
-
-                        -- { lut : Texture
-                        -- , lutSize : vec2 info.imagewidth info.imageheight
-                        -- , tileSet : Texture
-                        -- , tileSetSize : Vec2
-                        -- , tileSize : Vec2
-                        -- , pixelsPerUnit : Float
-                        -- , viewportOffset : Vec2
-                        -- , widthRatio : Float
-                        -- }
-                        -- a =
-                        --     { columns = 4
-                        --     , firstgid = 4
-                        --     , image = "char1_test.png"
-                        --     , imageheight = 120
-                        --     , imagewidth = 64
-                        --     , margin = 0
-                        --     , name = "char1_test"
-                        --     , properties = Dict.fromList []
-                        --     , spacing = 0
-                        --     , tilecount = 20
-                        --     , tileheight = 24
-                        --     , tiles = Dict.fromList []
-                        --     , tilewidth = 16
-                        --     , transparentcolor = "#ff00ff"
-                        --     }
-                        _ =
-                            info |> Debug.log "getListOfLUT"
-                    in
-                    image :: acc
-
-                ( Tiled.Source _, _ ) ->
-                    acc
-
-                ( Tiled.ImageCollection _, _ ) ->
-                    acc
+                -- |> Debug.log "World::init - System.step2"
+                {- TEST STUFF -}
+            in
+            Model world
         )
-        []
+        (Layer.init level)

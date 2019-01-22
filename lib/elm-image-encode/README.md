@@ -13,7 +13,9 @@ A library for building base64 encoded images in elm
 
 import Html exposing (img)
     import Html.Attributes exposing (src)
+    import Image exposing (ColorDepth, Options)
     import Image.BMP exposing (encode24With)
+    
 
     main : Html.Html msg
     main =
@@ -45,7 +47,7 @@ import Html exposing (img)
 
     options : Options {}
     options =
-        { defaultColor = 0x00FFFF00, order = RightDown }
+        { defaultColor = 0x00FFFF00, order = RightDown, depth = Bit24 }
 
 ```
 
