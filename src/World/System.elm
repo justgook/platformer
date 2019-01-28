@@ -9,9 +9,13 @@ import World.Model exposing (World)
 
 
 animationsChanger : System World
-animationsChanger =
-    start
+animationsChanger world =
+    (start
         (\( delme, set4 ) ( position, setPosition ) ( _, set1 ) ( velocity, set2 ) animations acc ->
+            -- let
+            --     _ =
+            --         Debug.log "animationsChanger" world.delme
+            -- in
             acc
                 -- |> setPosition (Vec2.add velocity position)
                 -- |> setPosition (Vec2.add velocity position)
@@ -25,3 +29,5 @@ animationsChanger =
         >> andMap Component.velocities
         >> andMap Component.animations
         >> end
+    )
+        world

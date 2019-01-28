@@ -1,4 +1,7 @@
-module Tiled exposing (decode, encode)
+module Tiled exposing
+    ( decode, encode
+    , gidInfo
+    )
 
 {-| Use the [`decode`](#decode) to get [`Level`](Tiled-Level)
 
@@ -9,6 +12,7 @@ module Tiled exposing (decode, encode)
 
 -}
 
+import Bitwise
 import Json.Decode as Json exposing (Decoder)
 import Tiled.Level as Level exposing (Level)
 
@@ -25,3 +29,47 @@ encode =
 decode : Decoder Level
 decode =
     Level.decode
+
+
+
+-- http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tile-flipping
+
+
+gidInfo gid =
+    { gid = cleanGid gid
+    , fh = flippedHorizontally gid
+    , fv = flippedVertically gid
+    , fd = flippedDiagonally gid
+    }
+
+
+flippedHorizontally globalTileId =
+    Bitwise.and globalTileId flippedHorizontalFlag /= 0
+
+
+flippedVertically globalTileId =
+    Bitwise.and globalTileId flippedVerticalFlag /= 0
+
+
+flippedDiagonally globalTileId =
+    Bitwise.and globalTileId flippedDiagonalFlag /= 0
+
+
+cleanGid globalTileId =
+    flippedHorizontalFlag
+        |> Bitwise.or flippedVerticalFlag
+        |> Bitwise.or flippedDiagonalFlag
+        |> Bitwise.complement
+        |> Bitwise.and globalTileId
+
+
+flippedHorizontalFlag =
+    0x80000000
+
+
+flippedVerticalFlag =
+    0x40000000
+
+
+flippedDiagonalFlag =
+    0x20000000

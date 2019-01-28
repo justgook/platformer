@@ -1,5 +1,6 @@
 module Tiled.Util exposing
     ( PropertiesReader
+    , common
     , firstgid
     , layers
     , levelProps
@@ -16,6 +17,73 @@ import Tiled.Layer as Layer exposing (Layer)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Properties exposing (Properties, Property(..))
 import Tiled.Tileset as Tileset exposing (Tileset)
+
+
+common level =
+    case level of
+        Level.Orthogonal info ->
+            { backgroundcolor = info.backgroundcolor
+            , height = info.height
+            , infinite = info.infinite
+            , layers = info.layers
+            , nextobjectid = info.nextobjectid
+            , renderorder = info.renderorder
+            , tiledversion = info.tiledversion
+            , tileheight = info.tileheight
+            , tilesets = info.tilesets
+            , tilewidth = info.tilewidth
+            , version = info.version
+            , width = info.width
+            , properties = info.properties
+            }
+
+        Level.Isometric info ->
+            { backgroundcolor = info.backgroundcolor
+            , height = info.height
+            , infinite = info.infinite
+            , layers = info.layers
+            , nextobjectid = info.nextobjectid
+            , renderorder = info.renderorder
+            , tiledversion = info.tiledversion
+            , tileheight = info.tileheight
+            , tilesets = info.tilesets
+            , tilewidth = info.tilewidth
+            , version = info.version
+            , width = info.width
+            , properties = info.properties
+            }
+
+        Level.Staggered info ->
+            { backgroundcolor = info.backgroundcolor
+            , height = info.height
+            , infinite = info.infinite
+            , layers = info.layers
+            , nextobjectid = info.nextobjectid
+            , renderorder = info.renderorder
+            , tiledversion = info.tiledversion
+            , tileheight = info.tileheight
+            , tilesets = info.tilesets
+            , tilewidth = info.tilewidth
+            , version = info.version
+            , width = info.width
+            , properties = info.properties
+            }
+
+        Level.Hexagonal info ->
+            { backgroundcolor = info.backgroundcolor
+            , height = info.height
+            , infinite = info.infinite
+            , layers = info.layers
+            , nextobjectid = info.nextobjectid
+            , renderorder = info.renderorder
+            , tiledversion = info.tiledversion
+            , tileheight = info.tileheight
+            , tilesets = info.tilesets
+            , tilewidth = info.tilewidth
+            , version = info.version
+            , width = info.width
+            , properties = info.properties
+            }
 
 
 splitTileLayerByTileSet : Layer.TileData -> List Tileset -> List ( Tileset, List Int )
@@ -36,8 +104,7 @@ splitTileLayerByTileSet tileLayerData tilesetList =
                     append id =
                         \( t_, v ) -> ( t_, v ++ [ id ] )
                 in
-                tilesetList
-                    |> tilesetById tileId
+                tilesetById tilesetList tileId
                     |> Maybe.map
                         (\tileset ->
                             let
@@ -92,8 +159,8 @@ firstgid item =
             info.firstgid
 
 
-tilesetById : Int -> List Tileset -> Maybe Tileset
-tilesetById id =
+tilesetById : List Tileset -> Int -> Maybe Tileset
+tilesetById tileset id =
     find
         (\item ->
             case item of
@@ -106,6 +173,7 @@ tilesetById id =
                 Tileset.ImageCollection info ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
         )
+        tileset
 
 
 type alias File =

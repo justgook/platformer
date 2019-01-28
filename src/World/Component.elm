@@ -1,4 +1,4 @@
-module World.Component exposing (animations, delme, dimensions, positions, velocities)
+module World.Component exposing (animations, delme, dimensions, objects, positions, velocities)
 
 import Dict.Any as Dict
 
@@ -12,6 +12,12 @@ positions =
 delme =
     { get = .delme
     , set = \comps world -> { world | delme = comps }
+    }
+
+
+objects =
+    { get = identity
+    , set = \comps _ -> comps
     }
 
 

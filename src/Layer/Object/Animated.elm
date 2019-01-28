@@ -1,14 +1,30 @@
-module Game.View.Object.Animated exposing (render)
+module Game.View.Object.Animated exposing (Model, render)
 
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh)
 import Layer.Object exposing (vertexShader)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
-import WebGL exposing (Shader)
+import WebGL exposing (Mesh, Shader)
 import WebGL.Settings as WebGL
 import WebGL.Settings.Blend as Blend
 import WebGL.Texture exposing (Texture)
+
+
+type alias Model =
+    { columns : Int
+    , frame : Int
+    , imageSize : Vec2
+    , frames : Int
+    , height : Float
+    , width : Float
+    , lut : Texture
+    , mirror : Vec2
+    , sprite : Texture
+    , started : Int
+    , x : Float
+    , y : Float
+    }
 
 
 render : Layer Model -> WebGL.Entity
@@ -40,22 +56,6 @@ render (Layer common individual) =
             mesh
 
 
-type alias Model =
-    { columns : Int
-    , frame : Int
-    , imageSize : Vec2
-    , frames : Int
-    , height : Float
-    , width : Float
-    , lut : Texture
-    , mirror : Int
-    , sprite : Texture
-    , started : Int
-    , x : Float
-    , y : Float
-    }
-
-
 fragmentShader : Shader {} (Uniform Model) { vcoord : Vec2 }
 fragmentShader =
     [glsl|
@@ -69,7 +69,7 @@ fragmentShader =
         uniform int started;
         uniform vec2 imageSize;
         uniform int columns;
-        uniform int mirror;
+        uniform vec2 mirror;
 
         uniform float height;
         uniform float width;
@@ -98,13 +98,9 @@ fragmentShader =
             float yOffset = (float(columns) - floor(tileId / float(columns))) * height; // Some magic to invert calculation form top to bottom
 
             vec2 look = floor(vcoord * vec2(width, height));
+            look.x = width - look.x * mirror.x;
+            look.y = height - look.y * mirror.y;
 
-            if (mirror > 1 ) { //0x10
-                look.x = width - look.x;
-            }
-            if (mirror == 1 || mirror == 3) { //0x01
-                look.y = height - look.y;
-            }
             vec2 pixel = floor( (look + vec2(xOffset, yOffset))  * 2. + 1.) / (imageSize * 2.);
             gl_FragColor = texture2D(sprite, pixel);
             gl_FragColor.rgb *= gl_FragColor.a;

@@ -11,17 +11,24 @@ import WebGL.Texture exposing (Texture)
 
 
 type alias Model =
-    { image : Texture }
+    { image : Texture
+    , size : Vec2
+    }
 
 
 render : Layer Model -> WebGL.Entity
 render (Layer common individual) =
+    -- let
+    --     _ =
+    --         Debug.log "pixelsPerUnit" common.pixelsPerUnit
+    -- in
     { pixelsPerUnit = common.pixelsPerUnit
     , viewportOffset = common.viewportOffset
     , widthRatio = common.widthRatio
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
     , image = individual.image
+    , size = individual.size
     }
         |> WebGL.entityWith
             default.entitySettings
@@ -41,11 +48,14 @@ fragmentShader =
         uniform float pixelsPerUnit;
         uniform vec2 viewportOffset;
         uniform vec2 scrollRatio;
-
+        uniform vec2 size;
         float px = 1.0 / pixelsPerUnit;
 
         void main () {
-            gl_FragColor = texture2D(image, mod(vcoord + viewportOffset * px * scrollRatio, 1.0) );
-            gl_FragColor.rgb *= gl_FragColor.a;        
+            //Pixel center;
+            vec2 pixel0 = floor(vcoord * pixelsPerUnit) + 0.5;
+            vec2 pixel = pixel0 / size;
+            gl_FragColor = texture2D(image, mod(pixel + viewportOffset * px * scrollRatio, 1.0));
+            gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

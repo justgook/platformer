@@ -56,14 +56,14 @@ fragmentShader =
         uniform vec3 transparentcolor;
         uniform vec2 lutSize;
         uniform vec2 tileSetSize;
-        
-        
+
+
         uniform vec2 tileSize;
-        
+
         uniform vec2 viewportOffset;
         uniform float pixelsPerUnit;
         uniform vec2 scrollRatio;
-        
+
 
         vec2 tilesPerUnit = pixelsPerUnit / tileSize;
         //float px = 1.0 / pixelsPerUnit;
@@ -87,22 +87,22 @@ fragmentShader =
             //(2i + 1)/(2N) Pixel center
             vec2 coordinate = (look * 2. + 1.) / (lutSize * 2.);
             float tileIndex = color2float(texture2D(lut, coordinate));
-            
+
             float magic = tileIndex / tileIndex;
-            
+
             tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for none placeholder
             vec2 gridSize = vec2(16, 16);
             vec2 grid = tileSetSize / tileSize;
             vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
             // inverting reading botom to top
-            tile.y = grid.y - tile.y - 1.;            
+            tile.y = grid.y - tile.y - 1.;
 
             vec2 fragmentOffsetPx = floor((point - look) * tileSize);
 
             //(2i + 1)/(2N) Pixel center
             vec2 pixel = floor((tile * tileSize + fragmentOffsetPx)  * 2. + 1.) / (tileSetSize * 2.);
             gl_FragColor = texture2D(tileSet, pixel);
-            
+
             gl_FragColor.a *= magic;
             gl_FragColor.rgb *= gl_FragColor.a;
         }

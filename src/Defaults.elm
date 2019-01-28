@@ -31,7 +31,7 @@ webGLOption =
 textureOption : Texture.Options
 textureOption =
     { nonPowerOfTwoOptions
-        | magnify = nearest
+        | magnify = linear
         , minify = linear
     }
 

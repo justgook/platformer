@@ -1,12 +1,32 @@
-module Logic.System exposing (Setter, System, UnfinishedSystem, andMap, end, foldl2, foldl3, foldl4, map, start)
+module Logic.System exposing
+    ( SetsReducer2
+    , SetsReducer3
+    , SetsReducer4
+    , System
+    , TupleSystem
+    , UnfinishedSystem
+    , andMap
+    , end
+    , endCustom
+    , foldl2
+    , foldl2Custom
+    , foldl3
+    , foldl4
+    , map
+    , start
+    )
 
-import Array exposing (Array)
+import Array
 import Logic.Component as Component
 import Logic.Internal exposing (indexedFoldlArray, indexedMap2, map2)
 
 
 type alias System world =
     world -> world
+
+
+type alias TupleSystem world acc =
+    ( world, acc ) -> ( world, acc )
 
 
 type UnfinishedSystem world acc next func
@@ -22,6 +42,8 @@ type UnfinishedSystem world acc next func
         }
 
 
+{-| 3 times slower then `foldN`
+-}
 start :
     (( comp, acc -> ( Array.Array (Maybe acc), next ) -> ( Array.Array (Maybe acc), next ) ) -> func)
     -> Component.Spec comp world
@@ -110,39 +132,37 @@ end (UnfinishedSystem { world, acc, arrayFunction, apply }) =
         |> apply world
 
 
+endCustom : custom -> UnfinishedSystem world acc () (( acc, custom ) -> ( acc, custom )) -> ( world, custom )
+endCustom custom (UnfinishedSystem { world, acc, arrayFunction, apply }) =
+    Array.foldl
+        (\f acc_ ->
+            Maybe.map (\f_ -> f_ acc_) f
+                |> Maybe.withDefault acc_
+        )
+        ( acc (), custom )
+        arrayFunction
+        |> Tuple.mapFirst (apply world)
+
+
+map : (comp -> comp) -> Component.Spec comp world -> System world
 map f { get, set } world =
     set (get world |> Array.map (Maybe.map f)) world
 
 
-type alias Setter a acc =
-    a -> acc -> acc
-
-
-type alias Callback2 a b =
-    ( a, Setter a (Accumulator2 a b) )
-    -> ( b, Setter b (Accumulator2 a b) )
-    -> Accumulator2 a b
-    -> Accumulator2 a b
-
-
-type alias Accumulator2 a b =
-    { a : Component.Set a, b : Component.Set b }
+type alias SetsReducer2 a b acc =
+    ( a, a -> acc -> acc )
+    -> ( b, b -> acc -> acc )
+    -> acc
+    -> acc
 
 
 foldl2 :
-    Callback2 a b
+    SetsReducer2 a b { a : Component.Set a, b : Component.Set b }
     -> Component.Spec a world
     -> Component.Spec b world
-    -> world
-    -> world
+    -> System world
 foldl2 f spec1 spec2 world =
     let
-        comp1arr =
-            spec1.get world
-
-        comp2arr =
-            spec2.get world
-
         set1 i a acc =
             { acc | a = Array.set i (Just a) acc.a }
 
@@ -150,7 +170,7 @@ foldl2 f spec1 spec2 world =
             { acc | b = Array.set i (Just b) acc.b }
 
         combined =
-            { a = comp1arr, b = comp2arr }
+            { a = spec1.get world, b = spec2.get world }
 
         result =
             indexedFoldlArray
@@ -173,39 +193,63 @@ foldl2 f spec1 spec2 world =
     world |> spec1.set result.a |> spec2.set result.b
 
 
-type alias Accumulator3 a b c =
-    { a : Component.Set a
-    , b : Component.Set b
-    , c : Component.Set c
-    }
+foldl2Custom :
+    SetsReducer2 a b ( { a : Component.Set a, b : Component.Set b }, custom )
+    -> Component.Spec a world
+    -> Component.Spec b world
+    -> System ( world, custom )
+foldl2Custom f spec1 spec2 ( world, custom ) =
+    let
+        set1 i a ( acc, custom_ ) =
+            ( { acc | a = Array.set i (Just a) acc.a }, custom_ )
+
+        set2 i b ( acc, custom_ ) =
+            ( { acc | b = Array.set i (Just b) acc.b }, custom_ )
+
+        combined =
+            { a = spec1.get world, b = spec2.get world }
+
+        ( result, newCustom ) =
+            indexedFoldlArray
+                (\n value1 acc ->
+                    let
+                        value2 =
+                            acc
+                                |> Tuple.first
+                                |> .b
+                                |> Array.get n
+                                |> Maybe.withDefault Nothing
+                    in
+                    Maybe.map2
+                        (\a b ->
+                            f ( a, set1 n ) ( b, set2 n ) acc
+                        )
+                        value1
+                        value2
+                        |> Maybe.withDefault acc
+                )
+                ( combined, custom )
+                combined.a
+    in
+    ( world |> spec1.set result.a |> spec2.set result.b, newCustom )
 
 
-type alias Callback3 a b c =
-    ( a, Setter a (Accumulator3 a b c) )
-    -> ( b, Setter b (Accumulator3 a b c) )
-    -> ( c, Setter c (Accumulator3 a b c) )
-    -> Accumulator3 a b c
-    -> Accumulator3 a b c
+type alias SetsReducer3 a b c acc =
+    ( a, a -> acc -> acc )
+    -> ( b, b -> acc -> acc )
+    -> ( c, c -> acc -> acc )
+    -> acc
+    -> acc
 
 
 foldl3 :
-    Callback3 a b c
+    SetsReducer3 a b c { a : Component.Set a, b : Component.Set b, c : Component.Set c }
     -> Component.Spec a world
     -> Component.Spec b world
     -> Component.Spec c world
-    -> world
-    -> world
+    -> System world
 foldl3 f spec1 spec2 spec3 world =
     let
-        comp1arr =
-            spec1.get world
-
-        comp2arr =
-            spec2.get world
-
-        comp3arr =
-            spec3.get world
-
         set1 i a acc =
             { acc | a = Array.set i (Just a) acc.a }
 
@@ -216,7 +260,7 @@ foldl3 f spec1 spec2 spec3 world =
             { acc | c = Array.set i (Just c) acc.c }
 
         combined =
-            { a = comp1arr, b = comp2arr, c = comp3arr }
+            { a = spec1.get world, b = spec2.get world, c = spec3.get world }
 
         result =
             indexedFoldlArray
@@ -228,13 +272,7 @@ foldl3 f spec1 spec2 spec3 world =
                         value3 =
                             Array.get n acc.c |> Maybe.withDefault Nothing
                     in
-                    Maybe.map3
-                        (\a b c ->
-                            f ( a, set1 n ) ( b, set2 n ) ( c, set3 n ) acc
-                        )
-                        value1
-                        value2
-                        value3
+                    Maybe.map3 (\a b c -> f ( a, set1 n ) ( b, set2 n ) ( c, set3 n ) acc) value1 value2 value3
                         |> Maybe.withDefault acc
                 )
                 combined
@@ -246,45 +284,24 @@ foldl3 f spec1 spec2 spec3 world =
         |> spec3.set result.c
 
 
-type alias Accumulator4 a b c d =
-    { a : Component.Set a
-    , b : Component.Set b
-    , c : Component.Set c
-    , d : Component.Set d
-    }
-
-
-type alias Callback4 a b c d =
-    ( a, Setter a (Accumulator4 a b c d) )
-    -> ( b, Setter b (Accumulator4 a b c d) )
-    -> ( c, Setter c (Accumulator4 a b c d) )
-    -> ( d, Setter d (Accumulator4 a b c d) )
-    -> Accumulator4 a b c d
-    -> Accumulator4 a b c d
+type alias SetsReducer4 a b c d acc =
+    ( a, a -> acc -> acc )
+    -> ( b, b -> acc -> acc )
+    -> ( c, c -> acc -> acc )
+    -> ( d, d -> acc -> acc )
+    -> acc
+    -> acc
 
 
 foldl4 :
-    Callback4 a b c d
+    SetsReducer4 a b c d { a : Component.Set a, b : Component.Set b, c : Component.Set c, d : Component.Set d }
     -> Component.Spec a world
     -> Component.Spec b world
     -> Component.Spec c world
     -> Component.Spec d world
-    -> world
-    -> world
+    -> System world
 foldl4 f spec1 spec2 spec3 spec4 world =
     let
-        comp1arr =
-            spec1.get world
-
-        comp2arr =
-            spec2.get world
-
-        comp3arr =
-            spec3.get world
-
-        comp4arr =
-            spec4.get world
-
         set1 i a acc =
             { acc | a = Array.set i (Just a) acc.a }
 
@@ -298,29 +315,19 @@ foldl4 f spec1 spec2 spec3 spec4 world =
             { acc | d = Array.set i (Just d) acc.d }
 
         combined =
-            { a = comp1arr, b = comp2arr, c = comp3arr, d = comp4arr }
+            { a = spec1.get world, b = spec2.get world, c = spec3.get world, d = spec4.get world }
 
         result =
             indexedFoldlArray
                 (\n value1 acc ->
-                    let
-                        value2 =
-                            Array.get n acc.b |> Maybe.withDefault Nothing
-
-                        value3 =
-                            Array.get n acc.c |> Maybe.withDefault Nothing
-
-                        value4 =
-                            Array.get n acc.d |> Maybe.withDefault Nothing
-                    in
                     Maybe.map4
                         (\a b c d ->
                             f ( a, set1 n ) ( b, set2 n ) ( c, set3 n ) ( d, set4 n ) acc
                         )
                         value1
-                        value2
-                        value3
-                        value4
+                        (Array.get n acc.b |> Maybe.withDefault Nothing)
+                        (Array.get n acc.c |> Maybe.withDefault Nothing)
+                        (Array.get n acc.d |> Maybe.withDefault Nothing)
                         |> Maybe.withDefault acc
                 )
                 combined

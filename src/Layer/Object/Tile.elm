@@ -1,35 +1,44 @@
-module Layer.Tiles exposing (Model, render)
+module Layer.Object.Tile exposing (Model, render)
 
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
+import Layer.Object.Common exposing (vertexShader)
 import Math.Vector2 exposing (Vec2)
-import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
-import WebGL.Settings as WebGL
 import WebGL.Texture exposing (Texture)
 
 
 type alias Model =
-    { lut : Texture
-    , lutSize : Vec2
+    { x : Float
+    , y : Float
+    , width : Float
+    , height : Float
+    , tileIndex : Float
     , tileSet : Texture
     , tileSetSize : Vec2
     , tileSize : Vec2
+    , mirror : Vec2
     }
 
 
 render : Layer Model -> WebGL.Entity
 render (Layer common individual) =
-    { pixelsPerUnit = common.pixelsPerUnit
-    , viewportOffset = common.viewportOffset
-    , widthRatio = common.widthRatio
-    , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
+    { height = individual.height
+    , width = individual.width
+    , x = individual.x
+    , y = individual.y
     , tileSet = individual.tileSet
     , tileSetSize = individual.tileSetSize
     , tileSize = individual.tileSize
-    , lut = individual.lut
-    , lutSize = individual.lutSize
+    , tileIndex = individual.tileIndex
+    , mirror = individual.mirror
+
+    -- General
+    , transparentcolor = individual.transparentcolor
+    , scrollRatio = individual.scrollRatio
+    , pixelsPerUnit = common.pixelsPerUnit
+    , viewportOffset = common.viewportOffset
+    , widthRatio = common.widthRatio
     }
         |> WebGL.entityWith
             default.entitySettings
@@ -38,31 +47,20 @@ render (Layer common individual) =
             mesh
 
 
-
--- https://stackoverflow.com/questions/5879403/opengl-texture-coordinates-in-pixel-space/5879551#5879551
--- https://gamedev.stackexchange.com/questions/121051/webgl-pixel-perfect-tilemap-rendering
-
-
 fragmentShader : Shader a (Uniform Model) { vcoord : Vec2 }
 fragmentShader =
-    --TODO /Add suport for tiles-sets that is bigger than level tile size
-    -- need to create loop that go over all posible covered neighbours and merge resulting pixel (alpha level including)
     [glsl|
         precision mediump float;
         varying vec2 vcoord;
-        uniform sampler2D tileSet;
-        uniform sampler2D lut;
         uniform vec3 transparentcolor;
-        uniform vec2 lutSize;
+        uniform sampler2D tileSet;
         uniform vec2 tileSetSize;
         uniform float pixelsPerUnit;
         uniform vec2 tileSize;
+        uniform vec2 mirror;
         uniform vec2 viewportOffset;
         uniform vec2 scrollRatio;
-
-
-        vec2 tilesPerUnit = pixelsPerUnit / tileSize;
-        //float px = 1.0 / pixelsPerUnit;
+        uniform float tileIndex;
 
         float color2float(vec4 c) {
             return c.z * 255.0
@@ -77,27 +75,20 @@ fragmentShader =
         }
 
         void main () {
-            vec2 point = ((vcoord / (1.0 / tilesPerUnit))) + viewportOffset * scrollRatio;
-            vec2 look = floor(point);
-
-            //(2i + 1)/(2N) Pixel center
-            vec2 coordinate = (look * 2. + 1.) / (lutSize * 2.);
-            float tileIndex = color2float(texture2D(lut, coordinate));
-
+            vec2 point = vcoord + viewportOffset * scrollRatio;
             float magic = tileIndex / tileIndex;
-
-            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
             vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
+            vec2 tile = vec2(modI(tileIndex, grid.x), floor( (tileIndex - 1.) / grid.x));
+
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
-
-            vec2 fragmentOffsetPx = floor((point - look) * tileSize);
+            vec2 fragmentOffsetPx = floor(point * tileSize);
+            fragmentOffsetPx.x = abs((tileSize.x * mirror.x) - fragmentOffsetPx.x);
+            fragmentOffsetPx.y = abs((tileSize.y * mirror.y) - fragmentOffsetPx.y);
 
             //(2i + 1)/(2N) Pixel center
             vec2 pixel = floor((tile * tileSize + fragmentOffsetPx) * 2. + 1.) / (tileSetSize * 2.);
             gl_FragColor = texture2D(tileSet, pixel);
-
             gl_FragColor.a *= magic;
             gl_FragColor.rgb *= gl_FragColor.a;
         }

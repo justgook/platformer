@@ -1,4 +1,4 @@
-module Layer.Common exposing (Common, Individual, Layer(..), Uniform, fragmentShader, mesh, vertexShader)
+module Layer.Common exposing (Common, Individual, Layer(..), Uniform, mesh, vertexShader)
 
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3)
@@ -65,19 +65,5 @@ vertexShader =
         void main () {
           vcoord = vec2(position.x * widthRatio, position.y);
           gl_Position = viewport * vec4(vcoord, 0, 1.0);
-        }
-    |]
-
-
-fragmentShader : Shader a b { vcoord : Vec2 }
-fragmentShader =
-    [glsl|
-        precision mediump float;
-        varying vec2 vcoord;
-        void main () {
-            gl_FragColor = vec4(1, 0, 0, 1);
-            if (vcoord.x < .95 && vcoord.x > .05 && vcoord.y < .95 && vcoord.y > .05) {
-                 gl_FragColor.a = 0.25;
-            }
         }
     |]
