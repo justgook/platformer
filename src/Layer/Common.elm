@@ -22,6 +22,7 @@ type alias CommonCommon a =
         | pixelsPerUnit : Float
         , viewportOffset : Vec2
         , widthRatio : Float
+        , time : Int
     }
 
 

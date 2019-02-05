@@ -1,6 +1,6 @@
 module ResourceManager exposing (RemoteData(..), init)
 
-import Http
+import Http exposing (Response(..))
 import Json.Decode as Decode
 import Task exposing (Task)
 import Tiled.Level as Tiled
@@ -25,8 +25,7 @@ init succeed fail flags =
 
 getLevel : (Tiled.Level -> Task Http.Error a) -> (Http.Error -> Task e a) -> String -> Cmd (RemoteData e a)
 getLevel succeed fail url =
-    Http.get url Tiled.decode
-        |> Http.toTask
+    getTask url Tiled.decode
         |> Task.andThen succeed
         |> Task.onError fail
         |> Task.attempt
@@ -38,3 +37,33 @@ getLevel succeed fail url =
                     Err e ->
                         Failure e
             )
+
+
+getTask url decoder =
+    Http.task
+        { method = "GET"
+        , headers = []
+        , url = url
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.GoodStatus_ meta body ->
+                            Decode.decodeString decoder body
+                                |> Result.mapError (Decode.errorToString >> Http.BadBody)
+
+                        Http.BadUrl_ info ->
+                            Err (Http.BadUrl info)
+
+                        Http.Timeout_ ->
+                            Err Http.Timeout
+
+                        Http.NetworkError_ ->
+                            Err Http.NetworkError
+
+                        Http.BadStatus_ { statusCode } _ ->
+                            Err (Http.BadStatus statusCode)
+                )
+        , timeout = Nothing
+        }

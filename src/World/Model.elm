@@ -80,7 +80,6 @@ init level =
         camera =
             Camera.init level
 
-        -- tileheight
         levelHeight =
             Tiled.Util.common level |> (\{ height, tileheight } -> tileheight * height |> toFloat)
     in
@@ -113,12 +112,17 @@ init level =
                         ( acc ++ [ result ], id, worldSpawn )
 
                     Tiled.Tile layerData ->
-                        ( Tiled.Util.splitTileLayerByTileSet layerData tilesets
-                            |> tileLayerBuilder layerData
-                            |> (++) acc
-                        , id
-                        , worldSpawn
-                        )
+                        let
+                            { static, animated } =
+                                Tiled.Util.splitTileLayerByTileSet layerData tilesets
+
+                            staticLayersTasks =
+                                tileStaticLayerBuilder layerData static
+
+                            animatedLayersTasks =
+                                tileAnimatedLayerBuilder layerData animated
+                        in
+                        ( acc ++ staticLayersTasks ++ animatedLayersTasks, id, worldSpawn )
 
                     Tiled.InfiniteTile layerData ->
                         ( acc, id, worldSpawn )
@@ -240,10 +244,6 @@ objectRenderInfo levelHeight layerData tilesets object =
                 |> Task.succeed
 
         _ ->
-            let
-                _ =
-                    Debug.log "other:object" object
-            in
             Layer.Object.Rectangle
                 { x = 10 + toFloat 5
                 , y = 10 + toFloat 5
@@ -277,10 +277,10 @@ imageOptions =
         opt =
             Image.defaultOptions
     in
-    { opt | order = RightDown }
+    { opt | order = LeftUp }
 
 
-tileLayerBuilder layerData =
+tileStaticLayerBuilder layerData =
     List.concatMap
         (\i ->
             case i of
@@ -316,6 +316,67 @@ tileLayerBuilder layerData =
                 ( Tiled.ImageCollection _, _ ) ->
                     []
         )
+
+
+tileAnimatedLayerBuilder layerData =
+    List.concatMap
+        (\i ->
+            case i of
+                ( ( Tiled.Embedded tileset, anim ), data ) ->
+                    let
+                        layerProps =
+                            Tiled.Util.properties layerData
+
+                        tilsetProps =
+                            Tiled.Util.properties tileset
+
+                        animLutData =
+                            animationFraming anim
+
+                        animLength =
+                            List.length animLutData
+
+                        result =
+                            Task.succeed
+                                (\tileSetImage lut animLUT ->
+                                    AbimatedTiles
+                                        { lut = lut
+                                        , lutSize = vec2 (toFloat layerData.width) (toFloat layerData.height)
+                                        , tileSet = tileSetImage
+                                        , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
+                                        , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
+                                        , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                        , scrollRatio = scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                        , animLUT = animLUT
+                                        , animLength = animLength
+                                        }
+                                )
+                                |> andMapTask (download tileset.image)
+                                |> andMapTask
+                                    (encodeWith imageOptions layerData.width layerData.height data
+                                        |> WebGL.loadWith default.textureOption
+                                    )
+                                |> andMapTask
+                                    (encodeWith imageOptions animLength 1 animLutData
+                                        |> WebGL.loadWith default.textureOption
+                                    )
+                    in
+                    [ result ]
+
+                ( ( Tiled.Source _, _ ), _ ) ->
+                    []
+
+                ( ( Tiled.ImageCollection _, _ ), _ ) ->
+                    []
+        )
+
+
+animationFraming anim =
+    anim
+        |> List.concatMap
+            (\{ duration, tileid } ->
+                List.repeat (toFloat duration / 1000 * default.fps |> floor) tileid
+            )
 
 
 andMapTask : Task x a -> Task x (a -> b) -> Task x b

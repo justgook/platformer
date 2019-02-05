@@ -4,7 +4,7 @@ module Tiled.Tileset exposing
     , TilesData, ImageCollectionTileDataTile, TilesDataObjectgroup, SpriteAnimation
     , GridData
     , decodeTilesData, encodeTilesData
-    , decodeTiles
+    , decodeFile, decodeTiles
     )
 
 {-|
@@ -27,7 +27,7 @@ module Tiled.Tileset exposing
 
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (custom, optional, required)
+import Json.Decode.Pipeline exposing (custom, hardcoded, optional, required)
 import Json.Encode as Encode
 import Tiled.Helper exposing (indexedFoldl)
 import Tiled.Layer as Layer exposing (DrawOrder)
@@ -46,9 +46,17 @@ type Tileset
 decode : Decoder Tileset
 decode =
     Decode.oneOf
-        [ decodeEmbeddedTileset
+        [ decodeEmbeddedTileset (required "firstgid" Decode.int)
         , decodeSourceTileset
-        , decodeImageCollectionTileData
+        , decodeImageCollectionTileData (required "firstgid" Decode.int)
+        ]
+
+
+decodeFile : Int -> Decoder Tileset
+decodeFile firstgid =
+    Decode.oneOf
+        [ decodeEmbeddedTileset (hardcoded firstgid)
+        , decodeImageCollectionTileData (hardcoded firstgid)
         ]
 
 
@@ -172,11 +180,17 @@ encodeSpriteAnimation data =
 
 
 {-| -}
-decodeEmbeddedTileset : Decoder Tileset
-decodeEmbeddedTileset =
+
+
+
+-- decodeEmbeddedTileset : Decoder Tileset
+
+
+decodeEmbeddedTileset firstgid =
     Decode.succeed EmbeddedTileData
         |> required "columns" Decode.int
-        |> required "firstgid" Decode.int
+        -- |> required "firstgid" Decode.int
+        |> firstgid
         |> required "image" Decode.string
         |> required "imageheight" Decode.int
         |> required "imagewidth" Decode.int
@@ -250,11 +264,17 @@ decodeSpriteAnimation =
 
 
 {-| -}
-decodeImageCollectionTileData : Decode.Decoder Tileset
-decodeImageCollectionTileData =
+
+
+
+-- decodeImageCollectionTileData : Decode.Decoder Tileset
+
+
+decodeImageCollectionTileData firstgid =
     Decode.succeed ImageCollectionTileData
         |> required "columns" Decode.int
-        |> required "firstgid" Decode.int
+        |> firstgid
+        -- |> required "firstgid" Decode.int
         |> required "margin" Decode.int
         |> required "name" Decode.string
         |> required "spacing" Decode.int

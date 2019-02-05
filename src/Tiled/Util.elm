@@ -86,42 +86,94 @@ common level =
             }
 
 
-splitTileLayerByTileSet : Layer.TileData -> List Tileset -> List ( Tileset, List Int )
+others =
+    updateOthers (prepand 0)
+
+
+prepand id =
+    \( t_, v ) -> ( t_, id :: v )
+
+
+splitTileLayerByTileSet : Layer.TileData -> List Tileset -> { static : List ( Tileset, List Int ), animated : List ( ( Tileset, List Tileset.SpriteAnimation ), List Int ) }
 splitTileLayerByTileSet tileLayerData tilesetList =
     tileLayerData.data
         |> List.foldl
-            (\tileId ( length, acc ) ->
-                let
-                    updateDict id =
-                        append id
-
-                    insertDict tileset id =
-                        ( tileset, List.repeat length 0 ++ [ id ] )
-
-                    others =
-                        append 0 |> updateOthers
-
-                    append id =
-                        \( t_, v ) -> ( t_, v ++ [ id ] )
-                in
-                tilesetById tilesetList tileId
-                    |> Maybe.map
-                        (\tileset ->
-                            let
-                                relativeId =
-                                    -- First element alway should be 1, 0 is for empty
-                                    tileId - firstgid tileset + 1
-                            in
-                            acc
-                                |> updateOrInsert (updateDict relativeId) (insertDict tileset relativeId) (firstgid tileset)
-                                |> others (firstgid tileset)
+            (\tileId ( cache, static, animated ) ->
+                -- let
+                --     animDictK =
+                --         tileId - 1
+                -- in
+                case Dict.get tileId animated of
+                    Just ( t_, v ) ->
+                        ( 0 :: cache
+                        , static |> others 0
+                        , animated |> Dict.insert tileId ( t_, 1 :: v ) |> others tileId
                         )
-                    |> Maybe.withDefault (acc |> others 0)
-                    |> Tuple.pair (length + 1)
+
+                    Nothing ->
+                        case tilesetById tilesetList tileId of
+                            Just tileset ->
+                                let
+                                    fGid =
+                                        firstgid tileset
+                                in
+                                case animation tileset (tileId - fGid) of
+                                    Just anim ->
+                                        ( 0 :: cache
+                                        , static |> others 0
+                                        , animated |> Dict.insert tileId ( ( tileset, anim ), 1 :: cache ) |> others tileId
+                                        )
+
+                                    Nothing ->
+                                        let
+                                            relativeId =
+                                                -- First element alway should be 1, 0 is for empty
+                                                tileId - fGid + 1
+                                        in
+                                        case Dict.get fGid static of
+                                            Just ( t_, v ) ->
+                                                ( 0 :: cache
+                                                , static |> Dict.insert fGid ( t_, relativeId :: v ) |> others fGid
+                                                , animated |> others 0
+                                                )
+
+                                            Nothing ->
+                                                ( 0 :: cache
+                                                , static
+                                                    |> Dict.insert fGid ( tileset, relativeId :: cache )
+                                                    |> others fGid
+                                                , animated |> others 0
+                                                )
+
+                            Nothing ->
+                                ( 0 :: cache
+                                , static |> others 0
+                                , animated |> others 0
+                                )
             )
-            ( 0, Dict.empty )
-        |> Tuple.second
-        |> Dict.values
+            ( [], Dict.empty, Dict.empty )
+        |> (\( cache, static, animated ) ->
+                { static = Dict.values static
+                , animated = animated |> Dict.values
+                }
+           )
+
+
+rangeMember id dict =
+    rangeMember_ id (Dict.keys dict)
+
+
+rangeMember_ id keys =
+    case keys of
+        (( low, hight ) as result) :: rest ->
+            if id > hight || id < low then
+                rangeMember_ id rest
+
+            else
+                Just result
+
+        [] ->
+            Nothing
 
 
 updateOrInsert : (a -> a) -> a -> comparable -> Dict comparable a -> Dict comparable a
@@ -134,6 +186,16 @@ updateOrInsert f1 f2 k d =
             Dict.insert k f2 d
 
 
+tilecount tileset =
+    --TODO remove me for unknown length
+    case tileset of
+        Tileset.Embedded info ->
+            info.tilecount
+
+        _ ->
+            0
+
+
 updateOthers : (a -> a) -> comparable -> Dict comparable a -> Dict comparable a
 updateOthers f k =
     Dict.map
@@ -144,6 +206,16 @@ updateOthers f k =
             else
                 f v
         )
+
+
+animation : Tileset -> Int -> Maybe (List Tileset.SpriteAnimation)
+animation tileset id =
+    case tileset of
+        Tileset.Embedded { tiles } ->
+            Dict.get id tiles |> Maybe.map .animation
+
+        _ ->
+            Nothing
 
 
 firstgid : Tileset -> Int
@@ -161,6 +233,7 @@ firstgid item =
 
 tilesetById : List Tileset -> Int -> Maybe Tileset
 tilesetById tileset id =
+    --TODO make early exit
     find
         (\item ->
             case item of

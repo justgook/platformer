@@ -23,6 +23,7 @@ render (Layer common individual) =
     { pixelsPerUnit = common.pixelsPerUnit
     , viewportOffset = common.viewportOffset
     , widthRatio = common.widthRatio
+    , time = common.time
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
     , tileSet = individual.tileSet
@@ -81,7 +82,7 @@ fragmentShader =
             vec2 look = floor(point);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 coordinate = (look * 2. + 1.) / (lutSize * 2.);
+            vec2 coordinate = (look + 0.5) / lutSize;
             float tileIndex = color2float(texture2D(lut, coordinate));
 
             float magic = tileIndex / tileIndex;
@@ -95,7 +96,7 @@ fragmentShader =
             vec2 fragmentOffsetPx = floor((point - look) * tileSize);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 pixel = floor((tile * tileSize + fragmentOffsetPx) * 2. + 1.) / (tileSetSize * 2.);
+            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
             gl_FragColor = texture2D(tileSet, pixel);
 
             gl_FragColor.a *= magic;

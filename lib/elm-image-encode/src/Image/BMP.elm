@@ -193,6 +193,8 @@ lineFolder24 pixelInLineLeft acc =
             , unsignedInt24 Bytes.LE e2
             , unsignedInt24 Bytes.LE e3
             , unsignedInt8 0
+            , unsignedInt8 0
+            , unsignedInt8 0
             ]
                 |> (++) acc
 
@@ -207,8 +209,6 @@ lineFolder24 pixelInLineLeft acc =
         [ e1 ] ->
             [ unsignedInt24 Bytes.LE e1
             , unsignedInt8 0
-            , unsignedInt8 0
-            , unsignedInt8 0
             ]
                 |> (++) acc
 
@@ -218,6 +218,10 @@ lineFolder24 pixelInLineLeft acc =
 
 lineFolder24reverse : List Int -> List Encoder -> List Encoder
 lineFolder24reverse pixelInLineLeft acc =
+    -- [e1] -> 3 bytes -> add 1 to get a multiple of 4
+    -- [e1,e2] -> 6 bytes -> add 2 to get a multiple of 4
+    -- [e1,e2,e3] -> 9 bytes -> add 3 to get a multiple of 4
+    -- [e1,e2,e3,e4] -> 12 bytes -> add 0 to get a multiple of 4
     case pixelInLineLeft of
         e1 :: e2 :: e3 :: e4 :: rest ->
             unsignedInt24 Bytes.LE e4
@@ -232,7 +236,7 @@ lineFolder24reverse pixelInLineLeft acc =
                 :: unsignedInt24 Bytes.LE e2
                 :: unsignedInt24 Bytes.LE e1
                 :: acc
-                ++ [ unsignedInt8 0 ]
+                ++ [ unsignedInt8 0, unsignedInt8 0, unsignedInt8 0 ]
 
         [ e1, e2 ] ->
             unsignedInt24 Bytes.LE e2
@@ -246,8 +250,6 @@ lineFolder24reverse pixelInLineLeft acc =
             unsignedInt24 Bytes.LE e1
                 :: acc
                 ++ [ unsignedInt8 0
-                   , unsignedInt8 0
-                   , unsignedInt8 0
                    ]
 
         [] ->

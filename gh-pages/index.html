@@ -7,34 +7,49 @@
 <style>
   * {
     margin: 0;
-    padding: 0
+    padding: 0;
   }
 
   html {
     overflow: hidden;
+    height: 100%;
   }
 
-  /*
   body {
-    opacity: 1;
-    background: black;
-    animation-name: fade-in;
-    animation-duration: 2s;
+    min-height: 100%;
+    background: #000;
   }
 
-  @keyframes fade-in {
-    from {
-      opacity: 0;
+
+  body.loading::before {
+    content: " ";
+    display: block;
+    margin: 1px;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear 0s infinite;
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+  }
+
+  @keyframes lds-dual-ring {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
     }
 
-    to {
-      opacity: 1;
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
     }
   }
-  */
 </style>
 
-<body>
+<body class="loading">
+
   <!-- https://benpaulhanna.com/building-an-elm-project-with-parcel.html -->
   <script>
     (function () {
@@ -47,16 +62,22 @@
   </script>
   <script src="/bundle.js"></script>
   <script>
-    Elm.Main.init(
+    console.time("loading");
+    var app = Elm.Main.init(
       {
         flags: {
           devicePixelRatio: window.devicePixelRatio || 1,
           // levelUrl: "/assets/cornercase.json",
-          levelUrl: "/assets/debug.json",
+          levelUrl: "/assets/demo.json",
           seed: Math.floor(Math.random() * 0xFFFFFFFF)
         }
       }
-    )</script>
+    );
+    app.ports.start.subscribe(function (data) {
+      console.timeEnd("loading");
+      document.body.className = "loaded";
+    });
+  </script>
 </body>
 
 </html>

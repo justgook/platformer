@@ -1,6 +1,23 @@
-module World.Component exposing (animations, delme, dimensions, objects, positions, velocities)
+module World.Component exposing
+    ( Positions
+    , animations
+    , delme
+    , dimensions
+    , objects
+    , positions
+    , velocities
+    )
 
 import Dict.Any as Dict
+import Logic.Component exposing (Set, Spec, first, second)
+
+
+type alias Positions =
+    Logic.Component.Set String
+
+
+positionsExtractor =
+    { tile = () }
 
 
 positions =

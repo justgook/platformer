@@ -48,6 +48,7 @@ render (Layer common individual) =
     , pixelsPerUnit = common.pixelsPerUnit
     , viewportOffset = common.viewportOffset
     , widthRatio = common.widthRatio
+    , time = common.time
     }
         |> WebGL.entityWith
             default.entitySettings

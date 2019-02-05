@@ -25,6 +25,7 @@ render (Layer common individual) =
     { pixelsPerUnit = common.pixelsPerUnit
     , viewportOffset = common.viewportOffset
     , widthRatio = common.widthRatio
+    , time = common.time
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
     , image = individual.image
@@ -52,9 +53,8 @@ fragmentShader =
         float px = 1.0 / pixelsPerUnit;
 
         void main () {
-            //Pixel center;
-            vec2 pixel0 = floor(vcoord * pixelsPerUnit) + 0.5;
-            vec2 pixel = pixel0 / size;
+            //(2i + 1)/(2N) Pixel center
+            vec2 pixel = (floor(vcoord * pixelsPerUnit) + 0.5) / size;
             gl_FragColor = texture2D(image, mod(pixel + viewportOffset * px * scrollRatio, 1.0));
             gl_FragColor.rgb *= gl_FragColor.a;
         }
