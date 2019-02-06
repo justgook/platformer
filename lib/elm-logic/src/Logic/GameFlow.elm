@@ -1,4 +1,4 @@
-module Logic.GameFlow exposing (GameFlow(..), Model, update)
+module Logic.GameFlow exposing (GameFlow(..), Model, update, updateWith)
 
 
 type alias Model a =
@@ -20,21 +20,25 @@ default =
     { fps = 60 }
 
 
-update : (Model a -> Model a) -> Float -> Model a -> Model a
-update systems delta world =
+type alias ExtendedModel a b =
+    ( Model a, b )
+
+
+updateWith : (ExtendedModel a b -> ExtendedModel a b) -> Float -> ExtendedModel a b -> ExtendedModel a b
+updateWith systems delta (( world, _ ) as model) =
     let
         ( worldWithUpdatedRuntime, countOfFrames ) =
             case world.flow of
                 Running ->
-                    updateRuntime world delta default.fps
+                    updateRuntime model delta default.fps
 
                 Pause ->
-                    updateRuntime world delta 0
+                    updateRuntime model delta 0
 
                 SlowMotion current ->
                     let
-                        ( newWorld, countOfFrames_ ) =
-                            updateRuntime world delta (toFloat current.fps)
+                        ( ( newWorld, newWorld2 ), countOfFrames_ ) =
+                            updateRuntime model delta (toFloat current.fps)
 
                         framesLeft =
                             current.frames - countOfFrames_
@@ -46,7 +50,7 @@ update systems delta world =
                             else
                                 ( SlowMotion { current | frames = framesLeft }, newWorld.runtime_ )
                     in
-                    ( { newWorld | flow = flow, runtime_ = runtime }, countOfFrames_ )
+                    ( ( { newWorld | flow = flow, runtime_ = runtime }, newWorld2 ), countOfFrames_ )
     in
     worldWithUpdatedRuntime
         |> (if countOfFrames > 0 then
@@ -57,13 +61,19 @@ update systems delta world =
            )
 
 
+update : (Model a -> Model a) -> Float -> Model a -> Model a
+update systems delta model =
+    updateWith (Tuple.mapFirst systems) delta ( model, () )
+        |> Tuple.first
+
+
 resetRuntime : Float -> Int -> Float
 resetRuntime fps frames =
     toFloat frames / fps
 
 
-updateRuntime : Model a -> Float -> Float -> ( Model a, Int )
-updateRuntime world delta fps =
+updateRuntime : ExtendedModel a b -> Float -> Float -> ( ExtendedModel a b, Int )
+updateRuntime ( world, world2 ) delta fps =
     let
         thresholdTime =
             1 / fps * 12
@@ -80,17 +90,17 @@ updateRuntime world delta fps =
                 |> min (fps * thresholdTime)
                 |> round
     in
-    ( { world | runtime_ = newRuntime }, countOfFrames )
+    ( ( { world | runtime_ = newRuntime }, world2 ), countOfFrames )
 
 
-worldUpdate : (Model a -> Model a) -> Int -> Model a -> Model a
-worldUpdate system framesLeft world =
+worldUpdate : (ExtendedModel a b -> ExtendedModel a b) -> Int -> ExtendedModel a b -> ExtendedModel a b
+worldUpdate system framesLeft (( world, world2 ) as model) =
     if framesLeft < 1 then
-        world
+        model
 
     else
         let
-            newWorld =
-                system world
+            ( newWorld, newWorld2 ) =
+                system model
         in
-        worldUpdate system (framesLeft - 1) { newWorld | frame = newWorld.frame + 1 }
+        worldUpdate system (framesLeft - 1) ( { newWorld | frame = newWorld.frame + 1 }, newWorld2 )

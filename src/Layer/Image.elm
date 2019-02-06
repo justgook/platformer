@@ -10,18 +10,37 @@ import WebGL.Settings.Blend as Blend
 import WebGL.Texture exposing (Texture)
 
 
+
+-- type Repeat
+--     = Repeat
+--     | RepeatX
+--     | RepeatY
+--     | NoRepeat
+-- -- repeat : String -> Repeat -> Repeat
+-- -- repeat s d =
+-- --     case s of
+-- --         "repeat" ->
+-- --             Repeat
+-- --         "repeat-x" ->
+-- --             RepeatX
+-- --         "repeat-y" ->
+-- --             RepeatY
+-- --         "no-repeat" ->
+-- --             NoRepeat
+-- --         _ ->
+-- --             d
+
+
 type alias Model =
     { image : Texture
     , size : Vec2
+
+    -- , repeat : Repeat
     }
 
 
 render : Layer Model -> WebGL.Entity
 render (Layer common individual) =
-    -- let
-    --     _ =
-    --         Debug.log "pixelsPerUnit" common.pixelsPerUnit
-    -- in
     { pixelsPerUnit = common.pixelsPerUnit
     , viewportOffset = common.viewportOffset
     , widthRatio = common.widthRatio
@@ -50,12 +69,11 @@ fragmentShader =
         uniform vec2 viewportOffset;
         uniform vec2 scrollRatio;
         uniform vec2 size;
-        float px = 1.0 / pixelsPerUnit;
 
         void main () {
             //(2i + 1)/(2N) Pixel center
-            vec2 pixel = (floor(vcoord * pixelsPerUnit) + 0.5) / size;
-            gl_FragColor = texture2D(image, mod(pixel + viewportOffset * px * scrollRatio, 1.0));
+            vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
+            gl_FragColor = texture2D(image, mod(pixel, 1.0));
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

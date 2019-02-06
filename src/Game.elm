@@ -1,4 +1,4 @@
-port module Game exposing (document)
+port module Game exposing (World, document)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
@@ -6,6 +6,9 @@ import Defaults exposing (default)
 import Environment exposing (Environment)
 import Http
 import Json.Decode as Json
+import Layer exposing (Layer)
+import Logic.GameFlow as Flow
+import Logic.System exposing (System)
 import Resource
 import ResourceManager exposing (RemoteData(..))
 import ResourceManager2
@@ -15,12 +18,19 @@ import Tiled.Level
 import Tiled.Tileset
 import Tiled.Util
 import WebGL
-import World exposing (World)
+import World
+import World.Camera as Camera exposing (Camera)
+import World.Create
+import World.Render
 
 
-type alias Model =
+type alias World world obj =
+    World.World world obj
+
+
+type alias Model world obj =
     { env : Environment
-    , loader : RemoteData Http.Error World
+    , loader : RemoteData Http.Error (World world obj)
 
     -- , resource : ResourceManager2.Model Message
     }
@@ -29,67 +39,96 @@ type alias Model =
 port start : () -> Cmd msg
 
 
-document : Program Json.Value Model Message
-document =
+
+-- document : Program Json.Value Model Message
+
+
+document { init, system, read, view } =
     Browser.document
-        { init = init
-        , view = view
-        , update = update
+        { init = init_ init read
+        , view = view_ view
+        , update = update system
         , subscriptions =
-            \model ->
-                case model.loader of
+            \model_ ->
+                case model_.loader of
                     Success world ->
-                        [ Environment.subscriptions model.env |> Sub.map Environment
+                        [ Environment.subscriptions model_.env |> Sub.map Environment
                         , Browser.onAnimationFrameDelta Frame
                         ]
                             |> Sub.batch
 
                     _ ->
-                        Environment.subscriptions model.env |> Sub.map Environment
+                        Environment.subscriptions model_.env |> Sub.map Environment
         }
 
 
-init : Json.Value -> ( Model, Cmd Message )
-init flags =
+
+-- init_ : Json.Value -> ( Model world, Cmd (Message world) )
+
+
+init_ empty read flags =
     let
         ( env, envMsg ) =
             Environment.init flags
 
         ( loader, loaderMsg ) =
-            ResourceManager.init World.init Task.fail flags
+            ResourceManager.init
+                (World.Create.init read
+                    (\camera layers ->
+                        World.World
+                            { camera = camera
+                            , layers = layers
+                            , frame = 0
+                            , runtime_ = 0
+                            , flow = Flow.Running
+                            }
+                            empty
+                    )
+                )
+                Task.fail
+                flags
 
         -- ( resourceModel, resourceCmd ) =
         --     ResourceManager2.init Resource
     in
     ( { env = env
       , loader = loader
-
-      --   , resource = resourceModel
       }
     , Cmd.batch
         [ envMsg |> Cmd.map Environment
         , loaderMsg |> Cmd.map Loader
-
-        -- , resourceCmd
         ]
     )
 
 
-type Message
+type Message world obj
     = Environment Environment.Message
-    | Loader (ResourceManager.RemoteData Http.Error World)
+    | Loader (ResourceManager.RemoteData Http.Error (World world obj))
     | Frame Float
 
 
 
 -- | Resource ResourceManager2.Message
+-- update : System (World world) -> Message world -> Model world -> ( Model world, Cmd (Message world) )
 
 
-update : Message -> Model -> ( Model, Cmd Message )
-update msg model =
+update system msg model =
     case ( msg, model.loader ) of
-        ( Frame delta, Success world ) ->
-            ( { model | loader = Success (World.update delta world) }
+        ( Frame delta, Success (World.World world ecs) ) ->
+            -- let
+            --     _ =
+            --         Debug.log "Game::update" ecs
+            -- in
+            ( { model
+                | loader =
+                    Success
+                        (Flow.updateWith
+                            system
+                            delta
+                            ( world, ecs )
+                            |> (\( a, b ) -> World.World a b)
+                        )
+              }
             , Cmd.none
             )
 
@@ -112,8 +151,11 @@ update msg model =
             ( model, Cmd.none )
 
 
-view : Model -> Document Message
-view model =
+
+-- view_ : Model world obj -> Document (Message world obj)
+
+
+view_ objRender model =
     case model.loader of
         Loading ->
             { title = "Loading"
@@ -129,10 +171,11 @@ view model =
                 ]
             }
 
-        Success world ->
+        Success (World.World world ecs) ->
             { title = "Success"
             , body =
-                [ World.view model.env world
-                    |> WebGL.toHtmlWith default.webGLOption (Environment.style model.env)
+                [ World.Render.view objRender model.env world ecs
+                    |> WebGL.toHtmlWith default.webGLOption
+                        (Environment.style model.env)
                 ]
             }

@@ -1,5 +1,9 @@
 module World.Render exposing (view)
 
+-- import Layer.Object.Ellipse
+-- import Layer.Object.Rectangle
+-- import Layer.Object.Tile
+
 import Array
 import Defaults exposing (default)
 import Dict exposing (Dict)
@@ -10,10 +14,6 @@ import Image.BMP exposing (encodeWith)
 import Layer exposing (Layer(..))
 import Layer.Common as Common
 import Layer.Image
-import Layer.Object
-import Layer.Object.Ellipse
-import Layer.Object.Rectangle
-import Layer.Object.Tile
 import Layer.Tiles
 import Layer.Tiles.Animated
 import List.Extra as List
@@ -30,11 +30,9 @@ import WebGL
 import WebGL.Texture as WebGL exposing (Texture, linear, nearest, nonPowerOfTwoOptions)
 import World.Camera exposing (Camera)
 import World.Component
-import World.Model exposing (Model(..), World)
 
 
-view : Environment -> Model -> List WebGL.Entity
-view env (Model ({ camera, layers, frame } as world)) =
+view objRender env ({ camera, layers, frame } as world) ecs =
     let
         common =
             { pixelsPerUnit = camera.pixelsPerUnit
@@ -57,52 +55,5 @@ view env (Model ({ camera, layers, frame } as world)) =
                         [ Common.Layer common info |> Layer.Tiles.Animated.render ]
 
                     Object info ->
-                        customSystem common ( world, info )
+                        objRender common ( ecs, info )
             )
-
-
-customSystem :
-    Common.Common
-    -> ( World, Component.Set Layer.Object.Object )
-    -> List WebGL.Entity
-customSystem common ( world, infoSet ) =
-    System.foldl2Custom
-        (\( obj, seta ) ( b, setb ) acc ->
-            case obj of
-                Layer.Object.Rectangle info ->
-                    acc
-                        |> Tuple.mapSecond
-                            ((::)
-                                (info
-                                    |> Common.Layer common
-                                    |> Layer.Object.Rectangle.render
-                                )
-                            )
-
-                Layer.Object.Ellipse info ->
-                    acc
-                        |> Tuple.mapSecond
-                            ((::)
-                                (info
-                                    |> Common.Layer common
-                                    |> Layer.Object.Ellipse.render
-                                )
-                            )
-
-                Layer.Object.Tile info ->
-                    acc
-                        |> Tuple.mapSecond
-                            ((::)
-                                (info
-                                    |> Common.Layer common
-                                    |> Layer.Object.Tile.render
-                                )
-                            )
-
-                _ ->
-                    acc
-        )
-        (Component.second World.Component.objects)
-        (Component.first World.Component.positions)
-        ( ( world, infoSet ), [] )
-        |> Tuple.second

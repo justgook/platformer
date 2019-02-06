@@ -78,7 +78,7 @@ fragmentShader =
         }
 
         void main () {
-            vec2 point = ((vcoord / (1.0 / tilesPerUnit))) + viewportOffset * scrollRatio;
+            vec2 point = ((vcoord / (1.0 / tilesPerUnit))) + (viewportOffset / tileSize) * scrollRatio;
             vec2 look = floor(point);
 
             //(2i + 1)/(2N) Pixel center

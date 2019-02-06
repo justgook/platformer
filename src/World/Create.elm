@@ -1,4 +1,4 @@
-module World.Model exposing (Model(..), World, init)
+module World.Create exposing (init)
 
 -- import Dict.Any as Dict
 
@@ -11,12 +11,11 @@ import Image.BMP exposing (encodeWith)
 import Layer exposing (Layer(..))
 import Layer.Common as Common
 import Layer.Image
-import Layer.Object
 import Layer.Tiles
 import List.Extra as List
 import Logic.Component as Component
 import Logic.Entity as Entity
-import Logic.GameFlow as Flow exposing (GameFlow(..), Model)
+import Logic.GameFlow as Flow
 import Logic.System as System
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
@@ -30,50 +29,20 @@ import Tiled.Tileset as Tiled
 import Tiled.Util
 import WebGL
 import WebGL.Texture as WebGL exposing (linear, nearest)
+import World
 import World.Camera as Camera exposing (Camera)
 import World.Component as Component
-
-
-type Model
-    = Model World
-
-
-type alias World =
-    Flow.Model
-        { layers : List Layer
-        , camera : Camera
-        , delme : Array (Maybe Vec3)
-        , positions : Array (Maybe Vec2)
-        , dimensions : Array (Maybe Vec2)
-
-        -- , animations : Dict.AnyDict String String String
-        , animations2 : Array (Maybe Vec2)
-        , velocities : Array (Maybe Vec2)
-        }
 
 
 download im =
     "/assets/" ++ im |> WebGL.loadWith default.textureOption
 
 
-empty camera layers =
-    { layers = layers
-    , camera = camera
-    , frame = 0
-    , runtime_ = 0
-    , flow = Flow.Running
-    , positions = Array.empty
-    , dimensions = Array.empty
-    , delme = Array.empty
-
-    -- , animations = Dict.empty (\_ -> "a")
-    , animations2 = Array.empty
-    , velocities = Array.empty
-    }
-
-
-init level =
+init read empty level =
     let
+        objectSpawn_ =
+            objectSpawn read
+
         tilesets =
             Tiled.Util.tilesets level
 
@@ -129,138 +98,178 @@ init level =
 
                     Tiled.Object layerData ->
                         let
-                            ( newAcc, newId, newWorldSpawn ) =
-                                List.foldl (spwnObjects levelHeight layerData tilesets) ( Task.succeed Array.empty, id, worldSpawn ) layerData.objects
+                            ( newId, ( newWorldSpawn, newWorldSpawn2 ) ) =
+                                List.foldr
+                                    (\obj ->
+                                        case obj of
+                                            Tiled.Object.Point common ->
+                                                objectSpawn_ (\{ objectPoint } -> objectPoint common)
+
+                                            Tiled.Object.Rectangle common dimension ->
+                                                objectSpawn_ (\{ objectRectangle } -> objectRectangle common dimension)
+
+                                            Tiled.Object.Ellipse common dimension ->
+                                                objectSpawn_ (\{ objectEllipse } -> objectEllipse common dimension)
+
+                                            Tiled.Object.Polygon common dimension polyPoints ->
+                                                objectSpawn_ (\{ objectPolygon } -> objectPolygon common dimension polyPoints)
+
+                                            Tiled.Object.PolyLine common dimension polyPoints ->
+                                                objectSpawn_ (\{ objectPolyLine } -> objectPolyLine common dimension polyPoints)
+
+                                            Tiled.Object.Tile common dimension gid ->
+                                                objectSpawn_ (\{ objectTile } -> objectTile common dimension gid)
+                                    )
+                                    ( id, ( worldSpawn, identity ) )
+                                    layerData.objects
+
+                            objLayer =
+                                newWorldSpawn2 Array.empty
+                                    |> Object
+                                    |> Task.succeed
                         in
-                        ( acc ++ [ newAcc |> Task.map Object ], newId, newWorldSpawn )
+                        ( acc ++ [ objLayer ], newId, newWorldSpawn )
+             -- let
+             --     ( newAcc, newId, newWorldSpawn ) =
+             --         List.foldl (spwnObjects levelHeight layerData tilesets) ( Task.succeed Array.empty, id, worldSpawn ) layerData.objects
+             -- in
+             -- ( acc ++ [ newAcc |> Task.map Object ], newId, newWorldSpawn )
             )
-            ( [], 0, identity )
-        |> createWorld camera
-
-
-spwnObjects levelHeight layerData tilesets obj ( acc, id, worldSpawn ) =
-    let
-        newId =
-            id + 1
-
-        newSpawn =
-            worldSpawn
-                >> Entity.create newId
-                >> Entity.with ( Component.positions, vec2 21 21 )
-                >> Entity.with ( Component.dimensions, vec2 22 22 )
-                >> Entity.with ( Component.velocities, vec2 23 23 )
-                >> Entity.with ( Component.animations, vec2 24 24 )
-                >> Entity.with ( Component.delme, vec3 25 25 25 )
-                >> Tuple.second
-
-        newAcc =
-            Task.map2
-                (\obj_ acc_ ->
-                    acc_
-                        |> Entity.create newId
-                        |> Entity.with ( Component.objects, obj_ )
-                        |> Tuple.second
-                )
-                (objectRenderInfo levelHeight layerData tilesets obj)
-                acc
-    in
-    ( newAcc, newId, newSpawn )
-
-
-objectRenderInfo levelHeight layerData tilesets object =
-    let
-        layerProps =
-            Tiled.Util.properties layerData
-
-        layerScrollRatio =
-            scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
-    in
-    case object of
-        Tiled.Object.Tile common dimension gid ->
-            let
-                gidInfo =
-                    Tiled.gidInfo gid
-            in
-            case Tiled.Util.tilesetById tilesets gidInfo.gid of
-                Just (Tiled.Embedded tileset) ->
-                    Task.map
-                        (\tilesetImage ->
-                            let
-                                tilsetProps =
-                                    Tiled.Util.properties tileset
-                            in
-                            Layer.Object.Tile
-                                { x = common.x + dimension.width / 2
-                                , y = levelHeight - common.y + dimension.height / 2
-                                , width = dimension.width
-                                , height = dimension.height
-                                , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
-                                , scrollRatio = layerScrollRatio
-                                , mirror = vec2 (boolToFloat gidInfo.fh) (boolToFloat gidInfo.fv)
-
-                                -- First element alway should be 1, 0 is for empty
-                                , tileIndex = gidInfo.gid - tileset.firstgid + 1 |> toFloat
-                                , tileSet = tilesetImage
-                                , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
-                                , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                }
+            ( [], -1, identity )
+        |> (\( taskList, id, func ) ->
+                taskList
+                    |> Task.sequence
+                    |> Task.mapError (\_ -> Http.NetworkError)
+                    |> Task.map
+                        (\layers ->
+                            empty camera layers
+                                |> (\(World.World a b) -> World.World a (func b))
                         )
-                        (download tileset.image)
-
-                _ ->
-                    Layer.Object.Rectangle
-                        { x = common.x + dimension.width / 2
-                        , y = levelHeight - common.y + dimension.height / 2
-                        , width = dimension.width
-                        , height = dimension.height
-                        , color = vec4 1 0 1 1
-                        , scrollRatio = layerScrollRatio
-                        , transparentcolor = default.transparentcolor
-                        }
-                        |> Task.succeed
-
-        Tiled.Object.Rectangle common dimension ->
-            Layer.Object.Rectangle
-                { x = common.x + dimension.width / 2
-                , y = levelHeight - common.y - dimension.height / 2
-                , width = dimension.width
-                , height = dimension.height
-                , color = vec4 1 1 0 1
-                , scrollRatio = layerScrollRatio
-                , transparentcolor = default.transparentcolor
-                }
-                |> Task.succeed
-
-        Tiled.Object.Ellipse common dimension ->
-            Layer.Object.Ellipse
-                { x = common.x + dimension.width / 2
-                , y = levelHeight - common.y - dimension.height / 2
-                , width = dimension.width
-                , height = dimension.height
-                , color = vec4 0 1 0 1
-                , scrollRatio = layerScrollRatio
-                , transparentcolor = default.transparentcolor
-                }
-                |> Task.succeed
-
-        _ ->
-            Layer.Object.Rectangle
-                { x = 10 + toFloat 5
-                , y = 10 + toFloat 5
-                , width = 20
-                , height = 20
-                , color = vec4 1 1 1 1
-                , scrollRatio = layerScrollRatio
-                , transparentcolor = default.transparentcolor
-                }
-                |> Task.succeed
+           )
 
 
-createWorld camera ( taskList, id, func ) =
-    taskList
-        |> Task.sequence
-        |> Task.mapError (\_ -> Http.NetworkError)
-        |> Task.map (empty camera >> func >> Model)
+objectSpawn read f1 ( id_, ( acc1, acc2 ) ) =
+    let
+        newId_ =
+            id_ + 1
+
+        readFolder f_ read_ entAcc =
+            List.foldl f_ entAcc read_
+
+        ( newAcc1, newAcc2 ) =
+            readFolder f1 read ( acc1 >> Entity.create newId_, acc2 >> Entity.create newId_ )
+    in
+    ( newId_, ( newAcc1 >> Tuple.second, newAcc2 >> Tuple.second ) )
+
+
+
+-- ( newId_, ( acc1, acc2 ) )
+-- spwnObjects levelHeight layerData tilesets obj ( acc, id, worldSpawn ) =
+--     let
+--         newId =
+--             id + 1
+--         newSpawn =
+--             worldSpawn
+--                 >> Entity.create newId
+--                 >> Entity.with ( Component.positions, vec2 21 21 )
+--                 >> Entity.with ( Component.dimensions, vec2 22 22 )
+--                 >> Entity.with ( Component.velocities, vec2 23 23 )
+--                 >> Entity.with ( Component.animations, vec2 24 24 )
+--                 >> Entity.with ( Component.delme, vec3 25 25 25 )
+--                 >> Tuple.second
+--         newAcc =
+--             Task.map2
+--                 (\obj_ acc_ ->
+--                     acc_
+--                         |> Entity.create newId
+--                         |> Entity.with ( Component.objects, obj_ )
+--                         |> Tuple.second
+--                 )
+--                 (objectRenderInfo levelHeight layerData tilesets obj)
+--                 acc
+--     in
+--     ( newAcc, newId, newSpawn )
+-- objectRenderInfo levelHeight layerData tilesets object =
+--     let
+--         layerProps =
+--             Tiled.Util.properties layerData
+--         layerScrollRatio =
+--             scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+--     in
+--     case object of
+--         Tiled.Object.Tile common dimension gid ->
+--             let
+--                 gidInfo =
+--                     Tiled.gidInfo gid
+--             in
+--             case Tiled.Util.tilesetById tilesets gidInfo.gid of
+--                 Just (Tiled.Embedded tileset) ->
+--                     Task.map
+--                         (\tilesetImage ->
+--                             let
+--                                 tilsetProps =
+--                                     Tiled.Util.properties tileset
+--                             in
+--                             Layer.Object.Tile
+--                                 { x = common.x + dimension.width / 2
+--                                 , y = levelHeight - common.y + dimension.height / 2
+--                                 , width = dimension.width
+--                                 , height = dimension.height
+--                                 , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+--                                 , scrollRatio = layerScrollRatio
+--                                 , mirror = vec2 (boolToFloat gidInfo.fh) (boolToFloat gidInfo.fv)
+--                                 -- First element alway should be 1, 0 is for empty
+--                                 , tileIndex = gidInfo.gid - tileset.firstgid + 1 |> toFloat
+--                                 , tileSet = tilesetImage
+--                                 , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
+--                                 , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
+--                                 }
+--                         )
+--                         (download tileset.image)
+--                 _ ->
+--                     Layer.Object.Rectangle
+--                         { x = common.x + dimension.width / 2
+--                         , y = levelHeight - common.y + dimension.height / 2
+--                         , width = dimension.width
+--                         , height = dimension.height
+--                         , color = vec4 1 0 1 1
+--                         , scrollRatio = layerScrollRatio
+--                         , transparentcolor = default.transparentcolor
+--                         }
+--                         |> Task.succeed
+--         Tiled.Object.Rectangle common dimension ->
+--             Layer.Object.Rectangle
+--                 { x = common.x + dimension.width / 2
+--                 , y = levelHeight - common.y - dimension.height / 2
+--                 , width = dimension.width
+--                 , height = dimension.height
+--                 , color = vec4 1 1 0 1
+--                 , scrollRatio = layerScrollRatio
+--                 , transparentcolor = default.transparentcolor
+--                 }
+--                 |> Task.succeed
+--         Tiled.Object.Ellipse common dimension ->
+--             Layer.Object.Ellipse
+--                 { x = common.x + dimension.width / 2
+--                 , y = levelHeight - common.y - dimension.height / 2
+--                 , width = dimension.width
+--                 , height = dimension.height
+--                 , color = vec4 0 1 0 1
+--                 , scrollRatio = layerScrollRatio
+--                 , transparentcolor = default.transparentcolor
+--                 }
+--                 |> Task.succeed
+--         _ ->
+--             Layer.Object.Rectangle
+--                 { x = 10 + toFloat 5
+--                 , y = 10 + toFloat 5
+--                 , width = 20
+--                 , height = 20
+--                 , color = vec4 1 1 1 1
+--                 , scrollRatio = layerScrollRatio
+--                 , transparentcolor = default.transparentcolor
+--                 }
+--                 |> Task.succeed
 
 
 scrollRatio : Bool -> Tiled.Util.PropertiesReader -> Vec2

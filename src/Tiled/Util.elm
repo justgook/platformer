@@ -99,10 +99,6 @@ splitTileLayerByTileSet tileLayerData tilesetList =
     tileLayerData.data
         |> List.foldl
             (\tileId ( cache, static, animated ) ->
-                -- let
-                --     animDictK =
-                --         tileId - 1
-                -- in
                 case Dict.get tileId animated of
                     Just ( t_, v ) ->
                         ( 0 :: cache
@@ -233,7 +229,6 @@ firstgid item =
 
 tilesetById : List Tileset -> Int -> Maybe Tileset
 tilesetById tileset id =
-    --TODO make early exit
     find
         (\item ->
             case item of

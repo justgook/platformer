@@ -15,16 +15,16 @@ create id world =
 
 
 with : ( Component.Spec comp world, comp ) -> ( EntityID, world ) -> ( EntityID, world )
-with ( { get, set }, component ) ( mid, world ) =
+with ( { get, set }, component ) ( mId, world ) =
     let
         updatedComponents =
             get world
-                |> setComponent mid component
+                |> setComponent mId component
 
         updatedWorld =
             set updatedComponents world
     in
-    ( mid, updatedWorld )
+    ( mId, updatedWorld )
 
 
 setComponent : EntityID -> a -> Component.Set a -> Component.Set a

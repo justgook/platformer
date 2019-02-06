@@ -178,6 +178,7 @@ greedyGroupsOfWithStep f acc size step xs =
 
 lineFolder24 : List Int -> List Encoder -> List Encoder
 lineFolder24 pixelInLineLeft acc =
+    -- TODO remove ++ - use reverse folding
     case pixelInLineLeft of
         e1 :: e2 :: e3 :: e4 :: rest ->
             [ unsignedInt24 Bytes.LE e1

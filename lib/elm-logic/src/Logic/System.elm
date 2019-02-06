@@ -193,6 +193,15 @@ foldl2 f spec1 spec2 world =
     world |> spec1.set result.a |> spec2.set result.b
 
 
+applyIf : Bool -> (a -> a) -> a -> a
+applyIf bool f world =
+    if bool then
+        f world
+
+    else
+        world
+
+
 foldl2Custom :
     SetsReducer2 a b ( { a : Component.Set a, b : Component.Set b }, custom )
     -> Component.Spec a world
@@ -231,7 +240,11 @@ foldl2Custom f spec1 spec2 ( world, custom ) =
                 ( combined, custom )
                 combined.a
     in
-    ( world |> spec1.set result.a |> spec2.set result.b, newCustom )
+    ( world
+        |> applyIf (result.a /= combined.a) (spec1.set result.a)
+        |> applyIf (result.b /= combined.b) (spec2.set result.b)
+    , newCustom
+    )
 
 
 type alias SetsReducer3 a b c acc =
@@ -279,9 +292,9 @@ foldl3 f spec1 spec2 spec3 world =
                 combined.a
     in
     world
-        |> spec1.set result.a
-        |> spec2.set result.b
-        |> spec3.set result.c
+        |> applyIf (result.a /= combined.a) (spec1.set result.a)
+        |> applyIf (result.b /= combined.b) (spec2.set result.b)
+        |> applyIf (result.c /= combined.c) (spec3.set result.c)
 
 
 type alias SetsReducer4 a b c d acc =
@@ -334,7 +347,7 @@ foldl4 f spec1 spec2 spec3 spec4 world =
                 combined.a
     in
     world
-        |> spec1.set result.a
-        |> spec2.set result.b
-        |> spec3.set result.c
-        |> spec4.set result.d
+        |> applyIf (result.a /= combined.a) (spec1.set result.a)
+        |> applyIf (result.b /= combined.b) (spec2.set result.b)
+        |> applyIf (result.c /= combined.c) (spec3.set result.c)
+        |> applyIf (result.d /= combined.d) (spec4.set result.d)
