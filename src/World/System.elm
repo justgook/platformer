@@ -1,4 +1,4 @@
-module World.System exposing (demoCamera)
+module World.System exposing (demoCamera, linearMovement)
 
 import Array exposing (Array)
 import Ease exposing (Easing)
@@ -10,23 +10,43 @@ import World exposing (World(..))
 import World.Component as Component
 
 
-demoCamera easing points ( world, rest ) =
-    -- https://package.elm-lang.org/packages/elm-community/easing-functions/latest/Ease
+linearMovement posSpec dirSpec ( common, ecs ) =
     let
         speed =
-            370
+            3
+
+        newEcs =
+            System.foldl2
+                (\( pos, setPos ) ( { x, y }, setDir ) acc ->
+                    acc
+                        |> (vec2 (toFloat x * speed) (toFloat y * speed)
+                                |> Vec2.add pos
+                                |> setPos
+                           )
+                )
+                posSpec
+                dirSpec
+                ecs
+    in
+    ( common, newEcs )
+
+
+demoCamera easing points ( common, ecs ) =
+    let
+        speed =
+            60
 
         now =
-            toFloat world.frame / speed
+            toFloat common.frame / speed
 
         index =
             floor now
 
-        value =
-            easing (now - toFloat index)
-
         current =
             NE.get index points
+
+        value =
+            easing (now - toFloat index)
 
         next =
             NE.get (index + 1) points
@@ -37,7 +57,11 @@ demoCamera easing points ( world, rest ) =
                 |> Vec3.add current
                 |> Vec3.toRecord
     in
-    ( { world | camera = { pixelsPerUnit = z, viewportOffset = vec2 x y } }, rest )
+    ( { common
+        | camera = { pixelsPerUnit = z, viewportOffset = vec2 x y }
+      }
+    , ecs
+    )
 
 
 

@@ -118,7 +118,7 @@ init read empty level =
                                                 objectSpawn_ (\{ objectPolyLine } -> objectPolyLine common dimension polyPoints)
 
                                             Tiled.Object.Tile common dimension gid ->
-                                                objectSpawn_ (\{ objectTile } -> objectTile common dimension gid)
+                                                objectSpawn_ (\{ objectTile } -> objectTile { common | y = levelHeight - common.y } dimension gid)
                                     )
                                     ( id, ( worldSpawn, identity ) )
                                     layerData.objects

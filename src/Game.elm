@@ -43,7 +43,7 @@ port start : () -> Cmd msg
 -- document : Program Json.Value Model Message
 
 
-document { init, system, read, view } =
+document { init, system, read, view, subscriptions } =
     Browser.document
         { init = init_ init read
         , view = view_ view
@@ -51,9 +51,10 @@ document { init, system, read, view } =
         , subscriptions =
             \model_ ->
                 case model_.loader of
-                    Success world ->
+                    Success (World.World world1 world2) ->
                         [ Environment.subscriptions model_.env |> Sub.map Environment
                         , Browser.onAnimationFrameDelta Frame
+                        , subscriptions ( world1, world2 ) |> Sub.map Subscription
                         ]
                             |> Sub.batch
 
@@ -105,41 +106,31 @@ type Message world obj
     = Environment Environment.Message
     | Loader (ResourceManager.RemoteData Http.Error (World world obj))
     | Frame Float
-
-
-
--- | Resource ResourceManager2.Message
--- update : System (World world) -> Message world -> Model world -> ( Model world, Cmd (Message world) )
+    | Subscription ( Flow.Model { camera : Camera, layers : List (Layer obj) }, world )
 
 
 update system msg model =
+    let
+        wrap m data =
+            { m | loader = Success (data |> (\( a, b ) -> World.World a b)) }
+    in
     case ( msg, model.loader ) of
         ( Frame delta, Success (World.World world ecs) ) ->
-            -- let
-            --     _ =
-            --         Debug.log "Game::update" ecs
-            -- in
-            ( { model
-                | loader =
-                    Success
-                        (Flow.updateWith
-                            system
-                            delta
-                            ( world, ecs )
-                            |> (\( a, b ) -> World.World a b)
-                        )
-              }
+            ( Flow.updateWith system delta ( world, ecs ) |> wrap model
             , Cmd.none
             )
 
-        ( Environment income, _ ) ->
-            ( { model | env = Environment.update income model.env }, Cmd.none )
+        ( Subscription custom, Success (World.World world ecs) ) ->
+            ( custom |> wrap model, Cmd.none )
 
-        ( Loader (Success income), _ ) ->
-            ( { model | loader = Success income }, start () )
+        ( Environment info, _ ) ->
+            ( { model | env = Environment.update info model.env }, Cmd.none )
 
-        ( Loader income, _ ) ->
-            ( { model | loader = income }, Cmd.none )
+        ( Loader (Success info), _ ) ->
+            ( { model | loader = Success info }, start () )
+
+        ( Loader info, _ ) ->
+            ( { model | loader = info }, Cmd.none )
 
         -- ( Resource income, _ ) ->
         --     let

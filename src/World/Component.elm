@@ -1,4 +1,4 @@
-module World.Component exposing (Object(..), dimensions, objects, positions)
+module World.Component exposing (Object(..), defaultRead, dimensions, inFirst, objects, positions)
 
 import Array exposing (Array)
 import Defaults exposing (default)

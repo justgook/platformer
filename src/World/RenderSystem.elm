@@ -17,13 +17,13 @@ import World.Component as Component
 
 customSystem common ( ecs, infoSet ) =
     System.foldl2Custom
-        (\( obj, seta ) ( b, setb ) acc ->
+        (\( obj, seta ) ( pos, setb ) acc ->
             case obj of
                 Component.Rectangle info ->
                     acc
                         |> Tuple.mapSecond
                             ((::)
-                                (info
+                                ({ info | x = Vec2.getX pos, y = Vec2.getY pos }
                                     |> Common.Layer common
                                     |> Layer.Object.Rectangle.render
                                 )
