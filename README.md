@@ -34,8 +34,8 @@
 
 
 ## Custom Object properties
-  1. **OUTDATED** `buttonLeft` (Maybe change to `OnKeyUp[KeyCode] - Player.Move.Right` - where `Player` is name of object) - [`keyCode`](http://keycode.info/) - (Fallback to `37`)
-  1. `buttonRight` - [`KeyCode`](http://keycode.info/) - (Fallback to `39`)
+  1. **OUTDATED** `buttonLeft` (Maybe change to `onKey[event.key] - Move.N` - where `Player` is name of object) - [`keyCode`](http://keycode.info/) - (Fallback to `37`)
+  1. `buttonRight` - [`event.key`](http://keycode.info/)
   1. **NOT IMPLEMENTED** `atomove.x` - `float` - auto move by horizontal axis
   1. **NOT IMPLEMENTED** `atomove.y` - `float` - auto move by vertical axis
   1. **NOT IMPLEMENTED** `cameraOffset` - `Vec2` of `%, float(px)`

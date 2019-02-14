@@ -1,13 +1,14 @@
-module Main exposing (main)
+port module Main exposing (main)
+
+--import Json.Encode as E
 
 import Ease exposing (Easing)
 import Game exposing (World, document)
-import List.Nonempty as NE exposing (Nonempty(..))
-import Logic.GameFlow as Flow
+import List.Nonempty exposing (Nonempty(..))
 import Math.Vector3 exposing (vec3)
 import World.Component as Component
-import World.Input exposing (keyboard1)
 import World.RenderSystem exposing (customSystem)
+import World.Subscription exposing (keyboard)
 import World.System as System
 
 
@@ -17,7 +18,7 @@ main =
         , system = system
         , read = read
         , view = view
-        , subscriptions = keyboard1.sub
+        , subscriptions = keyboard
         }
 
 
@@ -25,11 +26,18 @@ view common ( world, info ) =
     customSystem common ( world, info )
 
 
+
+--port gamepadDown : (E.Value -> msg) -> Sub msg
+--
+--
+--port gamepadUp : (E.Value -> msg) -> Sub msg
+
+
 read =
     [ Component.positions.read
     , Component.dimensions.read
     , Component.objects.read
-    , keyboard1.read
+    , Component.direction.read
     ]
 
 
@@ -37,7 +45,7 @@ init =
     --TODO rename to world
     { positions = Component.positions.empty
     , dimensions = Component.dimensions.empty
-    , direction = keyboard1.empty
+    , direction = Component.direction.empty
     }
 
 
@@ -57,4 +65,4 @@ system world =
     in
     world
         |> System.demoCamera easing cameraPoints
-        |> System.linearMovement Component.positions.spec keyboard1.spec
+        |> System.linearMovement Component.positions.spec Component.direction.spec

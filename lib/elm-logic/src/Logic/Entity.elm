@@ -1,4 +1,4 @@
-module Logic.Entity exposing (EntityID, create, with)
+module Logic.Entity exposing (EntityID, create, setComponent, with)
 
 import Array
 import Logic.Component as Component

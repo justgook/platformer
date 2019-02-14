@@ -4,7 +4,6 @@ import Layer.Common as Common
 import Layer.Image
 import Layer.Tiles
 import Layer.Tiles.Animated
-import Logic.Component as Component
 
 
 type Layer object

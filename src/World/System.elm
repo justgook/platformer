@@ -1,13 +1,9 @@
 module World.System exposing (demoCamera, linearMovement)
 
-import Array exposing (Array)
-import Ease exposing (Easing)
 import List.Nonempty as NE exposing (Nonempty)
-import Logic.System as System exposing (System, andMap, end, start)
+import Logic.System as System exposing (System)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
-import World exposing (World(..))
-import World.Component as Component
+import Math.Vector3 as Vec3 exposing (Vec3)
 
 
 linearMovement posSpec dirSpec ( common, ecs ) =
@@ -17,7 +13,7 @@ linearMovement posSpec dirSpec ( common, ecs ) =
 
         newEcs =
             System.foldl2
-                (\( pos, setPos ) ( { x, y }, setDir ) acc ->
+                (\( pos, setPos ) ( { x, y }, _ ) acc ->
                     acc
                         |> (vec2 (toFloat x * speed) (toFloat y * speed)
                                 |> Vec2.add pos
@@ -62,28 +58,3 @@ demoCamera easing points ( common, ecs ) =
       }
     , ecs
     )
-
-
-
--- animationsChanger world =
---     (start
---         (\( delme, set4 ) ( position, setPosition ) ( _, set1 ) ( velocity, set2 ) animations acc ->
---             -- let
---             --     _ =
---             --         Debug.log "animationsChanger" world.delme
---             -- in
---             acc
---                 -- |> setPosition (Vec2.add velocity position)
---                 -- |> setPosition (Vec2.add velocity position)
---                 -- |> setPosition (Vec2.add velocity position)
---                 |> setPosition (Vec2.add velocity position)
---                 |> set4 (Vec3.add (vec3 1 1 1) delme)
---         )
---         Component.delme
---         >> andMap Component.positions
---         >> andMap Component.dimensions
---         >> andMap Component.velocities
---         >> andMap Component.animations
---         >> end
---     )
---         world

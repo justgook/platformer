@@ -5,21 +5,13 @@ import Browser.Events as Browser
 import Defaults exposing (default)
 import Environment exposing (Environment)
 import Http
-import Json.Decode as Json
 import Layer exposing (Layer)
 import Logic.GameFlow as Flow
-import Logic.System exposing (System)
-import Resource
 import ResourceManager exposing (RemoteData(..))
-import ResourceManager2
 import Task
-import Tiled
-import Tiled.Level
-import Tiled.Tileset
-import Tiled.Util
 import WebGL
 import World
-import World.Camera as Camera exposing (Camera)
+import World.Camera exposing (Camera)
 import World.Create
 import World.Render
 
@@ -31,8 +23,6 @@ type alias World world obj =
 type alias Model world obj =
     { env : Environment
     , loader : RemoteData Http.Error (World world obj)
-
-    -- , resource : ResourceManager2.Model Message
     }
 
 
@@ -63,10 +53,6 @@ document { init, system, read, view, subscriptions } =
         }
 
 
-
--- init_ : Json.Value -> ( Model world, Cmd (Message world) )
-
-
 init_ empty read flags =
     let
         ( env, envMsg ) =
@@ -88,9 +74,6 @@ init_ empty read flags =
                 )
                 Task.fail
                 flags
-
-        -- ( resourceModel, resourceCmd ) =
-        --     ResourceManager2.init Resource
     in
     ( { env = env
       , loader = loader
@@ -132,12 +115,6 @@ update system msg model =
         ( Loader info, _ ) ->
             ( { model | loader = info }, Cmd.none )
 
-        -- ( Resource income, _ ) ->
-        --     let
-        --         ( resource, cmd ) =
-        --             Resource.update income model.resource
-        --     in
-        --     ( { model | resource = resource }, cmd )
         _ ->
             ( model, Cmd.none )
 

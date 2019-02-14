@@ -35,6 +35,7 @@ decode =
 -- http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tile-flipping
 
 
+gidInfo : Int -> { gid : Int, fh : Bool, fv : Bool, fd : Bool }
 gidInfo gid =
     { gid = cleanGid gid
     , fh = flippedHorizontally gid
@@ -43,18 +44,22 @@ gidInfo gid =
     }
 
 
+flippedHorizontally : Int -> Bool
 flippedHorizontally globalTileId =
     Bitwise.and globalTileId flippedHorizontalFlag /= 0
 
 
+flippedVertically : Int -> Bool
 flippedVertically globalTileId =
     Bitwise.and globalTileId flippedVerticalFlag /= 0
 
 
+flippedDiagonally : Int -> Bool
 flippedDiagonally globalTileId =
     Bitwise.and globalTileId flippedDiagonalFlag /= 0
 
 
+cleanGid : Int -> Int
 cleanGid globalTileId =
     flippedHorizontalFlag
         |> Bitwise.or flippedVerticalFlag

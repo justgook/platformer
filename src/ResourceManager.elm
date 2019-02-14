@@ -1,4 +1,4 @@
-module ResourceManager exposing (RemoteData(..), init)
+module ResourceManager exposing (RemoteData(..), getTask, init)
 
 import Http exposing (Response(..))
 import Json.Decode as Decode

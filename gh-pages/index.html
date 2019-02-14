@@ -62,6 +62,12 @@
   </script>
   <script src="/bundle.js"></script>
   <script>
+    // window.addEventListener("gamepadconnected", function(e) {
+    //   console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+    //           e.gamepad.index, e.gamepad.id,
+    //           e.gamepad.buttons.length, e.gamepad.axes.length);
+    // });
+
     console.time("loading");
     var app = Elm.Main.init(
       {
@@ -73,9 +79,12 @@
         }
       }
     );
+
     app.ports.start.subscribe(function (data) {
       console.timeEnd("loading");
       document.body.className = "loaded";
+      // setTimeout(()=>app.ports.activeUsers.send("hello"), 0);
+
     });
   </script>
 </body>

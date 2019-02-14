@@ -1,61 +1,36 @@
-module World.Input exposing (keyboard1)
+module World.Subscription exposing (gamePad, keyboard)
 
 import Array
 import Browser.Events
+import Dict
 import Json.Decode as Decode
 import Logic.Entity as Entity exposing (EntityID)
-import Logic.System
 import Set exposing (Set)
-import World.Component exposing (defaultRead, inFirst)
 
 
-spec =
-    { get = .direction >> .comps
-    , set = \comps ({ direction } as world) -> { world | direction = { direction | comps = comps } }
-    }
+gamePad ( gamepadDown, gamepadUp ) port_ world =
+    gamepadDown
+        (\income ->
+            let
+                _ =
+                    income
+                        |> Decode.decodeValue Decode.string
+                        |> Debug.log "gamePad msg"
+            in
+            world
+        )
 
 
-
--- TODO move to component and name it as InputSpec
-
-
-keyboard1 =
-    { sub =
-        \world ->
-            Sub.batch
-                [ Browser.Events.onKeyDown (onKeyDown world)
-                , Browser.Events.onKeyUp (onKeyUp world)
-                ]
-    , spec = spec
-    , empty =
-        { pressed = Set.empty
-        , comps = Array.empty
-        , registred =
-            Set.fromList [ "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp" ]
-        }
-    , read =
-        { defaultRead
-            | objectTile =
-                \{ x, y } _ _ ->
-                    inFirst
-                        (Entity.with
-                            ( spec
-                            , { x = 0
-                              , y = 0
-                              , down = "ArrowDown"
-                              , left = "ArrowLeft"
-                              , right = "ArrowRight"
-                              , up = "ArrowUp"
-                              }
-                            )
-                        )
-        }
-    }
+keyboard world =
+    Sub.batch
+        [ Browser.Events.onKeyDown (onKeyDown world)
+        , Browser.Events.onKeyUp (onKeyUp world)
+        ]
 
 
 onKeyDown ( world1, { direction } as world2 ) =
     Decode.field "key" Decode.string
-        |> Decode.andThen (isRegistred direction)
+        |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.insert key direction.pressed
@@ -65,7 +40,7 @@ onKeyDown ( world1, { direction } as world2 ) =
 
 onKeyUp ( world1, { direction } as world2 ) =
     Decode.field "key" Decode.string
-        |> Decode.andThen (isRegistred direction)
+        |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.remove key direction.pressed
@@ -73,12 +48,13 @@ onKeyUp ( world1, { direction } as world2 ) =
             )
 
 
-isRegistred direction key =
-    if Set.member key direction.registred then
+isRegistered direction key =
+    --TODO maybe get rid of it and extend more updateKeys to fail in Maybe..
+    if Dict.member key direction.registered then
         Decode.succeed key
 
     else
-        Decode.fail "not registred key"
+        Decode.fail "not registered key"
 
 
 updateKeys keyChanged ( world1, { direction } as world2 ) pressed =
@@ -87,19 +63,26 @@ updateKeys keyChanged ( world1, { direction } as world2 ) pressed =
 
     else
         let
+            newComps =
+                direction.registered
+                    |> Dict.get keyChanged
+                    |> Maybe.andThen
+                        (\id ->
+                            Array.get id direction.comps
+                                |> Maybe.andThen identity
+                                |> Maybe.map
+                                    (\comp ->
+                                        let
+                                            { x, y } =
+                                                arrows comp pressed
+                                        in
+                                        Entity.setComponent id { comp | x = x, y = y } direction.comps
+                                    )
+                        )
+                    |> Maybe.withDefault direction.comps
+
             updatedDirection =
-                --TODO convert to plain Array.map or something like that, or even better - convert registred from set to dict, where it registers key to EntityID
-                Logic.System.map
-                    (\comp ->
-                        let
-                            { x, y } =
-                                arrows comp pressed
-                        in
-                        { comp | x = x, y = y }
-                    )
-                    spec
-                    world2
-                    |> .direction
+                { direction | comps = newComps }
         in
         Decode.succeed
             ( world1

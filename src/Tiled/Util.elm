@@ -1,22 +1,26 @@
 module Tiled.Util exposing
     ( PropertiesReader
+    , Tileset
     , common
-    , firstgid
+    , firstGid
     , layers
     , levelProps
     , properties
     , splitTileLayerByTileSet
     , tilesetById
+    , tilesetById2
     , tilesets
     )
 
 import Dict exposing (Dict)
+import Error exposing (Error(..))
 import Math.Vector3 exposing (Vec3, vec3)
-import Set
+import ResourceManager
+import Task
 import Tiled.Layer as Layer exposing (Layer)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Properties exposing (Properties, Property(..))
-import Tiled.Tileset as Tileset exposing (Tileset)
+import Tiled.Tileset
 
 
 common level =
@@ -94,7 +98,7 @@ prepand id =
     \( t_, v ) -> ( t_, id :: v )
 
 
-splitTileLayerByTileSet : Layer.TileData -> List Tileset -> { static : List ( Tileset, List Int ), animated : List ( ( Tileset, List Tileset.SpriteAnimation ), List Int ) }
+splitTileLayerByTileSet : Layer.TileData -> List Tiled.Tileset.Tileset -> { static : List ( Tiled.Tileset.Tileset, List Int ), animated : List ( ( Tiled.Tileset.Tileset, List Tiled.Tileset.SpriteAnimation ), List Int ) }
 splitTileLayerByTileSet tileLayerData tilesetList =
     tileLayerData.data
         |> List.foldl
@@ -111,7 +115,7 @@ splitTileLayerByTileSet tileLayerData tilesetList =
                             Just tileset ->
                                 let
                                     fGid =
-                                        firstgid tileset
+                                        firstGid tileset
                                 in
                                 case animation tileset (tileId - fGid) of
                                     Just anim ->
@@ -155,41 +159,41 @@ splitTileLayerByTileSet tileLayerData tilesetList =
            )
 
 
-rangeMember id dict =
-    rangeMember_ id (Dict.keys dict)
 
-
-rangeMember_ id keys =
-    case keys of
-        (( low, hight ) as result) :: rest ->
-            if id > hight || id < low then
-                rangeMember_ id rest
-
-            else
-                Just result
-
-        [] ->
-            Nothing
-
-
-updateOrInsert : (a -> a) -> a -> comparable -> Dict comparable a -> Dict comparable a
-updateOrInsert f1 f2 k d =
-    case Dict.get k d of
-        Just v ->
-            Dict.insert k (f1 v) d
-
-        Nothing ->
-            Dict.insert k f2 d
-
-
-tilecount tileset =
-    --TODO remove me for unknown length
-    case tileset of
-        Tileset.Embedded info ->
-            info.tilecount
-
-        _ ->
-            0
+--rangeMember id dict =
+--    rangeMember_ id (Dict.keys dict)
+--
+--
+--rangeMember_ id keys =
+--    case keys of
+--        (( low, hight ) as result) :: rest ->
+--            if id > hight || id < low then
+--                rangeMember_ id rest
+--
+--            else
+--                Just result
+--
+--        [] ->
+--            Nothing
+--
+--updateOrInsert : (a -> a) -> a -> comparable -> Dict comparable a -> Dict comparable a
+--updateOrInsert f1 f2 k d =
+--    case Dict.get k d of
+--        Just v ->
+--            Dict.insert k (f1 v) d
+--
+--        Nothing ->
+--            Dict.insert k f2 d
+--
+--
+--tileCount tileset =
+--    --TODO remove me for unknown length
+--    case tileset of
+--        Tiled.Tileset.Embedded info ->
+--            info.tilecount
+--
+--        _ ->
+--            0
 
 
 updateOthers : (a -> a) -> comparable -> Dict comparable a -> Dict comparable a
@@ -204,41 +208,125 @@ updateOthers f k =
         )
 
 
-animation : Tileset -> Int -> Maybe (List Tileset.SpriteAnimation)
+animation : Tiled.Tileset.Tileset -> Int -> Maybe (List Tiled.Tileset.SpriteAnimation)
 animation tileset id =
     case tileset of
-        Tileset.Embedded { tiles } ->
+        Tiled.Tileset.Embedded { tiles } ->
             Dict.get id tiles |> Maybe.map .animation
 
         _ ->
             Nothing
 
 
-firstgid : Tileset -> Int
-firstgid item =
+firstGid : Tiled.Tileset.Tileset -> Int
+firstGid item =
     case item of
-        Tileset.Source info ->
+        Tiled.Tileset.Source info ->
             info.firstgid
 
-        Tileset.Embedded info ->
+        Tiled.Tileset.Embedded info ->
             info.firstgid
 
-        Tileset.ImageCollection info ->
+        Tiled.Tileset.ImageCollection info ->
             info.firstgid
 
 
-tilesetById : List Tileset -> Int -> Maybe Tileset
+type Tileset
+    = Embedded Tiled.Tileset.EmbeddedTileData
+    | ImageCollection Tiled.Tileset.ImageCollectionTileData
+
+
+tilesetById2 : List Tiled.Tileset.Tileset -> Int -> Task.Task Error Tileset
+tilesetById2 tilesetList id =
+    let
+        fail code =
+            Error code ("Tileset Not Found for gid" ++ String.fromInt id)
+                |> Task.fail
+
+        download =
+            ResourceManager.getTask
+
+        convert t =
+            case t of
+                Tiled.Tileset.Embedded info ->
+                    Task.succeed (Embedded info)
+
+                Tiled.Tileset.ImageCollection info ->
+                    Task.succeed (ImageCollection info)
+
+                Tiled.Tileset.Source _ ->
+                    fail 1
+
+        find2 list =
+            case list of
+                first :: second :: rest ->
+                    case ( first, firstGid second ) of
+                        ( Tiled.Tileset.Source { firstgid, source }, secondGid ) ->
+                            if id >= firstgid && id < secondGid then
+                                download source (Tiled.Tileset.decodeFile firstgid)
+                                    |> Task.onError (\_ -> fail 2)
+                                    |> Task.andThen convert
+
+                            else
+                                find2 (second :: rest)
+
+                        ( Tiled.Tileset.Embedded info, _ ) ->
+                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+                                Task.succeed (Embedded info)
+
+                            else
+                                find2 (second :: rest)
+
+                        ( Tiled.Tileset.ImageCollection info, _ ) ->
+                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+                                Task.succeed (ImageCollection info)
+
+                            else
+                                find2 (second :: rest)
+
+                last :: [] ->
+                    case last of
+                        Tiled.Tileset.Source { firstgid, source } ->
+                            if firstgid < id then
+                                download source (Tiled.Tileset.decodeFile firstgid)
+                                    |> Task.onError (\_ -> fail 4)
+                                    |> Task.andThen convert
+
+                            else
+                                fail 6
+
+                        Tiled.Tileset.Embedded info ->
+                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+                                Task.succeed (Embedded info)
+
+                            else
+                                fail 7
+
+                        Tiled.Tileset.ImageCollection info ->
+                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+                                Task.succeed (ImageCollection info)
+
+                            else
+                                fail 8
+
+                [] ->
+                    fail 9
+    in
+    find2 tilesetList
+
+
+tilesetById : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
 tilesetById tileset id =
     find
         (\item ->
             case item of
-                Tileset.Source _ ->
+                Tiled.Tileset.Source _ ->
                     False
 
-                Tileset.Embedded info ->
+                Tiled.Tileset.Embedded info ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
 
-                Tileset.ImageCollection info ->
+                Tiled.Tileset.ImageCollection info ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
         )
         tileset
@@ -385,7 +473,7 @@ layers level =
             info.layers
 
 
-tilesets : Level -> List Tileset
+tilesets : Level -> List Tiled.Tileset.Tileset
 tilesets level =
     case level of
         Level.Orthogonal info ->
