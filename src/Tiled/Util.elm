@@ -151,7 +151,7 @@ splitTileLayerByTileSet tileLayerData tilesetList =
                                 )
             )
             ( [], Dict.empty, Dict.empty )
-        |> (\( cache, static, animated ) ->
+        |> (\( _, static, animated ) ->
                 { static = Dict.values static
                 , animated = animated |> Dict.values
                 }

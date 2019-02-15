@@ -144,7 +144,6 @@ init read empty level =
                             empty camera layers
                                 |> (\(World.World a b) ->
                                         func b
-                                            |> Task.map (Debug.log "RESULT WOLD AFTER CREATE")
                                             |> Task.mapError (\_ -> Http.NetworkError)
                                             |> Task.map (\w -> World.World a w)
                                    )

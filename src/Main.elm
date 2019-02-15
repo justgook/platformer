@@ -53,7 +53,7 @@ system world =
     let
         cameraPoints =
             Nonempty
-                (vec3 30 5 360)
+                (vec3 0 0 360)
                 [-- vec3 200 100 360
                  -- , vec3 3 0 160
                  -- , vec3 4 0 160

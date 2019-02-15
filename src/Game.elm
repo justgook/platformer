@@ -5,7 +5,7 @@ import Browser.Events as Browser
 import Defaults exposing (default)
 import Dict
 import Environment exposing (Environment)
-import Error exposing (Error)
+import Error exposing (Error(..))
 import Http
 import Layer exposing (Layer)
 import Logic.GameFlow as Flow
@@ -24,9 +24,10 @@ type alias World world obj =
     World.World world obj
 
 
-type alias Model world obj =
+type alias Model world obj delme =
     { env : Environment
     , loader : RemoteData Http.Error (World world obj)
+    , resource : delme
     }
 
 
@@ -94,6 +95,7 @@ init_ empty read flags =
     in
     ( { env = env
       , loader = loader
+      , resource = []
       }
     , Cmd.batch
         [ envMsg |> Cmd.map Environment
@@ -131,10 +133,11 @@ update system msg model =
                 good =
                     resource
                         |> Tuple.first
-                        --                        |> List.length
-                        |> Debug.log "got:Resource in Main update"
+
+                --                        |> List.length
+                --                        |> Debug.log "got:Resource in Main update"
             in
-            ( model, Cmd.none )
+            ( { model | resource = good }, Cmd.none )
 
         ( Resource (Err e), _ ) ->
             let
@@ -153,25 +156,31 @@ update system msg model =
 
 
 view_ objRender model =
-    case model.loader of
-        Loading ->
+    case ( model.loader, model.resource ) of
+        ( Loading, _ ) ->
             { title = "Loading"
             , body =
                 [ WebGL.toHtmlWith default.webGLOption (Environment.style model.env) []
                 ]
             }
 
-        Failure e ->
+        ( Failure e, _ ) ->
             { title = "Failure"
             , body =
                 [ WebGL.toHtmlWith default.webGLOption (Environment.style model.env) []
                 ]
             }
 
-        Success (World.World world ecs) ->
+        ( Success (World.World world ecs), xs ) ->
+            let
+                testWorld =
+                    { world | layers = xs }
+
+                --                    world
+            in
             { title = "Success"
             , body =
-                [ World.Render.view objRender model.env world ecs
+                [ World.Render.view objRender model.env testWorld ecs
                     |> WebGL.toHtmlWith default.webGLOption
                         (Environment.style model.env)
                 ]
