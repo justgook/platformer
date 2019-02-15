@@ -7,8 +7,7 @@ module Tiled.Util exposing
     , levelProps
     , properties
     , splitTileLayerByTileSet
-    , tilesetById
-    , tilesetById2
+    , tilesetById3
     , tilesets
     )
 
@@ -111,7 +110,7 @@ splitTileLayerByTileSet tileLayerData tilesetList =
                         )
 
                     Nothing ->
-                        case tilesetById tilesetList tileId of
+                        case tilesetById3 tilesetList tileId of
                             Just tileset ->
                                 let
                                     fGid =
@@ -236,97 +235,137 @@ type Tileset
     | ImageCollection Tiled.Tileset.ImageCollectionTileData
 
 
-tilesetById2 : List Tiled.Tileset.Tileset -> Int -> Task.Task Error Tileset
-tilesetById2 tilesetList id =
+
+--
+--tilesetById2 : List Tiled.Tileset.Tileset -> Int -> Task.Task Error Tileset
+--tilesetById2 tilesetList id =
+--    let
+--        fail code =
+--            Error code ("Tileset Not Found for gid" ++ String.fromInt id)
+--                |> Task.fail
+--
+--        download =
+--            ResourceManager.getTask
+--
+--        convert t =
+--            case t of
+--                Tiled.Tileset.Embedded info ->
+--                    Task.succeed (Embedded info)
+--
+--                Tiled.Tileset.ImageCollection info ->
+--                    Task.succeed (ImageCollection info)
+--
+--                Tiled.Tileset.Source _ ->
+--                    fail 1
+--
+--        find2 list =
+--            case list of
+--                first :: second :: rest ->
+--                    case ( first, firstGid second ) of
+--                        ( Tiled.Tileset.Source { firstgid, source }, secondGid ) ->
+--                            if id >= firstgid && id < secondGid then
+--                                download source (Tiled.Tileset.decodeFile firstgid)
+--                                    |> Task.onError (\_ -> fail 2)
+--                                    |> Task.andThen convert
+--
+--                            else
+--                                find2 (second :: rest)
+--
+--                        ( Tiled.Tileset.Embedded info, _ ) ->
+--                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+--                                Task.succeed (Embedded info)
+--
+--                            else
+--                                find2 (second :: rest)
+--
+--                        ( Tiled.Tileset.ImageCollection info, _ ) ->
+--                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+--                                Task.succeed (ImageCollection info)
+--
+--                            else
+--                                find2 (second :: rest)
+--
+--                last :: [] ->
+--                    case last of
+--                        Tiled.Tileset.Source { firstgid, source } ->
+--                            if firstgid < id then
+--                                download source (Tiled.Tileset.decodeFile firstgid)
+--                                    |> Task.onError (\_ -> fail 4)
+--                                    |> Task.andThen convert
+--
+--                            else
+--                                fail 6
+--
+--                        Tiled.Tileset.Embedded info ->
+--                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+--                                Task.succeed (Embedded info)
+--
+--                            else
+--                                fail 7
+--
+--                        Tiled.Tileset.ImageCollection info ->
+--                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
+--                                Task.succeed (ImageCollection info)
+--
+--                            else
+--                                fail 8
+--
+--                [] ->
+--                    fail 9
+--    in
+--    find2 tilesetList
+--tilesetById : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
+--tilesetById tileset id =
+--    find
+--        (\item ->
+--            case item of
+--                Tiled.Tileset.Source _ ->
+--                    False
+--
+--                Tiled.Tileset.Embedded info ->
+--                    id >= info.firstgid && id < info.firstgid + info.tilecount
+--
+--                Tiled.Tileset.ImageCollection info ->
+--                    id >= info.firstgid && id < info.firstgid + info.tilecount
+--        )
+--        tileset
+
+
+tilesetById3 : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
+tilesetById3 tileset id =
     let
-        fail code =
-            Error code ("Tileset Not Found for gid" ++ String.fromInt id)
-                |> Task.fail
-
-        download =
-            ResourceManager.getTask
-
-        convert t =
-            case t of
-                Tiled.Tileset.Embedded info ->
-                    Task.succeed (Embedded info)
-
-                Tiled.Tileset.ImageCollection info ->
-                    Task.succeed (ImageCollection info)
-
-                Tiled.Tileset.Source _ ->
-                    fail 1
-
-        find2 list =
+        innerfind predicate list =
             case list of
-                first :: second :: rest ->
-                    case ( first, firstGid second ) of
-                        ( Tiled.Tileset.Source { firstgid, source }, secondGid ) ->
-                            if id >= firstgid && id < secondGid then
-                                download source (Tiled.Tileset.decodeFile firstgid)
-                                    |> Task.onError (\_ -> fail 2)
-                                    |> Task.andThen convert
+                first :: next :: rest ->
+                    if predicate first (Just next) then
+                        Just first
 
-                            else
-                                find2 (second :: rest)
+                    else
+                        innerfind predicate (next :: rest)
 
-                        ( Tiled.Tileset.Embedded info, _ ) ->
-                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
-                                Task.succeed (Embedded info)
+                first :: rest ->
+                    if predicate first Nothing then
+                        Just first
 
-                            else
-                                find2 (second :: rest)
-
-                        ( Tiled.Tileset.ImageCollection info, _ ) ->
-                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
-                                Task.succeed (ImageCollection info)
-
-                            else
-                                find2 (second :: rest)
-
-                last :: [] ->
-                    case last of
-                        Tiled.Tileset.Source { firstgid, source } ->
-                            if firstgid < id then
-                                download source (Tiled.Tileset.decodeFile firstgid)
-                                    |> Task.onError (\_ -> fail 4)
-                                    |> Task.andThen convert
-
-                            else
-                                fail 6
-
-                        Tiled.Tileset.Embedded info ->
-                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
-                                Task.succeed (Embedded info)
-
-                            else
-                                fail 7
-
-                        Tiled.Tileset.ImageCollection info ->
-                            if id >= info.firstgid && id < info.firstgid + info.tilecount then
-                                Task.succeed (ImageCollection info)
-
-                            else
-                                fail 8
+                    else
+                        innerfind predicate rest
 
                 [] ->
-                    fail 9
+                    Nothing
     in
-    find2 tilesetList
+    innerfind
+        (\item next ->
+            case ( item, next ) of
+                ( Tiled.Tileset.Source info, Nothing ) ->
+                    True
 
+                ( Tiled.Tileset.Source info, Just nextTileset ) ->
+                    id >= info.firstgid && id < firstGid nextTileset
 
-tilesetById : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
-tilesetById tileset id =
-    find
-        (\item ->
-            case item of
-                Tiled.Tileset.Source _ ->
-                    False
-
-                Tiled.Tileset.Embedded info ->
+                ( Tiled.Tileset.Embedded info, _ ) ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
 
-                Tiled.Tileset.ImageCollection info ->
+                ( Tiled.Tileset.ImageCollection info, _ ) ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
         )
         tileset

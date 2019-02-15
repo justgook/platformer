@@ -6,11 +6,9 @@ module World.Component exposing
     )
 
 import Array exposing (Array)
-import Defaults exposing (default)
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
 import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector4 exposing (Vec4, vec4)
 import Task
 import World.Component.Common exposing (EcsSpec, defaultRead)
 import World.Component.Direction
@@ -43,7 +41,7 @@ positions =
     , read =
         { defaultRead
             | objectTile =
-                \_ { x, y } { width, height } gid ->
+                \_ { x, y } _ _ ->
                     Task.succeed << Entity.with ( spec, vec2 x y )
         }
     }

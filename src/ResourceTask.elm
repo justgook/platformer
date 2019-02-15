@@ -1,0 +1,240 @@
+module ResourceTask exposing
+    ( CacheTask
+    , ResourceTask
+    , Response
+    , andThen
+    , andThenWithCache
+    , attempt
+    , attemptDebug
+    , failWithCache
+    , getCache
+    , getLevel
+    , getTexture
+    , getTileset
+    , init
+    ,  map
+       --    , sequence
+
+    ,  sequenceWithCache
+       --    , succeed
+
+    , succeedWithCache
+    )
+
+import Defaults exposing (default)
+import Dict exposing (Dict)
+import Error exposing (Error(..))
+import Http
+import Json.Decode as Decode exposing (Decoder)
+import Task exposing (Task)
+import Tiled.Level
+import Tiled.Tileset
+import WebGL.Texture
+
+
+type Response
+    = Texture WebGL.Texture.Texture
+    | Tileset Tiled.Tileset.Tileset
+    | Level Tiled.Level.Level
+
+
+type alias ResourceTask a =
+    Task Error ( a, Dict.Dict String Response )
+
+
+type alias CacheTask =
+    Task Error (Dict.Dict String Response)
+
+
+attempt : (Result Error a -> msg) -> ResourceTask a -> Cmd msg
+attempt f task =
+    task
+        |> Task.map Tuple.first
+        |> Task.attempt f
+
+
+attemptDebug : (Result Error ( a, Dict.Dict String Response ) -> msg) -> ResourceTask a -> Cmd msg
+attemptDebug f task =
+    task
+        |> Task.attempt f
+
+
+
+--
+--sequence : List (ResourceTask a) -> ResourceTask (List a)
+--sequence ltask =
+--    List.foldr
+--        (\t acc ->
+--            acc
+--                |> andThen
+--                    (\r ->
+--                        map (\r2 -> r2 :: r) t
+--                    )
+--        )
+--        (succeed [])
+--        ltask
+
+
+sequenceWithCache : List (CacheTask -> ResourceTask a) -> CacheTask -> ResourceTask (List a)
+sequenceWithCache ltask cache =
+    List.foldr
+        (\t acc ->
+            acc
+                |> andThenWithCache
+                    (\newList t2 ->
+                        t t2
+                            |> map (\r -> r :: newList)
+                    )
+        )
+        (succeedWithCache [] cache)
+        ltask
+
+
+getTileset : String -> Int -> CacheTask -> ResourceTask Tiled.Tileset.Tileset
+getTileset url firstgid cache =
+    cache
+        |> Task.andThen
+            (\d ->
+                case Dict.get url d of
+                    Just (Tileset r) ->
+                        Task.succeed ( r, d )
+
+                    _ ->
+                        getJson url (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
+            )
+        |> Task.map
+            (\( resp, dict ) ->
+                ( resp, Dict.insert url (Tileset resp) dict )
+            )
+
+
+getTexture : String -> CacheTask -> ResourceTask WebGL.Texture.Texture
+getTexture url cache =
+    cache
+        |> Task.andThen
+            (\d ->
+                case Dict.get url d of
+                    Just (Texture r) ->
+                        Task.succeed ( r, d )
+
+                    _ ->
+                        url
+                            |> WebGL.Texture.loadWith default.textureOption
+                            |> Task.mapError textureError
+                            |> Task.map (\r -> ( r, d ))
+            )
+        |> Task.map
+            (\( resp, dict ) ->
+                ( resp, Dict.insert url (Texture resp) dict )
+            )
+
+
+textureError : WebGL.Texture.Error -> Error
+textureError e =
+    case e of
+        WebGL.Texture.LoadError ->
+            Error 4005 "Texture.LoadError"
+
+        WebGL.Texture.SizeError a b ->
+            Error 4006 "Texture.LoadError"
+
+
+getLevel : String -> CacheTask -> ResourceTask Tiled.Level.Level
+getLevel url cache =
+    cache
+        |> Task.andThen
+            (\d ->
+                case Dict.get url d of
+                    Just (Level r) ->
+                        Task.succeed ( r, d )
+
+                    _ ->
+                        getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
+            )
+        |> Task.map
+            (\( resp, dict ) ->
+                ( resp, Dict.insert url (Level resp) dict )
+            )
+
+
+
+--succeed : a -> ResourceTask a
+--succeed a =
+--    Task.succeed ( a, Dict.empty )
+
+
+succeedWithCache : a -> CacheTask -> ResourceTask a
+succeedWithCache a =
+    Task.andThen (Tuple.pair a >> Task.succeed)
+
+
+failWithCache : Error -> CacheTask -> ResourceTask a
+failWithCache e _ =
+    Task.fail e
+
+
+getCache : ResourceTask a -> CacheTask
+getCache task =
+    task
+        |> Task.map Tuple.second
+
+
+map : (a -> b) -> ResourceTask a -> ResourceTask b
+map f task =
+    Task.map (Tuple.mapFirst f) task
+
+
+andThen : (a -> ResourceTask b) -> ResourceTask a -> ResourceTask b
+andThen f task =
+    task
+        |> Task.andThen
+            (\( a, dict ) ->
+                f a
+                    |> Task.map (\( b, dict2 ) -> ( b, Dict.union dict dict2 ))
+            )
+
+
+andThenWithCache : (a -> CacheTask -> ResourceTask b) -> ResourceTask a -> ResourceTask b
+andThenWithCache f task =
+    task
+        |> Task.andThen
+            (\( a, dict ) ->
+                f a (Task.succeed dict)
+                    |> Task.map (\( b, dict2 ) -> ( b, Dict.union dict dict2 ))
+            )
+
+
+getJson : String -> Decoder a -> Task.Task Error a
+getJson url decoder =
+    Http.task
+        { method = "GET"
+        , headers = []
+        , url = url
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (\response ->
+                    case response of
+                        Http.GoodStatus_ meta body ->
+                            Decode.decodeString decoder body
+                                |> Result.mapError (Decode.errorToString >> Error 4004)
+
+                        Http.BadUrl_ info ->
+                            Err (Error 4000 info)
+
+                        Http.Timeout_ ->
+                            Err (Error 4001 "Timeout")
+
+                        Http.NetworkError_ ->
+                            Err (Error 4002 "NetworkError")
+
+                        Http.BadStatus_ { statusCode } _ ->
+                            Err (Error 4003 ("BadStatus:" ++ String.fromInt statusCode))
+                )
+        , timeout = Nothing
+        }
+
+
+init : CacheTask
+init =
+    Task.succeed Dict.empty

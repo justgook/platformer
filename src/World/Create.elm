@@ -28,7 +28,7 @@ download im =
 
 
 type alias GetImageData =
-    Int -> Task Error Tiled.Util.Tileset
+    Int -> Maybe Tileset
 
 
 getImageData : List Tileset -> GetImageData
@@ -39,7 +39,7 @@ getImageData t gid =
     in
     info
         |> .gid
-        |> Tiled.Util.tilesetById2 t
+        |> Tiled.Util.tilesetById3 t
 
 
 init read empty level =

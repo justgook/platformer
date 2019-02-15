@@ -3,16 +3,20 @@ port module Game exposing (World, document)
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Defaults exposing (default)
+import Dict
 import Environment exposing (Environment)
+import Error exposing (Error)
 import Http
 import Layer exposing (Layer)
 import Logic.GameFlow as Flow
 import ResourceManager exposing (RemoteData(..))
+import ResourceTask exposing (ResourceTask)
 import Task
 import WebGL
 import World
 import World.Camera exposing (Camera)
 import World.Create
+import World.Create2
 import World.Render
 
 
@@ -24,6 +28,14 @@ type alias Model world obj =
     { env : Environment
     , loader : RemoteData Http.Error (World world obj)
     }
+
+
+type Message world obj defineMe
+    = Environment Environment.Message
+    | Loader (ResourceManager.RemoteData Http.Error (World world obj))
+    | Frame Float
+    | Subscription ( Flow.Model { camera : Camera, layers : List (Layer obj) }, world )
+    | Resource (Result Error ( defineMe, Dict.Dict String ResourceTask.Response ))
 
 
 port start : () -> Cmd msg
@@ -74,6 +86,11 @@ init_ empty read flags =
                 )
                 Task.fail
                 flags
+
+        resourceTask =
+            ResourceTask.init
+                |> ResourceTask.getLevel "/assets/demo.json"
+                |> ResourceTask.andThenWithCache World.Create2.init
     in
     ( { env = env
       , loader = loader
@@ -81,15 +98,9 @@ init_ empty read flags =
     , Cmd.batch
         [ envMsg |> Cmd.map Environment
         , loaderMsg |> Cmd.map Loader
+        , ResourceTask.attemptDebug Resource resourceTask
         ]
     )
-
-
-type Message world obj
-    = Environment Environment.Message
-    | Loader (ResourceManager.RemoteData Http.Error (World world obj))
-    | Frame Float
-    | Subscription ( Flow.Model { camera : Camera, layers : List (Layer obj) }, world )
 
 
 update system msg model =
@@ -114,6 +125,24 @@ update system msg model =
 
         ( Loader info, _ ) ->
             ( { model | loader = info }, Cmd.none )
+
+        ( Resource (Ok resource), _ ) ->
+            let
+                good =
+                    resource
+                        |> Tuple.first
+                        --                        |> List.length
+                        |> Debug.log "got:Resource in Main update"
+            in
+            ( model, Cmd.none )
+
+        ( Resource (Err e), _ ) ->
+            let
+                bad =
+                    e
+                        |> Debug.log "got:Resource in Main update AS ERROR"
+            in
+            ( model, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
