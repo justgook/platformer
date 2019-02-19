@@ -3,22 +3,18 @@ module ResourceTask exposing
     , ResourceTask
     , Response
     , andThen
-    , andThenWithCache
     , attempt
-    , attemptDebug
-    , failWithCache
+    , attemptWithCach
+    , fail
     , getCache
     , getLevel
     , getTexture
     , getTileset
     , init
-    ,  map
-       --    , sequence
-
-    ,  sequenceWithCache
-       --    , succeed
-
-    , succeedWithCache
+    , map
+    , map2
+    , sequence
+    , succeed
     )
 
 import Defaults exposing (default)
@@ -53,40 +49,24 @@ attempt f task =
         |> Task.attempt f
 
 
-attemptDebug : (Result Error ( a, Dict.Dict String Response ) -> msg) -> ResourceTask a -> Cmd msg
-attemptDebug f task =
+attemptWithCach : (Result Error ( a, Dict.Dict String Response ) -> msg) -> ResourceTask a -> Cmd msg
+attemptWithCach f task =
     task
         |> Task.attempt f
 
 
-
---
---sequence : List (ResourceTask a) -> ResourceTask (List a)
---sequence ltask =
---    List.foldr
---        (\t acc ->
---            acc
---                |> andThen
---                    (\r ->
---                        map (\r2 -> r2 :: r) t
---                    )
---        )
---        (succeed [])
---        ltask
-
-
-sequenceWithCache : List (CacheTask -> ResourceTask a) -> CacheTask -> ResourceTask (List a)
-sequenceWithCache ltask cache =
+sequence : List (CacheTask -> ResourceTask a) -> CacheTask -> ResourceTask (List a)
+sequence ltask cache =
     List.foldr
         (\t acc ->
             acc
-                |> andThenWithCache
+                |> andThen
                     (\newList t2 ->
                         t t2
                             |> map (\r -> r :: newList)
                     )
         )
-        (succeedWithCache [] cache)
+        (succeed [] cache)
         ltask
 
 
@@ -163,13 +143,13 @@ getLevel url cache =
 --    Task.succeed ( a, Dict.empty )
 
 
-succeedWithCache : a -> CacheTask -> ResourceTask a
-succeedWithCache a =
+succeed : a -> CacheTask -> ResourceTask a
+succeed a =
     Task.andThen (Tuple.pair a >> Task.succeed)
 
 
-failWithCache : Error -> CacheTask -> ResourceTask a
-failWithCache e _ =
+fail : Error -> CacheTask -> ResourceTask a
+fail e _ =
     Task.fail e
 
 
@@ -184,18 +164,19 @@ map f task =
     Task.map (Tuple.mapFirst f) task
 
 
-andThen : (a -> ResourceTask b) -> ResourceTask a -> ResourceTask b
+map2 :
+    (a2 -> a1 -> b)
+    -> (CacheTask -> ResourceTask a2)
+    -> (CacheTask -> ResourceTask a1)
+    -> CacheTask
+    -> ResourceTask b
+map2 f task1 task2 =
+    --TODO validate cache pass from first to second task
+    task1 >> andThen (\a -> task2 >> map (\b -> f a b))
+
+
+andThen : (a -> CacheTask -> ResourceTask b) -> ResourceTask a -> ResourceTask b
 andThen f task =
-    task
-        |> Task.andThen
-            (\( a, dict ) ->
-                f a
-                    |> Task.map (\( b, dict2 ) -> ( b, Dict.union dict dict2 ))
-            )
-
-
-andThenWithCache : (a -> CacheTask -> ResourceTask b) -> ResourceTask a -> ResourceTask b
-andThenWithCache f task =
     task
         |> Task.andThen
             (\( a, dict ) ->

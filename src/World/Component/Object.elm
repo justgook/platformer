@@ -8,8 +8,7 @@ import Layer.Object.Tile
 import Logic.Entity as Entity
 import Math.Vector2 exposing (vec2)
 import Math.Vector4 exposing (vec4)
-import Task
-import World.Component.Common exposing (defaultRead)
+import World.Component.Common exposing (Read3(..), defaultRead)
 
 
 type Object
@@ -29,26 +28,11 @@ objects =
     { spec = spec
     , read =
         { defaultRead
-            | objectTile =
-                \getImageData { x, y } { width, height } gid result ->
-                    let
-                        _ =
-                            getImageData gid
-                    in
-                    Task.succeed result
-
-            --                    inSecond
-            --                        (Entity.with
-            --                            ( spec
-            --                            , Rectangle
-            --                                { delme
-            --                                    | width = width
-            --                                    , height = height
-            --                                    , x = x
-            --                                    , y = y
-            --                                }
-            --                            )
-            --                        )
+            | objectTileRenderable =
+                Sync3
+                    (\{ x, y } { width, height } gid ->
+                        Entity.with ( spec, Rectangle { delme | width = width, height = height, x = x, y = y } )
+                    )
         }
     }
 

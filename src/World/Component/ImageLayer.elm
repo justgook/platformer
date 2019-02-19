@@ -5,14 +5,19 @@ import Dict
 import Layer
 import Math.Vector2 exposing (vec2)
 import ResourceTask
-import Tiled.Util2
+import Tiled.Layer exposing (ImageData)
+import Tiled.Util
 import WebGL.Texture
 
 
+imageLayer :
+    ImageData
+    -> ResourceTask.CacheTask
+    -> ResourceTask.ResourceTask (Layer.Layer object)
 imageLayer imageData =
     let
         props =
-            Tiled.Util2.properties imageData
+            Tiled.Util.properties imageData
     in
     ResourceTask.getTexture ("/assets/" ++ imageData.image)
         >> ResourceTask.map
@@ -25,6 +30,6 @@ imageLayer imageData =
                     { image = t
                     , size = vec2 (toFloat width) (toFloat height)
                     , transparentcolor = props.color "transparentcolor" default.transparentcolor
-                    , scrollRatio = Tiled.Util2.scrollRatio (Dict.get "scrollRatio" imageData.properties == Nothing) props
+                    , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" imageData.properties == Nothing) props
                     }
             )

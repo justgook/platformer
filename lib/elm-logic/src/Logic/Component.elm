@@ -1,4 +1,4 @@
-module Logic.Component exposing (Set, Spec, first, second)
+module Logic.Component exposing (Set, Spec, empty, first, second)
 
 import Array exposing (Array)
 
@@ -11,6 +11,11 @@ type alias Spec comp world =
     { get : world -> Set comp
     , set : Set comp -> world -> world
     }
+
+
+empty : Set comp
+empty =
+    Array.empty
 
 
 first : Spec comp world -> Spec comp ( world, b )

@@ -1,9 +1,11 @@
 module World.System exposing (demoCamera, linearMovement)
 
+import Ease exposing (Easing)
 import List.Nonempty as NE exposing (Nonempty)
 import Logic.System as System exposing (System)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3)
+import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import World exposing (WorldTuple)
 
 
 linearMovement posSpec dirSpec ( common, ecs ) =
@@ -27,8 +29,14 @@ linearMovement posSpec dirSpec ( common, ecs ) =
     ( common, newEcs )
 
 
-demoCamera easing points ( common, ecs ) =
+demoCamera : Easing -> List Vec3 -> WorldTuple world object -> WorldTuple world object
+demoCamera easing points_ ( common, ecs ) =
     let
+        points =
+            NE.fromList points_
+                |> Maybe.withDefault
+                    (vec3 0 0 common.camera.pixelsPerUnit |> NE.fromElement)
+
         speed =
             60
 

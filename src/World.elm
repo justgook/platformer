@@ -1,4 +1,4 @@
-module World exposing (World(..))
+module World exposing (World(..), WorldTuple)
 
 import Layer exposing (Layer)
 import Logic.GameFlow as Flow
@@ -13,3 +13,12 @@ type World world object
             }
         )
         world
+
+
+type alias WorldTuple world object =
+    ( Flow.Model
+        { layers : List (Layer object)
+        , camera : Camera
+        }
+    , world
+    )

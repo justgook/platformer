@@ -6,9 +6,8 @@ import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
 import Parser exposing ((|.), (|=))
 import Set
-import Task
 import Tiled.Properties exposing (Property(..))
-import World.Component.Common exposing (EcsSpec, defaultRead)
+import World.Component.Common exposing (EcsSpec, Read3(..), defaultRead)
 
 
 type alias Direction =
@@ -30,6 +29,7 @@ direction :
                 , pressed : Set.Set String
                 }
         }
+        layer
         Direction
         { comps : Logic.Component.Set Direction
         , registered : Dict String EntityID
@@ -110,15 +110,16 @@ direction =
     , read =
         { defaultRead
             | objectTile =
-                \_ { x, y, properties } _ _ ( entityId, world ) ->
-                    let
-                        ( comp, registered ) =
-                            filterKeys properties ( entityId, world.direction.registered )
+                Sync3
+                    (\{ x, y, properties } _ _ ( entityId, world ) ->
+                        let
+                            ( comp, registered ) =
+                                filterKeys properties ( entityId, world.direction.registered )
 
-                        dir =
-                            world.direction
-                    in
-                    Entity.with ( spec, comp ) ( entityId, { world | direction = { dir | registered = registered } } )
-                        |> Task.succeed
+                            dir =
+                                world.direction
+                        in
+                        Entity.with ( spec, comp ) ( entityId, { world | direction = { dir | registered = registered } } )
+                    )
         }
     }

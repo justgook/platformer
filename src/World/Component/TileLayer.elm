@@ -7,28 +7,47 @@ import Image exposing (Order(..))
 import Image.BMP exposing (encodeWith)
 import Layer
 import Math.Vector2 exposing (vec2)
-import ResourceTask
-import Tiled.Tileset
-import Tiled.Util2 exposing (tilesetById, updateTileset)
+import ResourceTask exposing (ResourceTask)
+import Tiled.Layer exposing (TileData)
+import Tiled.Tileset exposing (SpriteAnimation, Tileset)
+import Tiled.Util exposing (tilesetById, updateTileset)
 
 
+tileLayer : List Tileset -> TileData -> ResourceTask.CacheTask -> ResourceTask ( List (Layer.Layer object), List Tileset )
 tileLayer tilesets_ ({ data } as layerData) =
-    newSplitTileLayerByTileSet
+    splitTileLayerByTileSet
         tilesets_
         data
         { cache = [], static = Dict.empty, animated = Dict.empty }
-        >> ResourceTask.andThenWithCache
+        >> ResourceTask.andThen
             (\{ tilesets, animated, static } ->
-                ResourceTask.sequenceWithCache (tileStaticLayerBuilder layerData static ++ tileAnimatedLayerBuilder layerData animated)
+                ResourceTask.sequence (tileStaticLayerBuilder layerData static ++ tileAnimatedLayerBuilder layerData animated)
                     >> ResourceTask.map (\layers -> ( layers, tilesets ))
             )
 
 
-newSplitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc) =
+splitTileLayerByTileSet :
+    List Tiled.Tileset.Tileset
+    -> List Int
+    ->
+        { animated :
+            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+        , cache : Image.Pixels
+        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        }
+    -> ResourceTask.CacheTask
+    ->
+        ResourceTask.ResourceTask
+            { animated :
+                List ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+            , static : List ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+            , tilesets : List Tiled.Tileset.Tileset
+            }
+splitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc) =
     case dataLeft of
         gid :: rest ->
             if gid == 0 then
-                newSplitTileLayerByTileSet tilesets
+                splitTileLayerByTileSet tilesets
                     rest
                     { animated = others 0 animated
                     , cache = 0 :: cache
@@ -38,32 +57,33 @@ newSplitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc
             else
                 case tilesetById tilesets gid of
                     Just (Tiled.Tileset.Embedded info) ->
-                        newSplitTileLayerByTileSet tilesets rest (fillTiles gid info acc)
+                        splitTileLayerByTileSet tilesets rest (fillTiles gid info acc)
 
                     Just ((Tiled.Tileset.Source { firstgid, source }) as was) ->
                         ResourceTask.getTileset ("/assets/" ++ source) firstgid
-                            >> ResourceTask.andThenWithCache
+                            >> ResourceTask.andThen
                                 (\tileset ->
-                                    newSplitTileLayerByTileSet
+                                    splitTileLayerByTileSet
                                         (updateTileset was tileset tilesets [])
                                         dataLeft
                                         acc
                                 )
 
                     Just (Tiled.Tileset.ImageCollection info) ->
-                        newSplitTileLayerByTileSet tilesets rest { acc | cache = 0 :: cache }
+                        splitTileLayerByTileSet tilesets rest { acc | cache = 0 :: cache }
 
                     Nothing ->
-                        ResourceTask.failWithCache (Error 5000 ("Not found Tileset for GID:" ++ String.fromInt gid))
+                        ResourceTask.fail (Error 5000 ("Not found Tileset for GID:" ++ String.fromInt gid))
 
         [] ->
-            ResourceTask.succeedWithCache
+            ResourceTask.succeed
                 { animated = Dict.values acc.animated
                 , static = Dict.values acc.static
                 , tilesets = tilesets
                 }
 
 
+imageOptions : Image.Options {}
 imageOptions =
     let
         opt =
@@ -72,18 +92,22 @@ imageOptions =
     { opt | order = LeftUp }
 
 
+tileStaticLayerBuilder :
+    TileData
+    -> List ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+    -> List (ResourceTask.CacheTask -> ResourceTask.ResourceTask (Layer.Layer object))
 tileStaticLayerBuilder layerData =
     List.map
         (\( tileset, data ) ->
             let
                 layerProps =
-                    Tiled.Util2.properties layerData
+                    Tiled.Util.properties layerData
 
                 tilsetProps =
-                    Tiled.Util2.properties tileset
+                    Tiled.Util.properties tileset
             in
             ResourceTask.getTexture ("/assets/" ++ tileset.image)
-                >> ResourceTask.andThenWithCache
+                >> ResourceTask.andThen
                     (\tileSetImage ->
                         ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)
                             >> ResourceTask.map
@@ -95,22 +119,26 @@ tileStaticLayerBuilder layerData =
                                         , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                         , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
                                         , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
-                                        , scrollRatio = Tiled.Util2.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                        , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                         }
                                 )
                     )
         )
 
 
+tileAnimatedLayerBuilder :
+    TileData
+    -> List ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+    -> List (ResourceTask.CacheTask -> ResourceTask.ResourceTask (Layer.Layer object))
 tileAnimatedLayerBuilder layerData =
     List.map
         (\( ( tileset, anim ), data ) ->
             let
                 layerProps =
-                    Tiled.Util2.properties layerData
+                    Tiled.Util.properties layerData
 
                 tilsetProps =
-                    Tiled.Util2.properties tileset
+                    Tiled.Util.properties tileset
 
                 animLutData =
                     animationFraming anim
@@ -119,10 +147,10 @@ tileAnimatedLayerBuilder layerData =
                     List.length animLutData
             in
             ResourceTask.getTexture ("/assets/" ++ tileset.image)
-                >> ResourceTask.andThenWithCache
+                >> ResourceTask.andThen
                     (\tileSetImage ->
                         ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)
-                            >> ResourceTask.andThenWithCache
+                            >> ResourceTask.andThen
                                 (\lut ->
                                     ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
                                         >> ResourceTask.map
@@ -134,7 +162,7 @@ tileAnimatedLayerBuilder layerData =
                                                     , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                                     , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
                                                     , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
-                                                    , scrollRatio = Tiled.Util2.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                                    , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                                     , animLUT = animLUT
                                                     , animLength = animLength
                                                     }
@@ -144,6 +172,7 @@ tileAnimatedLayerBuilder layerData =
         )
 
 
+animationFraming : List { a | duration : Int, tileid : b } -> List b
 animationFraming anim =
     anim
         |> List.concatMap
@@ -152,6 +181,21 @@ animationFraming anim =
             )
 
 
+fillTiles :
+    Int
+    -> Tiled.Tileset.EmbeddedTileData
+    ->
+        { animated :
+            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+        , cache : List Int
+        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        }
+    ->
+        { animated :
+            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+        , cache : List Int
+        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        }
 fillTiles tileId info ({ cache, static, animated } as acc) =
     case Dict.get tileId animated of
         Just ( t_, v ) ->
@@ -202,10 +246,12 @@ animation { tiles } id =
     Dict.get id tiles |> Maybe.map .animation
 
 
+others : comparable -> Dict.Dict comparable ( b, List Int ) -> Dict.Dict comparable ( b, List Int )
 others =
     updateOthers (prepend 0)
 
 
+prepend : a -> ( b, List a ) -> ( b, List a )
 prepend id ( t, v ) =
     ( t, id :: v )
 
