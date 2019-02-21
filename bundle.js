@@ -600,11 +600,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.dG.aq === region.bK.aq)
+	if (region.dH.ar === region.bL.ar)
 	{
-		return 'on line ' + region.dG.aq;
+		return 'on line ' + region.dH.ar;
 	}
-	return 'on lines ' + region.dG.aq + ' through ' + region.bK.aq;
+	return 'on lines ' + region.dH.ar + ' through ' + region.bL.ar;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dh,
-		impl.dP,
-		impl.cQ,
+		impl.di,
+		impl.dQ,
+		impl.cR,
 		function() { return function() {} }
 	);
 });
@@ -2660,8 +2660,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		N: func(record.N),
-		bk: record.bk,
-		be: record.be
+		bl: record.bl,
+		bf: record.bf
 	}
 });
 
@@ -2930,10 +2930,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.N;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bk;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bl;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.be) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.bf) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3883,11 +3883,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dh,
-		impl.dP,
-		impl.cQ,
+		impl.di,
+		impl.dQ,
+		impl.cR,
 		function(sendToApp, initialModel) {
-			var view = impl.cV;
+			var view = impl.cW;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3919,12 +3919,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dh,
-		impl.dP,
-		impl.cQ,
+		impl.di,
+		impl.dQ,
+		impl.cR,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.at && impl.at(sendToApp)
-			var view = impl.cV;
+			var divertHrefToApp = impl.au && impl.au(sendToApp)
+			var view = impl.cW;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3932,12 +3932,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.a$);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.a0);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.bt) && (_VirtualDom_doc.title = title = doc.bt);
+				(title !== doc.bu) && (_VirtualDom_doc.title = title = doc.bu);
 			});
 		}
 	);
@@ -3993,12 +3993,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.dp;
-	var onUrlRequest = impl.dq;
+	var onUrlChange = impl.dq;
+	var onUrlRequest = impl.dr;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		at: function(sendToApp)
+		au: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4014,9 +4014,9 @@ function _Browser_application(impl)
 					var next = elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.cA === next.cA
-							&& curr.b_ === next.b_
-							&& curr.cw.a === next.cw.a
+							&& curr.cB === next.cB
+							&& curr.b$ === next.b$
+							&& curr.cx.a === next.cx.a
 						)
 							? elm$browser$Browser$Internal(next)
 							: elm$browser$Browser$External(href)
@@ -4024,13 +4024,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		dh: function(flags)
+		di: function(flags)
 		{
-			return A3(impl.dh, flags, _Browser_getUrl(), key);
+			return A3(impl.di, flags, _Browser_getUrl(), key);
 		},
-		cV: impl.cV,
-		dP: impl.dP,
-		cQ: impl.cQ
+		cW: impl.cW,
+		dQ: impl.dQ,
+		cR: impl.cR
 	});
 }
 
@@ -4096,17 +4096,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { df: 'hidden', c0: 'visibilitychange' }
+		? { dg: 'hidden', c1: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { df: 'mozHidden', c0: 'mozvisibilitychange' }
+		? { dg: 'mozHidden', c1: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { df: 'msHidden', c0: 'msvisibilitychange' }
+		? { dg: 'msHidden', c1: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { df: 'webkitHidden', c0: 'webkitvisibilitychange' }
-		: { df: 'hidden', c0: 'visibilitychange' };
+		? { dg: 'webkitHidden', c1: 'webkitvisibilitychange' }
+		: { dg: 'hidden', c1: 'visibilitychange' };
 }
 
 
@@ -4187,11 +4187,11 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		dC: _Browser_getScene(),
-		cW: {
-			by: _Browser_window.pageXOffset,
-			bz: _Browser_window.pageYOffset,
-			ak: _Browser_doc.documentElement.clientWidth,
+		dD: _Browser_getScene(),
+		cX: {
+			bz: _Browser_window.pageXOffset,
+			bA: _Browser_window.pageYOffset,
+			al: _Browser_doc.documentElement.clientWidth,
 			ae: _Browser_doc.documentElement.clientHeight
 		}
 	};
@@ -4202,7 +4202,7 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		ak: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		al: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
 		ae: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
@@ -4226,14 +4226,14 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			dC: {
-				ak: node.scrollWidth,
+			dD: {
+				al: node.scrollWidth,
 				ae: node.scrollHeight
 			},
-			cW: {
-				by: node.scrollLeft,
-				bz: node.scrollTop,
-				ak: node.clientWidth,
+			cX: {
+				bz: node.scrollLeft,
+				bA: node.scrollTop,
+				al: node.clientWidth,
 				ae: node.clientHeight
 			}
 		};
@@ -4264,17 +4264,17 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			dC: _Browser_getScene(),
-			cW: {
-				by: x,
-				bz: y,
-				ak: _Browser_doc.documentElement.clientWidth,
+			dD: _Browser_getScene(),
+			cX: {
+				bz: x,
+				bA: y,
+				al: _Browser_doc.documentElement.clientWidth,
 				ae: _Browser_doc.documentElement.clientHeight
 			},
-			c6: {
-				by: x + rect.left,
-				bz: y + rect.top,
-				ak: rect.width,
+			c7: {
+				bz: x + rect.left,
+				bA: y + rect.top,
+				al: rect.width,
 				ae: rect.height
 			}
 		};
@@ -4330,15 +4330,15 @@ var _Http_toTask = F3(function(router, toTask, request)
 		elm$core$Maybe$isJust(request.x) && _Http_track(router, xhr, request.x.a);
 
 		try {
-			xhr.open(request.dl, request.dQ, true);
+			xhr.open(request.dm, request.aj, true);
 		} catch (e) {
-			return done(elm$http$Http$BadUrl_(request.dQ));
+			return done(elm$http$Http$BadUrl_(request.aj));
 		}
 
 		_Http_configureRequest(xhr, request);
 
-		request.a$.a && xhr.setRequestHeader('Content-Type', request.a$.a);
-		xhr.send(request.a$.b);
+		request.a0.a && xhr.setRequestHeader('Content-Type', request.a0.a);
+		xhr.send(request.a0.b);
 
 		return function() { xhr.c = true; xhr.abort(); };
 	});
@@ -4349,11 +4349,11 @@ var _Http_toTask = F3(function(router, toTask, request)
 
 function _Http_configureRequest(xhr, request)
 {
-	for (var headers = request.de; headers.b; headers = headers.b) // WHILE_CONS
+	for (var headers = request.df; headers.b; headers = headers.b) // WHILE_CONS
 	{
 		xhr.setRequestHeader(headers.a.a, headers.a.b);
 	}
-	xhr.timeout = request.dN.a || 0;
+	xhr.timeout = request.dO.a || 0;
 	xhr.responseType = request.s.d;
 	xhr.withCredentials = request._;
 }
@@ -4376,10 +4376,10 @@ function _Http_toResponse(toBody, xhr)
 function _Http_toMetadata(xhr)
 {
 	return {
-		dQ: xhr.responseURL,
-		dJ: xhr.status,
-		dK: xhr.statusText,
-		de: _Http_parseHeaders(xhr.getAllResponseHeaders())
+		aj: xhr.responseURL,
+		dK: xhr.status,
+		dL: xhr.statusText,
+		df: _Http_parseHeaders(xhr.getAllResponseHeaders())
 	};
 }
 
@@ -4474,15 +4474,15 @@ function _Http_track(router, xhr, tracker)
 	xhr.upload.addEventListener('progress', function(event) {
 		if (xhr.c) { return; }
 		_Scheduler_rawSpawn(A2(elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, elm$http$Http$Sending({
-			dE: event.loaded,
-			bj: event.total
+			dF: event.loaded,
+			bk: event.total
 		}))));
 	});
 	xhr.addEventListener('progress', function(event) {
 		if (xhr.c) { return; }
 		_Scheduler_rawSpawn(A2(elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, elm$http$Http$Receiving({
-			dy: event.loaded,
-			bj: event.lengthComputable ? elm$core$Maybe$Just(event.total) : elm$core$Maybe$Nothing
+			dz: event.loaded,
+			bk: event.lengthComputable ? elm$core$Maybe$Just(event.total) : elm$core$Maybe$Nothing
 		}))));
 	});
 }
@@ -4538,11 +4538,11 @@ var _MJS_v2setY = F2(function(y, a) {
 });
 
 var _MJS_v2toRecord = function(a) {
-    return { by: a[0], bz: a[1] };
+    return { bz: a[0], bA: a[1] };
 };
 
 var _MJS_v2fromRecord = function(r) {
-    return new Float64Array([r.by, r.bz]);
+    return new Float64Array([r.bz, r.bA]);
 };
 
 var _MJS_v2add = F2(function(a, b) {
@@ -4651,11 +4651,11 @@ var _MJS_v3setZ = F2(function(z, a) {
 });
 
 var _MJS_v3toRecord = function(a) {
-    return { by: a[0], bz: a[1], dV: a[2] };
+    return { bz: a[0], bA: a[1], dV: a[2] };
 };
 
 var _MJS_v3fromRecord = function(r) {
-    return new Float64Array([r.by, r.bz, r.dV]);
+    return new Float64Array([r.bz, r.bA, r.dV]);
 };
 
 var _MJS_v3add = F2(function(a, b) {
@@ -4811,11 +4811,11 @@ var _MJS_v4setW = F2(function(w, a) {
 });
 
 var _MJS_v4toRecord = function(a) {
-    return { by: a[0], bz: a[1], dV: a[2], cX: a[3] };
+    return { bz: a[0], bA: a[1], dV: a[2], cY: a[3] };
 };
 
 var _MJS_v4fromRecord = function(r) {
-    return new Float64Array([r.by, r.bz, r.dV, r.cX]);
+    return new Float64Array([r.bz, r.bA, r.dV, r.cY]);
 };
 
 var _MJS_v4add = F2(function(a, b) {
@@ -4921,31 +4921,31 @@ var _MJS_m4x4identity = new Float64Array([
 
 var _MJS_m4x4fromRecord = function(r) {
     var m = new Float64Array(16);
-    m[0] = r.b4;
-    m[1] = r.b8;
-    m[2] = r.cc;
-    m[3] = r.cg;
-    m[4] = r.b5;
-    m[5] = r.b9;
-    m[6] = r.cd;
-    m[7] = r.ch;
-    m[8] = r.b6;
-    m[9] = r.ca;
-    m[10] = r.ce;
-    m[11] = r.ci;
-    m[12] = r.b7;
-    m[13] = r.cb;
-    m[14] = r.cf;
-    m[15] = r.cj;
+    m[0] = r.b5;
+    m[1] = r.b9;
+    m[2] = r.cd;
+    m[3] = r.ch;
+    m[4] = r.b6;
+    m[5] = r.ca;
+    m[6] = r.ce;
+    m[7] = r.ci;
+    m[8] = r.b7;
+    m[9] = r.cb;
+    m[10] = r.cf;
+    m[11] = r.cj;
+    m[12] = r.b8;
+    m[13] = r.cc;
+    m[14] = r.cg;
+    m[15] = r.ck;
     return m;
 };
 
 var _MJS_m4x4toRecord = function(m) {
     return {
-        b4: m[0], b8: m[1], cc: m[2], cg: m[3],
-        b5: m[4], b9: m[5], cd: m[6], ch: m[7],
-        b6: m[8], ca: m[9], ce: m[10], ci: m[11],
-        b7: m[12], cb: m[13], cf: m[14], cj: m[15]
+        b5: m[0], b9: m[1], cd: m[2], ch: m[3],
+        b6: m[4], ca: m[5], ce: m[6], ci: m[7],
+        b7: m[8], cb: m[9], cf: m[10], cj: m[11],
+        b8: m[12], cc: m[13], cg: m[14], ck: m[15]
     };
 };
 
@@ -5537,7 +5537,7 @@ var _Texture_load = F6(function (magnify, mininify, horizontalWrap, verticalWrap
         callback(_Scheduler_succeed({
           $: 0,
           id: _Texture_guid++,
-          bG: createTexture,
+          bH: createTexture,
           a: width,
           b: height
         }));
@@ -6272,7 +6272,7 @@ function _WebGL_createUniformSetters(gl, model, program, uniformsMap) {
           var tex = model.f.textures[texture.id];
           if (!tex) {
             _WebGL_log('Created texture');
-            tex = texture.bG(gl);
+            tex = texture.bH(gl);
             model.f.textures[texture.id] = tex;
           }
           gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -6559,7 +6559,7 @@ var elm$browser$Browser$Events$MySub = F3(
 	});
 var elm$browser$Browser$Events$State = F2(
 	function (subs, pids) {
-		return {cu: pids, cP: subs};
+		return {cv: pids, cQ: subs};
 	});
 var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
@@ -6665,7 +6665,7 @@ var elm$browser$Browser$Events$addKey = function (sub) {
 };
 var elm$browser$Browser$Events$Event = F2(
 	function (key, event) {
-		return {bL: event, b1: key};
+		return {bM: event, b2: key};
 	});
 var elm$core$Basics$apL = F2(
 	function (f, x) {
@@ -6784,25 +6784,25 @@ var elm$core$Basics$sub = _Basics_sub;
 var elm$core$Elm$JsArray$length = _JsArray_length;
 var elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.h) {
+		if (!builder.g) {
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.j),
+				elm$core$Elm$JsArray$length(builder.i),
 				elm$core$Array$shiftStep,
 				elm$core$Elm$JsArray$empty,
-				builder.j);
+				builder.i);
 		} else {
-			var treeLen = builder.h * elm$core$Array$branchFactor;
+			var treeLen = builder.g * elm$core$Array$branchFactor;
 			var depth = elm$core$Basics$floor(
 				A2(elm$core$Basics$logBase, elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.k) : builder.k;
-			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.h);
+			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.j) : builder.j;
+			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.g);
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.j) + treeLen,
+				elm$core$Elm$JsArray$length(builder.i) + treeLen,
 				A2(elm$core$Basics$max, 5, depth * elm$core$Array$shiftStep),
 				tree,
-				builder.j);
+				builder.i);
 		}
 	});
 var elm$core$Basics$idiv = _Basics_idiv;
@@ -6816,7 +6816,7 @@ var elm$core$Array$initializeHelp = F5(
 				return A2(
 					elm$core$Array$builderToArray,
 					false,
-					{k: nodeList, h: (len / elm$core$Array$branchFactor) | 0, j: tail});
+					{j: nodeList, g: (len / elm$core$Array$branchFactor) | 0, i: tail});
 			} else {
 				var leaf = elm$core$Array$Leaf(
 					A3(elm$core$Elm$JsArray$initialize, elm$core$Array$branchFactor, fromIndex, fn));
@@ -7264,7 +7264,7 @@ var elm$core$String$contains = _String_contains;
 var elm$core$String$toInt = _String_toInt;
 var elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {bR: fragment, b_: host, ct: path, cw: port_, cA: protocol, cB: query};
+		return {bS: fragment, b$: host, cu: path, cx: port_, cB: protocol, cC: query};
 	});
 var elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
@@ -7648,7 +7648,7 @@ var elm$browser$Browser$Events$onEffects = F3(
 			stepLeft,
 			stepBoth,
 			stepRight,
-			state.cu,
+			state.cv,
 			elm$core$Dict$fromList(newSubs),
 			_Utils_Tuple3(_List_Nil, elm$core$Dict$empty, _List_Nil));
 		var deadPids = _n0.a;
@@ -7694,8 +7694,8 @@ var elm$core$List$filterMap = F2(
 	});
 var elm$browser$Browser$Events$onSelfMsg = F3(
 	function (router, _n0, state) {
-		var key = _n0.b1;
-		var event = _n0.bL;
+		var key = _n0.b2;
+		var event = _n0.bM;
 		var toMessage = function (_n2) {
 			var subKey = _n2.a;
 			var _n3 = _n2.b;
@@ -7704,7 +7704,7 @@ var elm$browser$Browser$Events$onSelfMsg = F3(
 			var decoder = _n3.c;
 			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : elm$core$Maybe$Nothing;
 		};
-		var messages = A2(elm$core$List$filterMap, toMessage, state.cP);
+		var messages = A2(elm$core$List$filterMap, toMessage, state.cQ);
 		return A2(
 			elm$core$Task$andThen,
 			function (_n1) {
@@ -7772,10 +7772,10 @@ var elm$core$Basics$round = _Basics_round;
 var author$project$Environment$requestWindowSize = A2(
 	elm$core$Task$perform,
 	function (_n0) {
-		var scene = _n0.dC;
+		var scene = _n0.dD;
 		return A2(
 			author$project$Environment$Resize,
-			elm$core$Basics$round(scene.ak),
+			elm$core$Basics$round(scene.al),
 			elm$core$Basics$round(scene.ae));
 	},
 	elm$browser$Browser$Dom$getViewport);
@@ -7793,7 +7793,7 @@ var elm$json$Json$Decode$float = _Json_decodeFloat;
 var author$project$Environment$init = function (flags) {
 	return _Utils_Tuple2(
 		{
-			aE: A2(
+			aF: A2(
 				elm$core$Result$withDefault,
 				1,
 				A2(
@@ -7801,8 +7801,8 @@ var author$project$Environment$init = function (flags) {
 					A2(elm$json$Json$Decode$field, 'devicePixelRatio', elm$json$Json$Decode$float),
 					flags)),
 			ae: 100,
-			ak: 100,
-			bw: 1
+			al: 100,
+			bx: 1
 		},
 		author$project$Environment$requestWindowSize);
 };
@@ -7819,20 +7819,24 @@ var author$project$ResourceTask$andThen = F2(
 			elm$core$Task$andThen,
 			function (_n0) {
 				var a = _n0.a;
-				var dict = _n0.b;
+				var d1 = _n0.b;
 				return A2(
 					elm$core$Task$map,
 					function (_n1) {
 						var b = _n1.a;
-						var dict2 = _n1.b;
+						var d2 = _n1.b;
 						return _Utils_Tuple2(
 							b,
-							A2(elm$core$Dict$union, dict, dict2));
+							_Utils_update(
+								d1,
+								{
+									n: A2(elm$core$Dict$union, d1.n, d2.n)
+								}));
 					},
 					A2(
 						f,
 						a,
-						elm$core$Task$succeed(dict)));
+						elm$core$Task$succeed(d1)));
 			},
 			task);
 	});
@@ -8343,17 +8347,17 @@ var elm$http$Http$task = function (r) {
 		_Http_toTask,
 		0,
 		elm$http$Http$resultToTask,
-		{_: false, a$: r.a$, s: r.dA, de: r.de, dl: r.dl, dN: r.dN, x: elm$core$Maybe$Nothing, dQ: r.dQ});
+		{_: false, a0: r.a0, s: r.dB, df: r.df, dm: r.dm, dO: r.dO, x: elm$core$Maybe$Nothing, aj: r.aj});
 };
 var elm$json$Json$Decode$decodeString = _Json_runOnString;
 var author$project$ResourceTask$getJson = F2(
 	function (url, decoder) {
 		return elm$http$Http$task(
 			{
-				a$: elm$http$Http$emptyBody,
-				de: _List_Nil,
-				dl: 'GET',
-				dA: elm$http$Http$stringResolver(
+				a0: elm$http$Http$emptyBody,
+				df: _List_Nil,
+				dm: 'GET',
+				dB: elm$http$Http$stringResolver(
 					function (response) {
 						switch (response.$) {
 							case 4:
@@ -8377,7 +8381,7 @@ var author$project$ResourceTask$getJson = F2(
 								return elm$core$Result$Err(
 									A2(author$project$Error$Error, 4002, 'NetworkError'));
 							default:
-								var statusCode = response.a.dJ;
+								var statusCode = response.a.dK;
 								return elm$core$Result$Err(
 									A2(
 										author$project$Error$Error,
@@ -8385,8 +8389,8 @@ var author$project$ResourceTask$getJson = F2(
 										'BadStatus:' + elm$core$String$fromInt(statusCode)));
 						}
 					}),
-				dN: elm$core$Maybe$Nothing,
-				dQ: url
+				dO: elm$core$Maybe$Nothing,
+				aj: url
 			});
 	});
 var author$project$Tiled$Level$Hexagonal = function (a) {
@@ -8471,7 +8475,7 @@ var author$project$Tiled$Layer$Tile = function (a) {
 };
 var author$project$Tiled$Layer$ImageData = F9(
 	function (id, image, name, opacity, visible, x, y, transparentcolor, properties) {
-		return {L: id, a3: image, O: name, Q: opacity, R: properties, dO: transparentcolor, U: visible, by: x, bz: y};
+		return {L: id, a4: image, O: name, Q: opacity, R: properties, dP: transparentcolor, U: visible, bz: x, bA: y};
 	});
 var author$project$Tiled$Properties$PropBool = function (a) {
 	return {$: 0, a: a};
@@ -8587,7 +8591,7 @@ var author$project$Tiled$Layer$ObjectData = function (id) {
 							return function (y) {
 								return function (color) {
 									return function (properties) {
-										return {a0: color, bI: draworder, L: id, O: name, $7: objects, Q: opacity, R: properties, U: visible, by: x, bz: y};
+										return {a1: color, bJ: draworder, L: id, O: name, dp: objects, Q: opacity, R: properties, U: visible, bz: x, bA: y};
 									};
 								};
 							};
@@ -8638,7 +8642,7 @@ var author$project$Tiled$Object$Tile = F3(
 	});
 var author$project$Tiled$Object$Common = F8(
 	function (id, name, kind, visible, x, y, rotation, properties) {
-		return {L: id, b2: kind, O: name, R: properties, cF: rotation, U: visible, by: x, bz: y};
+		return {L: id, b3: kind, O: name, R: properties, cG: rotation, U: visible, bz: x, bA: y};
 	});
 var author$project$Tiled$Object$decodeCommon = A4(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
@@ -8676,7 +8680,7 @@ var author$project$Tiled$Object$decodeCommon = A4(
 								elm$json$Json$Decode$succeed(author$project$Tiled$Object$Common)))))))));
 var author$project$Tiled$Object$Dimension = F2(
 	function (width, height) {
-		return {ae: height, ak: width};
+		return {ae: height, al: width};
 	});
 var author$project$Tiled$Object$decodeDimension = A3(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -8700,7 +8704,7 @@ var author$project$Tiled$Object$decodePolyPoints = elm$json$Json$Decode$list(
 			elm$json$Json$Decode$succeed(
 				F2(
 					function (x, y) {
-						return {by: x, bz: y};
+						return {bz: x, bA: y};
 					})))));
 var elm$json$Json$Decode$map3 = _Json_map3;
 var elm_community$json_extra$Json$Decode$Extra$when = F3(
@@ -8798,7 +8802,7 @@ var author$project$Tiled$Layer$TileData = function (id) {
 							return function (x) {
 								return function (y) {
 									return function (properties) {
-										return {aD: data, ae: height, L: id, O: name, Q: opacity, R: properties, U: visible, ak: width, by: x, bz: y};
+										return {aE: data, ae: height, L: id, O: name, Q: opacity, R: properties, U: visible, al: width, bz: x, bA: y};
 									};
 								};
 							};
@@ -8889,7 +8893,7 @@ var author$project$Tiled$Layer$TileChunkedData = function (id) {
 									return function (x) {
 										return function (y) {
 											return function (properties) {
-												return {bE: chunks, ae: height, L: id, O: name, Q: opacity, R: properties, dH: startx, dI: starty, U: visible, ak: width, by: x, bz: y};
+												return {bF: chunks, ae: height, L: id, O: name, Q: opacity, R: properties, dI: startx, dJ: starty, U: visible, al: width, bz: x, bA: y};
 											};
 										};
 									};
@@ -8904,7 +8908,7 @@ var author$project$Tiled$Layer$TileChunkedData = function (id) {
 };
 var author$project$Tiled$Layer$Chunk = F5(
 	function (data, height, width, x, y) {
-		return {aD: data, ae: height, ak: width, by: x, bz: y};
+		return {aE: data, ae: height, al: width, bz: x, bA: y};
 	});
 var author$project$Tiled$Layer$decodeChunk = F2(
 	function (encoding, compression) {
@@ -9056,7 +9060,7 @@ var author$project$Tiled$Tileset$EmbeddedTileData = function (columns) {
 											return function (transparentcolor) {
 												return function (tiles) {
 													return function (properties) {
-														return {aC: columns, ac: firstgid, a3: image, aL: imageheight, aM: imagewidth, aP: margin, O: name, R: properties, aU: spacing, aV: tilecount, bq: tileheight, aW: tiles, bs: tilewidth, dO: transparentcolor};
+														return {aD: columns, ac: firstgid, a4: image, aM: imageheight, aN: imagewidth, aQ: margin, O: name, R: properties, aV: spacing, aW: tilecount, br: tileheight, aX: tiles, bt: tilewidth, dP: transparentcolor};
 													};
 												};
 											};
@@ -9073,7 +9077,7 @@ var author$project$Tiled$Tileset$EmbeddedTileData = function (columns) {
 };
 var author$project$Tiled$Tileset$SpriteAnimation = F2(
 	function (duration, tileid) {
-		return {bJ: duration, cS: tileid};
+		return {bK: duration, cT: tileid};
 	});
 var author$project$Tiled$Tileset$decodeSpriteAnimation = A3(
 	elm$json$Json$Decode$map2,
@@ -9082,7 +9086,7 @@ var author$project$Tiled$Tileset$decodeSpriteAnimation = A3(
 	A2(elm$json$Json$Decode$field, 'tileid', elm$json$Json$Decode$int));
 var author$project$Tiled$Tileset$TilesDataObjectgroup = F7(
 	function (draworder, name, objects, opacity, visible, x, y) {
-		return {bI: draworder, O: name, $7: objects, Q: opacity, U: visible, by: x, bz: y};
+		return {bJ: draworder, O: name, dp: objects, Q: opacity, U: visible, bz: x, bA: y};
 	});
 var author$project$Tiled$Tileset$decodeTilesDataObjectgroup = A3(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -9244,7 +9248,7 @@ var author$project$Tiled$Tileset$ImageCollectionTileData = function (columns) {
 								return function (tiles) {
 									return function (properties) {
 										return function (grid) {
-											return {aC: columns, ac: firstgid, bX: grid, aP: margin, O: name, R: properties, aU: spacing, aV: tilecount, bq: tileheight, aW: tiles, bs: tilewidth};
+											return {aD: columns, ac: firstgid, bY: grid, aQ: margin, O: name, R: properties, aV: spacing, aW: tilecount, br: tileheight, aX: tiles, bt: tilewidth};
 										};
 									};
 								};
@@ -9258,7 +9262,7 @@ var author$project$Tiled$Tileset$ImageCollectionTileData = function (columns) {
 };
 var author$project$Tiled$Tileset$GridData = F3(
 	function (height, orientation, width) {
-		return {ae: height, cs: orientation, ak: width};
+		return {ae: height, ct: orientation, al: width};
 	});
 var author$project$Tiled$Tileset$decodeGrid = A3(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
@@ -9310,7 +9314,7 @@ var author$project$Tiled$Tileset$decodeImageCollectionTileDataTiles = function (
 										function (id, image, imageheight, imagewidth, animation, objectgroup, properties) {
 											return _Utils_Tuple2(
 												id,
-												{aa: animation, a3: image, aL: imageheight, aM: imagewidth, af: objectgroup, R: properties});
+												{aa: animation, a4: image, aM: imageheight, aN: imagewidth, af: objectgroup, R: properties});
 										})))))))));
 	return A2(
 		elm$json$Json$Decode$map,
@@ -9381,7 +9385,7 @@ var author$project$Tiled$Tileset$Source = function (a) {
 };
 var author$project$Tiled$Tileset$SourceTileData = F2(
 	function (firstgid, source) {
-		return {ac: firstgid, cJ: source};
+		return {ac: firstgid, cK: source};
 	});
 var author$project$Tiled$Tileset$decodeSourceTileset = A2(
 	elm$json$Json$Decode$map,
@@ -9472,7 +9476,7 @@ var author$project$Tiled$Level$decodeLevelData = A4(
 																								return function (version) {
 																									return function (width) {
 																										return function (props) {
-																											return {a_: backgroundcolor, ae: height, a4: infinite, aN: layers, bc: nextobjectid, R: props, bh: renderorder, bp: tiledversion, bq: tileheight, br: tilesets, bs: tilewidth, bv: version, ak: width};
+																											return {a$: backgroundcolor, ae: height, a5: infinite, aO: layers, bd: nextobjectid, R: props, bi: renderorder, bq: tiledversion, br: tileheight, bs: tilesets, bt: tilewidth, bw: version, al: width};
 																										};
 																									};
 																								};
@@ -9599,7 +9603,7 @@ var author$project$Tiled$Level$decodeStaggeredlevelData = A3(
 																														return function (hexsidelength) {
 																															return function (staggeraxis) {
 																																return function (staggerindex) {
-																																	return {a_: backgroundcolor, ae: height, bZ: hexsidelength, a4: infinite, aN: layers, bc: nextobjectid, R: props, bh: renderorder, cM: staggeraxis, cN: staggerindex, bp: tiledversion, bq: tileheight, br: tilesets, bs: tilewidth, bv: version, ak: width};
+																																	return {a$: backgroundcolor, ae: height, b_: hexsidelength, a5: infinite, aO: layers, bd: nextobjectid, R: props, bi: renderorder, cN: staggeraxis, cO: staggerindex, bq: tiledversion, br: tileheight, bs: tilesets, bt: tilewidth, bw: version, al: width};
 																																};
 																															};
 																														};
@@ -9633,25 +9637,63 @@ var author$project$Tiled$Level$decode = A2(
 		}
 	},
 	A2(elm$json$Json$Decode$field, 'orientation', elm$json$Json$Decode$string));
+var elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
 var author$project$ResourceTask$getLevel = F2(
 	function (url, cache) {
 		return A2(
 			elm$core$Task$map,
 			function (_n1) {
 				var resp = _n1.a;
-				var dict = _n1.b;
+				var d = _n1.b;
+				var relUrl = A2(
+					elm$core$String$join,
+					'/',
+					elm$core$List$reverse(
+						A2(
+							elm$core$List$cons,
+							'',
+							A2(
+								elm$core$List$drop,
+								1,
+								elm$core$List$reverse(
+									A2(elm$core$String$split, '/', url))))));
 				return _Utils_Tuple2(
 					resp,
-					A3(
-						elm$core$Dict$insert,
-						url,
-						author$project$ResourceTask$Level(resp),
-						dict));
+					_Utils_update(
+						d,
+						{
+							n: A3(
+								elm$core$Dict$insert,
+								url,
+								author$project$ResourceTask$Level(resp),
+								d.n),
+							aj: relUrl
+						}));
 			},
 			A2(
 				elm$core$Task$andThen,
 				function (d) {
-					var _n0 = A2(elm$core$Dict$get, url, d);
+					var _n0 = A2(elm$core$Dict$get, url, d.n);
 					if ((!_n0.$) && (_n0.a.$ === 2)) {
 						var r = _n0.a.a;
 						return elm$core$Task$succeed(
@@ -9667,7 +9709,8 @@ var author$project$ResourceTask$getLevel = F2(
 				},
 				cache));
 	});
-var author$project$ResourceTask$init = elm$core$Task$succeed(elm$core$Dict$empty);
+var author$project$ResourceTask$init = elm$core$Task$succeed(
+	{n: elm$core$Dict$empty, aj: ''});
 var author$project$Logic$GameFlow$Running = {$: 0};
 var elm$core$Tuple$mapFirst = F2(
 	function (func, _n0) {
@@ -9695,32 +9738,32 @@ var author$project$Tiled$Util$common = function (level) {
 	switch (level.$) {
 		case 0:
 			var info = level.a;
-			return {a_: info.a_, ae: info.ae, a4: info.a4, aN: info.aN, bc: info.bc, R: info.R, bh: info.bh, bp: info.bp, bq: info.bq, br: info.br, bs: info.bs, bv: info.bv, ak: info.ak};
+			return {a$: info.a$, ae: info.ae, a5: info.a5, aO: info.aO, bd: info.bd, R: info.R, bi: info.bi, bq: info.bq, br: info.br, bs: info.bs, bt: info.bt, bw: info.bw, al: info.al};
 		case 1:
 			var info = level.a;
-			return {a_: info.a_, ae: info.ae, a4: info.a4, aN: info.aN, bc: info.bc, R: info.R, bh: info.bh, bp: info.bp, bq: info.bq, br: info.br, bs: info.bs, bv: info.bv, ak: info.ak};
+			return {a$: info.a$, ae: info.ae, a5: info.a5, aO: info.aO, bd: info.bd, R: info.R, bi: info.bi, bq: info.bq, br: info.br, bs: info.bs, bt: info.bt, bw: info.bw, al: info.al};
 		case 2:
 			var info = level.a;
-			return {a_: info.a_, ae: info.ae, a4: info.a4, aN: info.aN, bc: info.bc, R: info.R, bh: info.bh, bp: info.bp, bq: info.bq, br: info.br, bs: info.bs, bv: info.bv, ak: info.ak};
+			return {a$: info.a$, ae: info.ae, a5: info.a5, aO: info.aO, bd: info.bd, R: info.R, bi: info.bi, bq: info.bq, br: info.br, bs: info.bs, bt: info.bt, bw: info.bw, al: info.al};
 		default:
 			var info = level.a;
-			return {a_: info.a_, ae: info.ae, a4: info.a4, aN: info.aN, bc: info.bc, R: info.R, bh: info.bh, bp: info.bp, bq: info.bq, br: info.br, bs: info.bs, bv: info.bv, ak: info.ak};
+			return {a$: info.a$, ae: info.ae, a5: info.a5, aO: info.aO, bd: info.bd, R: info.R, bi: info.bi, bq: info.bq, br: info.br, bs: info.bs, bt: info.bt, bw: info.bw, al: info.al};
 	}
 };
 var author$project$Tiled$Util$tilesets = function (level) {
 	switch (level.$) {
 		case 0:
 			var info = level.a;
-			return info.br;
+			return info.bs;
 		case 1:
 			var info = level.a;
-			return info.br;
+			return info.bs;
 		case 2:
 			var info = level.a;
-			return info.br;
+			return info.bs;
 		default:
 			var info = level.a;
-			return info.br;
+			return info.bs;
 	}
 };
 var author$project$World$World = F2(
@@ -9763,12 +9806,12 @@ var elm_explorations$webgl$WebGL$Internal$Blend = function (a) {
 	};
 };
 var elm_explorations$webgl$WebGL$Settings$Blend$custom = function (_n0) {
-	var r = _n0.aR;
-	var g = _n0.aJ;
-	var b = _n0.g;
-	var a = _n0.f;
-	var color = _n0.a0;
-	var alpha = _n0.aB;
+	var r = _n0.aS;
+	var g = _n0.aK;
+	var b = _n0.f;
+	var a = _n0.e;
+	var color = _n0.a1;
+	var alpha = _n0.aC;
 	var expand = F2(
 		function (_n1, _n2) {
 			var eq1 = _n1.a;
@@ -9795,12 +9838,12 @@ var elm_explorations$webgl$WebGL$Settings$Blend$add = F2(
 	function (factor1, factor2) {
 		return elm_explorations$webgl$WebGL$Settings$Blend$custom(
 			{
+				e: 0,
+				aC: A2(elm_explorations$webgl$WebGL$Settings$Blend$customAdd, factor1, factor2),
 				f: 0,
-				aB: A2(elm_explorations$webgl$WebGL$Settings$Blend$customAdd, factor1, factor2),
-				g: 0,
-				a0: A2(elm_explorations$webgl$WebGL$Settings$Blend$customAdd, factor1, factor2),
-				aJ: 0,
-				aR: 0
+				a1: A2(elm_explorations$webgl$WebGL$Settings$Blend$customAdd, factor1, factor2),
+				aK: 0,
+				aS: 0
 			});
 	});
 var elm_explorations$webgl$WebGL$Settings$Blend$Factor = elm$core$Basics$identity;
@@ -9817,10 +9860,10 @@ var elm_explorations$webgl$WebGL$Texture$linear = 9729;
 var elm_explorations$webgl$WebGL$Texture$Wrap = elm$core$Basics$identity;
 var elm_explorations$webgl$WebGL$Texture$clampToEdge = 33071;
 var elm_explorations$webgl$WebGL$Texture$nearest = 9728;
-var elm_explorations$webgl$WebGL$Texture$nonPowerOfTwoOptions = {aH: true, aK: elm_explorations$webgl$WebGL$Texture$clampToEdge, dk: elm_explorations$webgl$WebGL$Texture$linear, dm: elm_explorations$webgl$WebGL$Texture$nearest, aX: elm_explorations$webgl$WebGL$Texture$clampToEdge};
+var elm_explorations$webgl$WebGL$Texture$nonPowerOfTwoOptions = {aI: true, aL: elm_explorations$webgl$WebGL$Texture$clampToEdge, dl: elm_explorations$webgl$WebGL$Texture$linear, dn: elm_explorations$webgl$WebGL$Texture$nearest, aY: elm_explorations$webgl$WebGL$Texture$clampToEdge};
 var author$project$Defaults$textureOption = _Utils_update(
 	elm_explorations$webgl$WebGL$Texture$nonPowerOfTwoOptions,
-	{dk: elm_explorations$webgl$WebGL$Texture$linear, dm: elm_explorations$webgl$WebGL$Texture$linear});
+	{dl: elm_explorations$webgl$WebGL$Texture$linear, dn: elm_explorations$webgl$WebGL$Texture$linear});
 var elm_explorations$webgl$WebGL$Internal$Alpha = function (a) {
 	return {$: 0, a: a};
 };
@@ -9843,12 +9886,12 @@ var author$project$Defaults$webGLOption = _List_fromArray(
 var elm_explorations$linear_algebra$Math$Vector2$vec2 = _MJS_v2;
 var elm_explorations$linear_algebra$Math$Vector3$vec3 = _MJS_v3;
 var author$project$Defaults$default = {
-	c7: author$project$Defaults$entitySettings,
-	dc: 60,
-	dt: 160,
-	dD: 1,
-	dM: author$project$Defaults$textureOption,
-	dO: A3(elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
+	c8: author$project$Defaults$entitySettings,
+	dd: 60,
+	du: 160,
+	dE: 1,
+	dN: author$project$Defaults$textureOption,
+	dP: A3(elm_explorations$linear_algebra$Math$Vector3$vec3, 0, 0, 0),
 	dR: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 0, 0),
 	dS: author$project$Defaults$webGLOption
 };
@@ -9954,7 +9997,7 @@ var author$project$Tiled$Util$propWrap = F4(
 	});
 var author$project$Tiled$Util$properties = function (dict) {
 	return {
-		bC: A2(
+		bD: A2(
 			author$project$Tiled$Util$propWrap,
 			dict.R,
 			function (r) {
@@ -9965,7 +10008,7 @@ var author$project$Tiled$Util$properties = function (dict) {
 					return elm$core$Maybe$Nothing;
 				}
 			}),
-		a0: A2(
+		a1: A2(
 			author$project$Tiled$Util$propWrap,
 			dict.R,
 			function (r) {
@@ -9976,7 +10019,7 @@ var author$project$Tiled$Util$properties = function (dict) {
 					return elm$core$Maybe$Nothing;
 				}
 			}),
-		bP: A2(
+		bQ: A2(
 			author$project$Tiled$Util$propWrap,
 			dict.R,
 			function (r) {
@@ -9998,7 +10041,7 @@ var author$project$Tiled$Util$properties = function (dict) {
 					return elm$core$Maybe$Nothing;
 				}
 			}),
-		b$: A2(
+		b0: A2(
 			author$project$Tiled$Util$propWrap,
 			dict.R,
 			function (r) {
@@ -10009,7 +10052,7 @@ var author$project$Tiled$Util$properties = function (dict) {
 					return elm$core$Maybe$Nothing;
 				}
 			}),
-		cO: A2(
+		cP: A2(
 			author$project$Tiled$Util$propWrap,
 			dict.R,
 			function (r) {
@@ -10041,7 +10084,7 @@ var author$project$Tiled$Util$levelProps = function (level) {
 var author$project$World$Camera$init = function (level) {
 	return function (prop) {
 		return {
-			dt: A2(prop.ad, 'pixelsPerUnit', author$project$Defaults$default.dt),
+			du: A2(prop.ad, 'pixelsPerUnit', author$project$Defaults$default.du),
 			dR: author$project$Defaults$default.dR
 		};
 	}(
@@ -10085,11 +10128,11 @@ var elm_explorations$webgl$WebGL$Texture$SizeError = F2(
 	});
 var elm_explorations$webgl$WebGL$Texture$loadWith = F2(
 	function (_n0, url) {
-		var magnify = _n0.dk;
-		var minify = _n0.dm;
-		var horizontalWrap = _n0.aK;
-		var verticalWrap = _n0.aX;
-		var flipY = _n0.aH;
+		var magnify = _n0.dl;
+		var minify = _n0.dn;
+		var horizontalWrap = _n0.aL;
+		var verticalWrap = _n0.aY;
+		var flipY = _n0.aI;
 		var expand = F4(
 			function (_n1, _n2, _n3, _n4) {
 				var mag = _n1;
@@ -10106,19 +10149,23 @@ var author$project$ResourceTask$getTexture = F2(
 			elm$core$Task$map,
 			function (_n1) {
 				var resp = _n1.a;
-				var dict = _n1.b;
+				var d = _n1.b;
 				return _Utils_Tuple2(
 					resp,
-					A3(
-						elm$core$Dict$insert,
-						url,
-						author$project$ResourceTask$Texture(resp),
-						dict));
+					_Utils_update(
+						d,
+						{
+							n: A3(
+								elm$core$Dict$insert,
+								url,
+								author$project$ResourceTask$Texture(resp),
+								d.n)
+						}));
 			},
 			A2(
 				elm$core$Task$andThen,
 				function (d) {
-					var _n0 = A2(elm$core$Dict$get, url, d);
+					var _n0 = A2(elm$core$Dict$get, url, d.n);
 					if ((!_n0.$) && (!_n0.a.$)) {
 						var r = _n0.a.a;
 						return elm$core$Task$succeed(
@@ -10132,7 +10179,10 @@ var author$project$ResourceTask$getTexture = F2(
 							A2(
 								elm$core$Task$mapError,
 								author$project$ResourceTask$textureError,
-								A2(elm_explorations$webgl$WebGL$Texture$loadWith, author$project$Defaults$default.dM, url)));
+								A2(
+									elm_explorations$webgl$WebGL$Texture$loadWith,
+									author$project$Defaults$default.dN,
+									A2(elm$core$String$startsWith, 'data:image', url) ? url : _Utils_ap(d.aj, url))));
 					}
 				},
 				cache));
@@ -10141,25 +10191,25 @@ var author$project$Tiled$Util$scrollRatio = F2(
 	function (dual, props) {
 		return dual ? A2(
 			elm_explorations$linear_algebra$Math$Vector2$vec2,
-			A2(props.ad, 'scrollRatio.x', author$project$Defaults$default.dD),
-			A2(props.ad, 'scrollRatio.y', author$project$Defaults$default.dD)) : A2(
+			A2(props.ad, 'scrollRatio.x', author$project$Defaults$default.dE),
+			A2(props.ad, 'scrollRatio.y', author$project$Defaults$default.dE)) : A2(
 			elm_explorations$linear_algebra$Math$Vector2$vec2,
-			A2(props.ad, 'scrollRatio', author$project$Defaults$default.dD),
-			A2(props.ad, 'scrollRatio', author$project$Defaults$default.dD));
+			A2(props.ad, 'scrollRatio', author$project$Defaults$default.dE),
+			A2(props.ad, 'scrollRatio', author$project$Defaults$default.dE));
 	});
 var elm_explorations$webgl$WebGL$Texture$size = _Texture_size;
 var author$project$World$Component$ImageLayer$imageLayer = function (imageData) {
 	var props = author$project$Tiled$Util$properties(imageData);
 	return A2(
 		elm$core$Basics$composeR,
-		author$project$ResourceTask$getTexture('/assets/' + imageData.a3),
+		author$project$ResourceTask$getTexture(imageData.a4),
 		author$project$ResourceTask$map(
 			function (t) {
 				var _n0 = elm_explorations$webgl$WebGL$Texture$size(t);
 				var width = _n0.a;
 				var height = _n0.b;
 				return function () {
-					var _n1 = A2(props.cO, 'repeat', 'repeat');
+					var _n1 = A2(props.cP, 'repeat', 'repeat');
 					switch (_n1) {
 						case 'repeat-x':
 							return author$project$Layer$ImageX;
@@ -10172,15 +10222,15 @@ var author$project$World$Component$ImageLayer$imageLayer = function (imageData) 
 					}
 				}()(
 					{
-						a3: t,
-						dD: A2(
+						a4: t,
+						dE: A2(
 							author$project$Tiled$Util$scrollRatio,
 							_Utils_eq(
 								A2(elm$core$Dict$get, 'scrollRatio', imageData.R),
 								elm$core$Maybe$Nothing),
 							props),
-						bj: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, width, height),
-						dO: A2(props.a0, 'transparentcolor', author$project$Defaults$default.dO)
+						bk: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, width, height),
+						dP: A2(props.a1, 'transparentcolor', author$project$Defaults$default.dP)
 					});
 			}));
 };
@@ -10197,23 +10247,23 @@ var elm$core$Elm$JsArray$slice = _JsArray_slice;
 var elm$core$Array$appendHelpBuilder = F2(
 	function (tail, builder) {
 		var tailLen = elm$core$Elm$JsArray$length(tail);
-		var notAppended = (elm$core$Array$branchFactor - elm$core$Elm$JsArray$length(builder.j)) - tailLen;
-		var appended = A3(elm$core$Elm$JsArray$appendN, elm$core$Array$branchFactor, builder.j, tail);
+		var notAppended = (elm$core$Array$branchFactor - elm$core$Elm$JsArray$length(builder.i)) - tailLen;
+		var appended = A3(elm$core$Elm$JsArray$appendN, elm$core$Array$branchFactor, builder.i, tail);
 		return (notAppended < 0) ? {
-			k: A2(
+			j: A2(
 				elm$core$List$cons,
 				elm$core$Array$Leaf(appended),
-				builder.k),
-			h: builder.h + 1,
-			j: A3(elm$core$Elm$JsArray$slice, notAppended, tailLen, tail)
+				builder.j),
+			g: builder.g + 1,
+			i: A3(elm$core$Elm$JsArray$slice, notAppended, tailLen, tail)
 		} : ((!notAppended) ? {
-			k: A2(
+			j: A2(
 				elm$core$List$cons,
 				elm$core$Array$Leaf(appended),
-				builder.k),
-			h: builder.h + 1,
-			j: elm$core$Elm$JsArray$empty
-		} : {k: builder.k, h: builder.h, j: appended});
+				builder.j),
+			g: builder.g + 1,
+			i: elm$core$Elm$JsArray$empty
+		} : {j: builder.j, g: builder.g, i: appended});
 	});
 var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var elm$core$Array$bitMask = 4294967295 >>> (32 - elm$core$Array$shiftStep);
@@ -10323,9 +10373,9 @@ var elm$core$Array$builderFromArray = function (_n0) {
 			}
 		});
 	return {
-		k: A3(elm$core$Elm$JsArray$foldl, helper, _List_Nil, tree),
-		h: (len / elm$core$Array$branchFactor) | 0,
-		j: tail
+		j: A3(elm$core$Elm$JsArray$foldl, helper, _List_Nil, tree),
+		g: (len / elm$core$Array$branchFactor) | 0,
+		i: tail
 	};
 };
 var elm$core$Array$append = F2(
@@ -10458,8 +10508,8 @@ var author$project$Logic$Entity$setComponent = F3(
 	});
 var author$project$Logic$Entity$with = F2(
 	function (_n0, _n1) {
-		var get = _n0.a.dd;
-		var set = _n0.a.dF;
+		var get = _n0.a.de;
+		var set = _n0.a.dG;
 		var component = _n0.b;
 		var mId = _n1.a;
 		var world = _n1.b;
@@ -10490,23 +10540,23 @@ var author$project$Tiled$flippedVertically = function (globalTileId) {
 };
 var author$project$Tiled$gidInfo = function (gid) {
 	return {
-		bN: author$project$Tiled$flippedDiagonally(gid),
-		bO: author$project$Tiled$flippedHorizontally(gid),
-		bT: author$project$Tiled$flippedVertically(gid),
-		bV: author$project$Tiled$cleanGid(gid)
+		bO: author$project$Tiled$flippedDiagonally(gid),
+		bP: author$project$Tiled$flippedHorizontally(gid),
+		bU: author$project$Tiled$flippedVertically(gid),
+		bW: author$project$Tiled$cleanGid(gid)
 	};
 };
 var author$project$World$Component$Common$commonDimensionArgs = F2(
 	function (a, b) {
-		return {ae: b.ae, L: a.L, b2: a.b2, O: a.O, R: a.R, cF: a.cF, U: a.U, ak: b.ak, by: a.by, bz: a.bz};
+		return {ae: b.ae, L: a.L, b3: a.b3, O: a.O, R: a.R, cG: a.cG, U: a.U, al: b.al, bz: a.bz, bA: a.bA};
 	});
 var author$project$World$Component$Common$commonDimensionPolyPointsArgs = F3(
 	function (a, b, c) {
-		return {ae: b.ae, L: a.L, b2: a.b2, O: a.O, cv: c, R: a.R, cF: a.cF, U: a.U, ak: b.ak, by: a.by, bz: a.bz};
+		return {ae: b.ae, L: a.L, b3: a.b3, O: a.O, cw: c, R: a.R, cG: a.cG, U: a.U, al: b.al, bz: a.bz, bA: a.bA};
 	});
 var author$project$World$Component$Common$tileArgs = F4(
 	function (a, b, c, d) {
-		return {bN: c.bN, bO: c.bO, bT: c.bT, bU: d, bV: c.bV, ae: b.ae, L: a.L, b2: a.b2, O: a.O, R: a.R, cF: a.cF, U: a.U, ak: b.ak, by: a.by, bz: a.bz};
+		return {bO: c.bO, bP: c.bP, bU: c.bU, bV: d, bW: c.bW, ae: b.ae, L: a.L, b3: a.b3, O: a.O, R: a.R, cG: a.cG, U: a.U, al: b.al, bz: a.bz, bA: a.bA};
 	});
 var author$project$World$Component$ObjetLayer$combine1 = F4(
 	function (getKey, arg, readers, acc) {
@@ -10584,19 +10634,23 @@ var author$project$ResourceTask$getTileset = F3(
 			elm$core$Task$map,
 			function (_n1) {
 				var resp = _n1.a;
-				var dict = _n1.b;
+				var d = _n1.b;
 				return _Utils_Tuple2(
 					resp,
-					A3(
-						elm$core$Dict$insert,
-						url,
-						author$project$ResourceTask$Tileset(resp),
-						dict));
+					_Utils_update(
+						d,
+						{
+							n: A3(
+								elm$core$Dict$insert,
+								url,
+								author$project$ResourceTask$Tileset(resp),
+								d.n)
+						}));
 			},
 			A2(
 				elm$core$Task$andThen,
 				function (d) {
-					var _n0 = A2(elm$core$Dict$get, url, d);
+					var _n0 = A2(elm$core$Dict$get, url, d.n);
 					if ((!_n0.$) && (_n0.a.$ === 1)) {
 						var r = _n0.a.a;
 						return elm$core$Task$succeed(
@@ -10609,7 +10663,7 @@ var author$project$ResourceTask$getTileset = F3(
 							},
 							A2(
 								author$project$ResourceTask$getJson,
-								url,
+								_Utils_ap(d.aj, url),
 								author$project$Tiled$Tileset$decodeFile(firstgid)));
 					}
 				},
@@ -10690,10 +10744,10 @@ var author$project$Tiled$Util$tilesetById = F2(
 							}
 						case 1:
 							var info = _n2.a.a;
-							return (_Utils_cmp(id, info.ac) > -1) && (_Utils_cmp(id, info.ac + info.aV) < 0);
+							return (_Utils_cmp(id, info.ac) > -1) && (_Utils_cmp(id, info.ac + info.aW) < 0);
 						default:
 							var info = _n2.a.a;
-							return (_Utils_cmp(id, info.ac) > -1) && (_Utils_cmp(id, info.ac + info.aV) < 0);
+							return (_Utils_cmp(id, info.ac) > -1) && (_Utils_cmp(id, info.ac + info.aW) < 0);
 					}
 				}),
 			tilesets_);
@@ -10704,7 +10758,7 @@ var author$project$World$Component$ObjetLayer$getTilesetByGid = F2(
 		if (!_n0.$) {
 			if (!_n0.a.$) {
 				var info = _n0.a.a;
-				return A2(author$project$ResourceTask$getTileset, '/assets/' + info.cJ, info.ac);
+				return A2(author$project$ResourceTask$getTileset, info.cK, info.ac);
 			} else {
 				var t = _n0.a;
 				return author$project$ResourceTask$succeed(t);
@@ -10722,7 +10776,7 @@ var author$project$World$Component$ObjetLayer$validateAndUpdate = F3(
 		var layerECS = _n0.a;
 		var info = _n0.b;
 		var _n1 = _Utils_Tuple2(
-			_Utils_eq(newECS, info.aF),
+			_Utils_eq(newECS, info.aG),
 			_Utils_eq(layerECS, newLayerECS));
 		if (_n1.a) {
 			if (_n1.b) {
@@ -10740,13 +10794,13 @@ var author$project$World$Component$ObjetLayer$validateAndUpdate = F3(
 					layerECS,
 					_Utils_update(
 						info,
-						{aF: newECS, M: info.M + 1}));
+						{aG: newECS, M: info.M + 1}));
 			} else {
 				return _Utils_Tuple2(
 					newLayerECS,
 					_Utils_update(
 						info,
-						{aF: newECS, M: info.M + 1}));
+						{aG: newECS, M: info.M + 1}));
 			}
 		}
 	});
@@ -10757,8 +10811,8 @@ var elm$core$Tuple$second = function (_n0) {
 var author$project$World$Component$ObjetLayer$objectLayer = F5(
 	function (fix, readers, info_, objectData, start) {
 		var spec = {
-			dd: elm$core$Basics$identity,
-			dF: F2(
+			de: elm$core$Basics$identity,
+			dG: F2(
 				function (comps, _n4) {
 					return comps;
 				})
@@ -10774,7 +10828,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 						f,
 						args,
 						readers,
-						A2(author$project$Logic$Entity$create, acc.M, acc.aF)),
+						A2(author$project$Logic$Entity$create, acc.M, acc.aG)),
 					author$project$ResourceTask$map(
 						function (newECS) {
 							return A3(
@@ -10800,7 +10854,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 								A2(
 									readFor,
 									function ($) {
-										return $.cm;
+										return $.cn;
 									},
 									common));
 						case 1:
@@ -10810,7 +10864,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 								A2(
 									readFor,
 									function ($) {
-										return $.cp;
+										return $.cq;
 									},
 									A2(author$project$World$Component$Common$commonDimensionArgs, common, dimension)));
 						case 2:
@@ -10820,7 +10874,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 								A2(
 									readFor,
 									function ($) {
-										return $.cl;
+										return $.cm;
 									},
 									A2(author$project$World$Component$Common$commonDimensionArgs, common, dimension)));
 						case 3:
@@ -10831,7 +10885,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 								A2(
 									readFor,
 									function ($) {
-										return $.co;
+										return $.cp;
 									},
 									A3(author$project$World$Component$Common$commonDimensionPolyPointsArgs, common, dimension, polyPoints)));
 						case 4:
@@ -10842,7 +10896,7 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 								A2(
 									readFor,
 									function ($) {
-										return $.cn;
+										return $.co;
 									},
 									A3(author$project$World$Component$Common$commonDimensionPolyPointsArgs, common, dimension, polyPoints)));
 						default:
@@ -10858,11 +10912,11 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 										common,
 										dimension,
 										author$project$Tiled$gidInfo(gid),
-										author$project$World$Component$ObjetLayer$getTilesetByGid(info.br));
+										author$project$World$Component$ObjetLayer$getTilesetByGid(info.bs));
 									return A3(
 										readFor,
 										function ($) {
-											return $.cq;
+											return $.cr;
 										},
 										args,
 										_Utils_Tuple2(layerECS, info));
@@ -10880,13 +10934,13 @@ var author$project$World$Component$ObjetLayer$objectLayer = F5(
 					return _Utils_update(
 						info,
 						{
-							aN: A2(
+							aO: A2(
 								elm$core$List$cons,
 								author$project$Layer$Object(layer),
-								info.aN)
+								info.aO)
 						});
 				}),
-			objectData.$7);
+			objectData.dp);
 	});
 var author$project$ResourceTask$sequence = F2(
 	function (ltask, cache) {
@@ -10940,7 +10994,7 @@ var author$project$Tiled$Util$updateTileset = F4(
 	});
 var author$project$Tiled$Util$animation = F2(
 	function (_n0, id) {
-		var tiles = _n0.aW;
+		var tiles = _n0.aX;
 		return A2(
 			elm$core$Maybe$map,
 			function ($) {
@@ -11115,10 +11169,10 @@ var author$project$World$Component$TileLayer$splitTileLayerByTileSet = F3(
 							case 0:
 								var was = _n1.a;
 								var firstgid = was.a.ac;
-								var source = was.a.cJ;
+								var source = was.a.cK;
 								return A2(
 									elm$core$Basics$composeR,
-									A2(author$project$ResourceTask$getTileset, '/assets/' + source, firstgid),
+									A2(author$project$ResourceTask$getTileset, source, firstgid),
 									author$project$ResourceTask$andThen(
 										function (tileset) {
 											return A3(
@@ -11154,35 +11208,14 @@ var author$project$World$Component$TileLayer$splitTileLayerByTileSet = F3(
 					{
 						v: elm$core$Dict$values(acc.v),
 						w: elm$core$Dict$values(acc.w),
-						br: tilesets
+						bs: tilesets
 					});
 			}
 		}
 	});
 var author$project$Image$Bit24 = 0;
 var author$project$Image$RightUp = 1;
-var author$project$Image$defaultOptions = {c2: 16776960, c3: 0, ds: 1};
-var elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
+var author$project$Image$defaultOptions = {c3: 16776960, c4: 0, dt: 1};
 var elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
 		takeReverse:
@@ -11639,8 +11672,8 @@ var author$project$Image$BMP$lineFolder24reverse = F2(
 	});
 var author$project$Image$BMP$encodeImageData = F3(
 	function (w, _n0, pxs) {
-		var depth = _n0.c3;
-		var order = _n0.ds;
+		var depth = _n0.c4;
+		var order = _n0.dt;
 		var delme = F2(
 			function (line, acc) {
 				switch (order) {
@@ -12144,11 +12177,11 @@ var author$project$World$Component$TileLayer$animationFraming = function (anim) 
 	return A2(
 		elm$core$List$concatMap,
 		function (_n0) {
-			var duration = _n0.bJ;
-			var tileid = _n0.cS;
+			var duration = _n0.bK;
+			var tileid = _n0.cT;
 			return A2(
 				elm$core$List$repeat,
-				elm$core$Basics$floor((duration / 1000) * author$project$Defaults$default.dc),
+				elm$core$Basics$floor((duration / 1000) * author$project$Defaults$default.dd),
 				tileid);
 		},
 		anim);
@@ -12158,7 +12191,7 @@ var author$project$World$Component$TileLayer$imageOptions = function () {
 	var opt = author$project$Image$defaultOptions;
 	return _Utils_update(
 		opt,
-		{ds: 3});
+		{dt: 3});
 }();
 var author$project$World$Component$TileLayer$tileAnimatedLayerBuilder = function (layerData) {
 	return elm$core$List$map(
@@ -12173,13 +12206,13 @@ var author$project$World$Component$TileLayer$tileAnimatedLayerBuilder = function
 			var animLength = elm$core$List$length(animLutData);
 			return A2(
 				elm$core$Basics$composeR,
-				author$project$ResourceTask$getTexture('/assets/' + tileset.a3),
+				author$project$ResourceTask$getTexture(tileset.a4),
 				author$project$ResourceTask$andThen(
 					function (tileSetImage) {
 						return A2(
 							elm$core$Basics$composeR,
 							author$project$ResourceTask$getTexture(
-								A4(author$project$Image$BMP$encodeWith, author$project$World$Component$TileLayer$imageOptions, layerData.ak, layerData.ae, data)),
+								A4(author$project$Image$BMP$encodeWith, author$project$World$Component$TileLayer$imageOptions, layerData.al, layerData.ae, data)),
 							author$project$ResourceTask$andThen(
 								function (lut) {
 									return A2(
@@ -12190,20 +12223,20 @@ var author$project$World$Component$TileLayer$tileAnimatedLayerBuilder = function
 											function (animLUT) {
 												return author$project$Layer$AbimatedTiles(
 													{
-														aY: animLUT,
-														aZ: animLength,
-														a7: lut,
-														a8: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, layerData.ak, layerData.ae),
-														dD: A2(
+														aZ: animLUT,
+														a_: animLength,
+														a8: lut,
+														a9: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, layerData.al, layerData.ae),
+														dE: A2(
 															author$project$Tiled$Util$scrollRatio,
 															_Utils_eq(
 																A2(elm$core$Dict$get, 'scrollRatio', layerData.R),
 																elm$core$Maybe$Nothing),
 															layerProps),
-														bm: tileSetImage,
-														bn: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.aM, tileset.aL),
-														bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.bs, tileset.bq),
-														dO: A2(tilsetProps.a0, 'transparentcolor', author$project$Defaults$default.dO)
+														bn: tileSetImage,
+														bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.aN, tileset.aM),
+														bp: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.bt, tileset.br),
+														dP: A2(tilsetProps.a1, 'transparentcolor', author$project$Defaults$default.dP)
 													});
 											}));
 								}));
@@ -12222,29 +12255,29 @@ var author$project$World$Component$TileLayer$tileStaticLayerBuilder = function (
 			var layerProps = author$project$Tiled$Util$properties(layerData);
 			return A2(
 				elm$core$Basics$composeR,
-				author$project$ResourceTask$getTexture('/assets/' + tileset.a3),
+				author$project$ResourceTask$getTexture(tileset.a4),
 				author$project$ResourceTask$andThen(
 					function (tileSetImage) {
 						return A2(
 							elm$core$Basics$composeR,
 							author$project$ResourceTask$getTexture(
-								A4(author$project$Image$BMP$encodeWith, author$project$World$Component$TileLayer$imageOptions, layerData.ak, layerData.ae, data)),
+								A4(author$project$Image$BMP$encodeWith, author$project$World$Component$TileLayer$imageOptions, layerData.al, layerData.ae, data)),
 							author$project$ResourceTask$map(
 								function (lut) {
 									return author$project$Layer$Tiles(
 										{
-											a7: lut,
-											a8: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, layerData.ak, layerData.ae),
-											dD: A2(
+											a8: lut,
+											a9: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, layerData.al, layerData.ae),
+											dE: A2(
 												author$project$Tiled$Util$scrollRatio,
 												_Utils_eq(
 													A2(elm$core$Dict$get, 'scrollRatio', layerData.R),
 													elm$core$Maybe$Nothing),
 												layerProps),
-											bm: tileSetImage,
-											bn: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.aM, tileset.aL),
-											bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.bs, tileset.bq),
-											dO: A2(tilsetProps.a0, 'transparentcolor', author$project$Defaults$default.dO)
+											bn: tileSetImage,
+											bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.aN, tileset.aM),
+											bp: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, tileset.bt, tileset.br),
+											dP: A2(tilsetProps.a1, 'transparentcolor', author$project$Defaults$default.dP)
 										});
 								}));
 					}));
@@ -12252,7 +12285,7 @@ var author$project$World$Component$TileLayer$tileStaticLayerBuilder = function (
 };
 var author$project$World$Component$TileLayer$tileLayer = F2(
 	function (tilesets_, layerData) {
-		var data = layerData.aD;
+		var data = layerData.aE;
 		return A2(
 			elm$core$Basics$composeR,
 			A3(
@@ -12262,7 +12295,7 @@ var author$project$World$Component$TileLayer$tileLayer = F2(
 				{v: elm$core$Dict$empty, D: _List_Nil, w: elm$core$Dict$empty}),
 			author$project$ResourceTask$andThen(
 				function (_n0) {
-					var tilesets = _n0.br;
+					var tilesets = _n0.bs;
 					var animated = _n0.v;
 					var _static = _n0.w;
 					return A2(
@@ -12309,7 +12342,7 @@ var author$project$World$Create$objFix = F2(
 					author$project$Tiled$Object$Tile,
 					_Utils_update(
 						common,
-						{by: common.by + (dimension.ak / 2), bz: (levelHeight - common.bz) + (dimension.ae / 2)}),
+						{bz: common.bz + (dimension.al / 2), bA: (levelHeight - common.bA) + (dimension.ae / 2)}),
 					dimension,
 					gid);
 		}
@@ -12319,7 +12352,7 @@ var author$project$World$Create$init = F4(
 		var fix = author$project$World$Create$objFix(
 			function (_n3) {
 				var height = _n3.ae;
-				var tileheight = _n3.bq;
+				var tileheight = _n3.br;
 				return tileheight * height;
 			}(
 				author$project$Tiled$Util$common(level)));
@@ -12341,7 +12374,7 @@ var author$project$World$Create$init = F4(
 												return _Utils_update(
 													info,
 													{
-														aN: A2(elm$core$List$cons, l, info.aN)
+														aO: A2(elm$core$List$cons, l, info.aO)
 													});
 											}));
 								},
@@ -12353,7 +12386,7 @@ var author$project$World$Create$init = F4(
 								function (info) {
 									return A2(
 										elm$core$Basics$composeR,
-										A2(author$project$World$Component$TileLayer$tileLayer, info.br, tileData),
+										A2(author$project$World$Component$TileLayer$tileLayer, info.bs, tileData),
 										author$project$ResourceTask$map(
 											function (_n2) {
 												var l = _n2.a;
@@ -12361,8 +12394,8 @@ var author$project$World$Create$init = F4(
 												return _Utils_update(
 													info,
 													{
-														aN: _Utils_ap(l, info.aN),
-														br: t
+														aO: _Utils_ap(l, info.aO),
+														bs: t
 													});
 											}));
 								},
@@ -12382,22 +12415,22 @@ var author$project$World$Create$init = F4(
 			A2(
 				author$project$ResourceTask$succeed,
 				{
-					aF: emptyECS,
+					aG: emptyECS,
 					M: 0,
-					aN: _List_Nil,
-					br: author$project$Tiled$Util$tilesets(level)
+					aO: _List_Nil,
+					bs: author$project$Tiled$Util$tilesets(level)
 				},
 				start),
-			author$project$Tiled$Util$common(level).aN);
+			author$project$Tiled$Util$common(level).aO);
 		var camera = author$project$World$Camera$init(level);
 		return A2(
 			author$project$ResourceTask$map,
 			function (_n0) {
-				var layers = _n0.aN;
-				var ecs = _n0.aF;
+				var layers = _n0.aO;
+				var ecs = _n0.aG;
 				return A2(
 					author$project$World$World,
-					{c$: camera, bQ: author$project$Logic$GameFlow$Running, aI: 0, aN: layers, aT: 0},
+					{c0: camera, bR: author$project$Logic$GameFlow$Running, aJ: 0, aO: layers, aU: 0},
 					ecs);
 			},
 			layersTask);
@@ -12439,7 +12472,7 @@ var author$project$Environment$update = F2(
 		var h = msg.b;
 		return _Utils_update(
 			model,
-			{ae: h, ak: w, bw: w / h});
+			{ae: h, al: w, bx: w / h});
 	});
 var elm$json$Json$Encode$null = _Json_encodeNull;
 var author$project$Game$start = _Platform_outgoingPort(
@@ -12463,7 +12496,7 @@ var author$project$Game$wrap = F2(
 var author$project$Logic$GameFlow$SlowMotion = function (a) {
 	return {$: 2, a: a};
 };
-var author$project$Logic$GameFlow$default = {dc: 60};
+var author$project$Logic$GameFlow$default = {dd: 60};
 var author$project$Logic$GameFlow$resetRuntime = F2(
 	function (fps, frames) {
 		return frames / fps;
@@ -12478,14 +12511,14 @@ var author$project$Logic$GameFlow$updateRuntime = F3(
 		var world2 = _n0.b;
 		var thresholdTime = (1 / fps) * 12;
 		var deltaSec = delta / 1000;
-		var newRuntime = world.aT + A2(elm$core$Basics$min, deltaSec, thresholdTime);
+		var newRuntime = world.aU + A2(elm$core$Basics$min, deltaSec, thresholdTime);
 		var countOfFrames = elm$core$Basics$round(
-			A2(elm$core$Basics$min, fps * thresholdTime, (newRuntime * fps) - world.aI));
+			A2(elm$core$Basics$min, fps * thresholdTime, (newRuntime * fps) - world.aJ));
 		return _Utils_Tuple2(
 			_Utils_Tuple2(
 				_Utils_update(
 					world,
-					{aT: newRuntime}),
+					{aU: newRuntime}),
 				world2),
 			countOfFrames);
 	});
@@ -12506,7 +12539,7 @@ var author$project$Logic$GameFlow$worldUpdate = F3(
 					$temp$model = _Utils_Tuple2(
 					_Utils_update(
 						newWorld,
-						{aI: newWorld.aI + 1}),
+						{aJ: newWorld.aJ + 1}),
 					newWorld2);
 				system = $temp$system;
 				framesLeft = $temp$framesLeft;
@@ -12519,35 +12552,35 @@ var author$project$Logic$GameFlow$updateWith = F3(
 	function (systems, delta, model) {
 		var world = model.a;
 		var _n0 = function () {
-			var _n1 = world.bQ;
+			var _n1 = world.bR;
 			switch (_n1.$) {
 				case 0:
-					return A3(author$project$Logic$GameFlow$updateRuntime, model, delta, author$project$Logic$GameFlow$default.dc);
+					return A3(author$project$Logic$GameFlow$updateRuntime, model, delta, author$project$Logic$GameFlow$default.dd);
 				case 1:
 					return A3(author$project$Logic$GameFlow$updateRuntime, model, delta, 0);
 				default:
 					var current = _n1.a;
-					var _n2 = A3(author$project$Logic$GameFlow$updateRuntime, model, delta, current.dc);
+					var _n2 = A3(author$project$Logic$GameFlow$updateRuntime, model, delta, current.dd);
 					var _n3 = _n2.a;
 					var newWorld = _n3.a;
 					var newWorld2 = _n3.b;
 					var countOfFrames_ = _n2.b;
-					var framesLeft = current.bS - countOfFrames_;
+					var framesLeft = current.bT - countOfFrames_;
 					var _n4 = (framesLeft < 0) ? _Utils_Tuple2(
 						author$project$Logic$GameFlow$Running,
-						A2(author$project$Logic$GameFlow$resetRuntime, author$project$Logic$GameFlow$default.dc, newWorld.aI)) : _Utils_Tuple2(
+						A2(author$project$Logic$GameFlow$resetRuntime, author$project$Logic$GameFlow$default.dd, newWorld.aJ)) : _Utils_Tuple2(
 						author$project$Logic$GameFlow$SlowMotion(
 							_Utils_update(
 								current,
-								{bS: framesLeft})),
-						newWorld.aT);
+								{bT: framesLeft})),
+						newWorld.aU);
 					var flow = _n4.a;
 					var runtime = _n4.b;
 					return _Utils_Tuple2(
 						_Utils_Tuple2(
 							_Utils_update(
 								newWorld,
-								{bQ: flow, aT: runtime}),
+								{bR: flow, aU: runtime}),
 							newWorld2),
 						countOfFrames_);
 			}
@@ -12640,17 +12673,17 @@ var author$project$Environment$style = function (env) {
 			elm$virtual_dom$VirtualDom$attribute,
 			'width',
 			elm$core$String$fromInt(
-				elm$core$Basics$round(env.ak * env.aE))),
+				elm$core$Basics$round(env.al * env.aF))),
 			A2(
 			elm$virtual_dom$VirtualDom$attribute,
 			'height',
 			elm$core$String$fromInt(
-				elm$core$Basics$round(env.ae * env.aE))),
+				elm$core$Basics$round(env.ae * env.aF))),
 			A2(elm$virtual_dom$VirtualDom$style, 'display', 'block'),
 			A2(
 			elm$virtual_dom$VirtualDom$style,
 			'width',
-			elm$core$String$fromInt(env.ak) + 'px'),
+			elm$core$String$fromInt(env.al) + 'px'),
 			A2(
 			elm$virtual_dom$VirtualDom$style,
 			'height',
@@ -12664,10 +12697,10 @@ var author$project$Layer$Common$Layer = F2(
 var author$project$Layer$Image$fragmentShaderRepeat = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n\n        uniform sampler2D image;\n        uniform vec3 transparentcolor;\n        uniform float pixelsPerUnit;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform vec2 size;\n\n        void main () {\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;\n            gl_FragColor = texture2D(image, mod(pixel, 1.0));\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {image: 'a3', pixelsPerUnit: 'dt', scrollRatio: 'dD', size: 'bj', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {image: 'a4', pixelsPerUnit: 'du', scrollRatio: 'dE', size: 'bk', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Common$Vertex = function (position) {
-	return {du: position};
+	return {dv: position};
 };
 var elm_explorations$webgl$WebGL$Mesh3 = F2(
 	function (a, b) {
@@ -12695,8 +12728,8 @@ var author$project$Layer$Common$mesh = elm_explorations$webgl$WebGL$triangles(
 		]));
 var author$project$Layer$Common$vertexShader = {
 	src: '\n        attribute vec2 position;\n        uniform float widthRatio;\n\n        varying vec2 vcoord;\n        mat4 viewport = mat4(\n            (2.0 / widthRatio), 0, 0, 0,\n		 	                 0, 2, 0, 0,\n		 			         0, 0,-1, 0,\n		 			        -1,-1, 0, 1);\n        void main () {\n          vcoord = vec2(position.x * widthRatio, position.y);\n          gl_Position = viewport * vec4(vcoord, 0, 1.0);\n        }\n    ',
-	attributes: {position: 'du'},
-	uniforms: {widthRatio: 'bw'}
+	attributes: {position: 'dv'},
+	uniforms: {widthRatio: 'bx'}
 };
 var elm_explorations$webgl$WebGL$Internal$disableSetting = F2(
 	function (gl, setting) {
@@ -12766,69 +12799,69 @@ var author$project$Layer$Image$render_ = F2(
 		var individual = _n0.b;
 		return A5(
 			elm_explorations$webgl$WebGL$entityWith,
-			author$project$Defaults$default.c7,
+			author$project$Defaults$default.c8,
 			author$project$Layer$Common$vertexShader,
 			fragmentShader,
 			author$project$Layer$Common$mesh,
-			{a3: individual.a3, dt: common.dt, dD: individual.dD, bj: individual.bj, cT: common.cT, dO: individual.dO, dR: common.dR, bw: common.bw});
+			{a4: individual.a4, du: common.du, dE: individual.dE, bk: individual.bk, cU: common.cU, dP: individual.dP, dR: common.dR, bx: common.bx});
 	});
 var author$project$Layer$Image$render = author$project$Layer$Image$render_(author$project$Layer$Image$fragmentShaderRepeat);
 var author$project$Layer$Image$fragmentShaderNoRepeat = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n\n        uniform sampler2D image;\n        uniform vec3 transparentcolor;\n        uniform float pixelsPerUnit;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform vec2 size;\n\n        void main () {\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;\n            gl_FragColor = texture2D(image, mod(pixel, 1.0));\n            gl_FragColor.a *= float(pixel.x <= 1.0) * float(pixel.y <= 1.0);\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {image: 'a3', pixelsPerUnit: 'dt', scrollRatio: 'dD', size: 'bj', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {image: 'a4', pixelsPerUnit: 'du', scrollRatio: 'dE', size: 'bk', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Image$renderNo = author$project$Layer$Image$render_(author$project$Layer$Image$fragmentShaderNoRepeat);
 var author$project$Layer$Image$fragmentShaderRepeatX = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n\n        uniform sampler2D image;\n        uniform vec3 transparentcolor;\n        uniform float pixelsPerUnit;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform vec2 size;\n\n        void main () {\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;\n            gl_FragColor = texture2D(image, mod(pixel, 1.0));\n            gl_FragColor.a *= float(pixel.y <= 1.0);\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {image: 'a3', pixelsPerUnit: 'dt', scrollRatio: 'dD', size: 'bj', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {image: 'a4', pixelsPerUnit: 'du', scrollRatio: 'dE', size: 'bk', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Image$renderX = author$project$Layer$Image$render_(author$project$Layer$Image$fragmentShaderRepeatX);
 var author$project$Layer$Image$fragmentShaderRepeatY = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n\n        uniform sampler2D image;\n        uniform vec3 transparentcolor;\n        uniform float pixelsPerUnit;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform vec2 size;\n\n        void main () {\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;\n            gl_FragColor = texture2D(image, mod(pixel, 1.0));\n            gl_FragColor.a *= float(pixel.x <= 1.0);\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {image: 'a3', pixelsPerUnit: 'dt', scrollRatio: 'dD', size: 'bj', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {image: 'a4', pixelsPerUnit: 'du', scrollRatio: 'dE', size: 'bk', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Image$renderY = author$project$Layer$Image$render_(author$project$Layer$Image$fragmentShaderRepeatY);
 var author$project$Layer$Tiles$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        uniform sampler2D tileSet;\n        uniform sampler2D lut;\n        uniform vec3 transparentcolor;\n        uniform vec2 lutSize;\n        uniform vec2 tileSetSize;\n        uniform float pixelsPerUnit;\n        uniform vec2 tileSize;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n\n\n        vec2 tilesPerUnit = pixelsPerUnit / tileSize;\n        //float px = 1.0 / pixelsPerUnit;\n\n        float color2float(vec4 c) {\n            return c.z * 255.0\n            + c.y * 256.0 * 255.0\n            + c.x * 256.0 * 256.0 * 255.0\n            ;\n        }\n\n        float modI(float a, float b) {\n            float m = a - floor((a + 0.5) / b) * b;\n            return floor(m + 0.5);\n        }\n\n        void main () {\n            vec2 point = ((vcoord / (1.0 / tilesPerUnit))) + (viewportOffset / tileSize) * scrollRatio;\n            vec2 look = floor(point);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 coordinate = (look + 0.5) / lutSize;\n            float tileIndex = color2float(texture2D(lut, coordinate));\n\n            float magic = tileIndex / tileIndex;\n\n            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder\n            vec2 grid = tileSetSize / tileSize;\n            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));\n            // inverting reading botom to top\n            tile.y = grid.y - tile.y - 1.;\n\n            vec2 fragmentOffsetPx = floor((point - look) * tileSize);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;\n            gl_FragColor = texture2D(tileSet, pixel);\n\n            gl_FragColor.a *= magic;\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {lut: 'a7', lutSize: 'a8', pixelsPerUnit: 'dt', scrollRatio: 'dD', tileSet: 'bm', tileSetSize: 'bn', tileSize: 'bo', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {lut: 'a8', lutSize: 'a9', pixelsPerUnit: 'du', scrollRatio: 'dE', tileSet: 'bn', tileSetSize: 'bo', tileSize: 'bp', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Tiles$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Common$vertexShader,
 		author$project$Layer$Tiles$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{a7: individual.a7, a8: individual.a8, dt: common.dt, dD: individual.dD, bm: individual.bm, bn: individual.bn, bo: individual.bo, cT: common.cT, dO: individual.dO, dR: common.dR, bw: common.bw});
+		{a8: individual.a8, a9: individual.a9, du: common.du, dE: individual.dE, bn: individual.bn, bo: individual.bo, bp: individual.bp, cU: common.cU, dP: individual.dP, dR: common.dR, bx: common.bx});
 };
 var author$project$Layer$Tiles$Animated$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        uniform sampler2D tileSet;\n        uniform sampler2D lut;\n        uniform vec3 transparentcolor;\n        uniform vec2 lutSize;\n        uniform vec2 tileSetSize;\n        uniform float pixelsPerUnit;\n        uniform vec2 tileSize;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform sampler2D animLUT;\n        uniform int animLength;\n        uniform int time;\n        float animLength_ = float(animLength);\n        float time_ = float(time);\n\n        vec2 tilesPerUnit = pixelsPerUnit / tileSize;\n        //float px = 1.0 / pixelsPerUnit;\n\n        float color2float(vec4 c) {\n            return c.z * 255.0\n            + c.y * 256.0 * 255.0\n            + c.x * 256.0 * 256.0 * 255.0\n            ;\n        }\n\n        float modI(float a, float b) {\n            float m = a - floor((a + 0.5) / b) * b;\n            return floor(m + 0.5);\n        }\n\n        void main () {\n            vec2 point = ((vcoord / (1.0 / tilesPerUnit))) + (viewportOffset / tileSize) * scrollRatio;\n            vec2 look = floor(point);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 coordinate = (look + 0.5) / lutSize;\n            float currentFrame = modI(time_, animLength_);\n            float newIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 ))) + 1.;\n            float tileIndex = color2float(texture2D(lut, coordinate)) * newIndex;\n            float magic = tileIndex / tileIndex;\n            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder\n            vec2 grid = tileSetSize / tileSize;\n            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));\n            // inverting reading botom to top\n            tile.y = grid.y - tile.y - 1.;\n\n            vec2 fragmentOffsetPx = floor((point - look) * tileSize);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;\n            gl_FragColor = texture2D(tileSet, pixel);\n\n            gl_FragColor.a *= magic;\n            gl_FragColor.rgb *= gl_FragColor.a;\n\n        }\n    ',
 	attributes: {},
-	uniforms: {animLUT: 'aY', animLength: 'aZ', lut: 'a7', lutSize: 'a8', pixelsPerUnit: 'dt', scrollRatio: 'dD', tileSet: 'bm', tileSetSize: 'bn', tileSize: 'bo', time: 'cT', transparentcolor: 'dO', viewportOffset: 'dR'}
+	uniforms: {animLUT: 'aZ', animLength: 'a_', lut: 'a8', lutSize: 'a9', pixelsPerUnit: 'du', scrollRatio: 'dE', tileSet: 'bn', tileSetSize: 'bo', tileSize: 'bp', time: 'cU', transparentcolor: 'dP', viewportOffset: 'dR'}
 };
 var author$project$Layer$Tiles$Animated$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Common$vertexShader,
 		author$project$Layer$Tiles$Animated$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{aY: individual.aY, aZ: individual.aZ, a7: individual.a7, a8: individual.a8, dt: common.dt, dD: individual.dD, bm: individual.bm, bn: individual.bn, bo: individual.bo, cT: common.cT, dO: individual.dO, dR: common.dR, bw: common.bw});
+		{aZ: individual.aZ, a_: individual.a_, a8: individual.a8, a9: individual.a9, du: common.du, dE: individual.dE, bn: individual.bn, bo: individual.bo, bp: individual.bp, cU: common.cU, dP: individual.dP, dR: common.dR, bx: common.bx});
 };
 var author$project$World$Render$view = F4(
 	function (objRender, env, world, ecs) {
-		var camera = world.c$;
-		var layers = world.aN;
-		var frame = world.aI;
-		var common = {dt: camera.dt, cT: frame, dR: camera.dR, bw: env.bw};
+		var camera = world.c0;
+		var layers = world.aO;
+		var frame = world.aJ;
+		var common = {du: camera.du, cU: frame, dR: camera.dR, bx: env.bx};
 		return A2(
 			elm$core$List$concatMap,
 			function (income) {
@@ -12897,7 +12930,7 @@ var author$project$Game$view_ = F2(
 			var world = _n1.a;
 			var ecs = _n1.b;
 			return {
-				a$: _List_fromArray(
+				a0: _List_fromArray(
 					[
 						A3(
 						elm_explorations$webgl$WebGL$toHtmlWith,
@@ -12905,14 +12938,14 @@ var author$project$Game$view_ = F2(
 						author$project$Environment$style(model.y),
 						A4(author$project$World$Render$view, objRender, model.y, world, ecs))
 					]),
-				bt: 'Success'
+				bu: 'Success'
 			};
 		} else {
 			if (!_n0.a.a) {
 				var _n2 = _n0.a;
 				var t = _n2.b;
 				return {
-					a$: _List_fromArray(
+					a0: _List_fromArray(
 						[
 							A3(
 							elm_explorations$webgl$WebGL$toHtmlWith,
@@ -12920,14 +12953,14 @@ var author$project$Game$view_ = F2(
 							author$project$Environment$style(model.y),
 							_List_Nil)
 						]),
-					bt: t
+					bu: t
 				};
 			} else {
 				var _n3 = _n0.a;
 				var code = _n3.a;
 				var e = _n3.b;
 				return {
-					a$: _List_fromArray(
+					a0: _List_fromArray(
 						[
 							A3(
 							elm_explorations$webgl$WebGL$toHtmlWith,
@@ -12935,7 +12968,7 @@ var author$project$Game$view_ = F2(
 							author$project$Environment$style(model.y),
 							_List_Nil)
 						]),
-					bt: 'Failure:' + elm$core$String$fromInt(code)
+					bu: 'Failure:' + elm$core$String$fromInt(code)
 				};
 			}
 		}
@@ -12946,7 +12979,7 @@ var elm$browser$Browser$AnimationManager$Delta = function (a) {
 };
 var elm$browser$Browser$AnimationManager$State = F3(
 	function (subs, request, oldTime) {
-		return {bd: oldTime, cE: request, cP: subs};
+		return {be: oldTime, cF: request, cQ: subs};
 	});
 var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
 	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
@@ -12955,8 +12988,8 @@ var elm$browser$Browser$AnimationManager$rAF = _Browser_rAF(0);
 var elm$core$Process$spawn = _Scheduler_spawn;
 var elm$browser$Browser$AnimationManager$onEffects = F3(
 	function (router, subs, _n0) {
-		var request = _n0.cE;
-		var oldTime = _n0.bd;
+		var request = _n0.cF;
+		var oldTime = _n0.be;
 		var _n1 = _Utils_Tuple2(request, subs);
 		if (_n1.a.$ === 1) {
 			if (!_n1.b.b) {
@@ -13004,8 +13037,8 @@ var elm$time$Time$Posix = elm$core$Basics$identity;
 var elm$time$Time$millisToPosix = elm$core$Basics$identity;
 var elm$browser$Browser$AnimationManager$onSelfMsg = F3(
 	function (router, newTime, _n0) {
-		var subs = _n0.cP;
-		var oldTime = _n0.bd;
+		var subs = _n0.cQ;
+		var oldTime = _n0.be;
 		var send = function (sub) {
 			if (!sub.$) {
 				var tagger = sub.a;
@@ -13069,14 +13102,14 @@ var elm$browser$Browser$Events$onAnimationFrameDelta = elm$browser$Browser$Anima
 var elm$core$Platform$Sub$map = _Platform_map;
 var author$project$Game$document = function (_n0) {
 	var world = _n0.dT;
-	var system = _n0.dL;
-	var read = _n0.dx;
-	var view = _n0.cV;
-	var subscriptions = _n0.cQ;
+	var system = _n0.dM;
+	var read = _n0.dy;
+	var view = _n0.cW;
+	var subscriptions = _n0.cR;
 	return elm$browser$Browser$document(
 		{
-			dh: A2(author$project$Game$init_, world, read),
-			cQ: function (model_) {
+			di: A2(author$project$Game$init_, world, read),
+			cR: function (model_) {
 				var _n1 = model_.S;
 				if (!_n1.$) {
 					var _n2 = _n1.a;
@@ -13103,43 +13136,43 @@ var author$project$Game$document = function (_n0) {
 						author$project$Environment$subscriptions(model_.y));
 				}
 			},
-			dP: author$project$Game$update(system),
-			cV: author$project$Game$view_(view)
+			dQ: author$project$Game$update(system),
+			cW: author$project$Game$view_(view)
 		});
 };
 var author$project$World$Component$Common$Sync = function (a) {
 	return {$: 0, a: a};
 };
 var author$project$World$Component$Common$None = {$: 2};
-var author$project$World$Component$Common$defaultRead = {cl: author$project$World$Component$Common$None, cm: author$project$World$Component$Common$None, cn: author$project$World$Component$Common$None, co: author$project$World$Component$Common$None, cp: author$project$World$Component$Common$None, cq: author$project$World$Component$Common$None};
+var author$project$World$Component$Common$defaultRead = {cm: author$project$World$Component$Common$None, cn: author$project$World$Component$Common$None, co: author$project$World$Component$Common$None, cp: author$project$World$Component$Common$None, cq: author$project$World$Component$Common$None, cr: author$project$World$Component$Common$None};
 var author$project$World$Component$dimensions = function () {
 	var spec = {
-		dd: function ($) {
-			return $.c4;
+		de: function ($) {
+			return $.c5;
 		},
-		dF: F2(
+		dG: F2(
 			function (comps, world) {
 				return _Utils_update(
 					world,
-					{c4: comps});
+					{c5: comps});
 			})
 	};
 	return {
-		aG: author$project$Logic$Component$empty,
-		dx: _Utils_update(
+		aH: author$project$Logic$Component$empty,
+		dy: _Utils_update(
 			author$project$World$Component$Common$defaultRead,
 			{
-				cq: author$project$World$Component$Common$Sync(
+				cr: author$project$World$Component$Common$Sync(
 					function (_n0) {
 						var height = _n0.ae;
-						var width = _n0.ak;
+						var width = _n0.al;
 						return author$project$Logic$Entity$with(
 							_Utils_Tuple2(
 								spec,
 								A2(elm_explorations$linear_algebra$Math$Vector2$vec2, width, height)));
 					})
 			}),
-		cL: spec
+		cM: spec
 	};
 }();
 var elm$core$Set$Set_elm_builtin = elm$core$Basics$identity;
@@ -13160,7 +13193,7 @@ var elm$parser$Parser$Advanced$AddRight = F2(
 	});
 var elm$parser$Parser$Advanced$DeadEnd = F4(
 	function (row, col, problem, contextStack) {
-		return {bF: col, c1: contextStack, cx: problem, cG: row};
+		return {bG: col, c2: contextStack, cy: problem, cH: row};
 	});
 var elm$parser$Parser$Advanced$Empty = {$: 0};
 var elm$parser$Parser$Advanced$fromState = F2(
@@ -13168,7 +13201,7 @@ var elm$parser$Parser$Advanced$fromState = F2(
 		return A2(
 			elm$parser$Parser$Advanced$AddRight,
 			elm$parser$Parser$Advanced$Empty,
-			A4(elm$parser$Parser$Advanced$DeadEnd, s.cG, s.bF, x, s.d));
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.cH, s.bG, x, s.c));
 	});
 var elm$parser$Parser$Advanced$end = function (x) {
 	return function (s) {
@@ -13245,7 +13278,7 @@ var elm$parser$Parser$Advanced$keyword = function (_n0) {
 	var expecting = _n0.b;
 	var progress = !elm$core$String$isEmpty(kwd);
 	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, kwd, s.b, s.cG, s.bF, s.a);
+		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, kwd, s.b, s.cH, s.bG, s.a);
 		var newOffset = _n1.a;
 		var newRow = _n1.b;
 		var newCol = _n1.c;
@@ -13262,7 +13295,7 @@ var elm$parser$Parser$Advanced$keyword = function (_n0) {
 			elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{bF: newCol, d: s.d, e: s.e, b: newOffset, cG: newRow, a: s.a});
+			{bG: newCol, c: s.c, d: s.d, b: newOffset, cH: newRow, a: s.a});
 	};
 };
 var elm$parser$Parser$keyword = function (kwd) {
@@ -13274,10 +13307,10 @@ var elm$parser$Parser$keyword = function (kwd) {
 };
 var elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
-		return {bF: col, cx: problem, cG: row};
+		return {bG: col, cy: problem, cH: row};
 	});
 var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.cG, p.bF, p.cx);
+	return A3(elm$parser$Parser$DeadEnd, p.cH, p.bG, p.cy);
 };
 var elm$parser$Parser$Advanced$bagToList = F2(
 	function (bag, list) {
@@ -13309,7 +13342,7 @@ var elm$parser$Parser$Advanced$run = F2(
 	function (_n0, src) {
 		var parse = _n0;
 		var _n1 = parse(
-			{bF: 1, d: _List_Nil, e: 1, b: 0, cG: 1, a: src});
+			{bG: 1, c: _List_Nil, d: 1, b: 0, cH: 1, a: src});
 		if (!_n1.$) {
 			var value = _n1.b;
 			return elm$core$Result$Ok(value);
@@ -13345,7 +13378,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 	var expecting = _n0.b;
 	var progress = !elm$core$String$isEmpty(str);
 	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.cG, s.bF, s.a);
+		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.cH, s.bG, s.a);
 		var newOffset = _n1.a;
 		var newRow = _n1.b;
 		var newCol = _n1.c;
@@ -13356,7 +13389,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 			elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{bF: newCol, d: s.d, e: s.e, b: newOffset, cG: newRow, a: s.a});
+			{bG: newCol, c: s.c, d: s.d, b: newOffset, cH: newRow, a: s.a});
 	};
 };
 var elm$parser$Parser$Advanced$symbol = elm$parser$Parser$Advanced$token;
@@ -13388,7 +13421,7 @@ var elm$parser$Parser$Advanced$varHelp = F7(
 		while (true) {
 			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, src);
 			if (_Utils_eq(newOffset, -1)) {
-				return {bF: col, d: context, e: indent, b: offset, cG: row, a: src};
+				return {bG: col, c: context, d: indent, b: offset, cH: row, a: src};
 			} else {
 				if (_Utils_eq(newOffset, -2)) {
 					var $temp$isGood = isGood,
@@ -13428,45 +13461,45 @@ var elm$parser$Parser$Advanced$varHelp = F7(
 	});
 var elm$parser$Parser$Advanced$variable = function (i) {
 	return function (s) {
-		var firstOffset = A3(elm$parser$Parser$Advanced$isSubChar, i.dG, s.b, s.a);
+		var firstOffset = A3(elm$parser$Parser$Advanced$isSubChar, i.dH, s.b, s.a);
 		if (_Utils_eq(firstOffset, -1)) {
 			return A2(
 				elm$parser$Parser$Advanced$Bad,
 				false,
-				A2(elm$parser$Parser$Advanced$fromState, s, i.bM));
+				A2(elm$parser$Parser$Advanced$fromState, s, i.bN));
 		} else {
-			var s1 = _Utils_eq(firstOffset, -2) ? A7(elm$parser$Parser$Advanced$varHelp, i.di, s.b + 1, s.cG + 1, 1, s.a, s.e, s.d) : A7(elm$parser$Parser$Advanced$varHelp, i.di, firstOffset, s.cG, s.bF + 1, s.a, s.e, s.d);
+			var s1 = _Utils_eq(firstOffset, -2) ? A7(elm$parser$Parser$Advanced$varHelp, i.dj, s.b + 1, s.cH + 1, 1, s.a, s.d, s.c) : A7(elm$parser$Parser$Advanced$varHelp, i.dj, firstOffset, s.cH, s.bG + 1, s.a, s.d, s.c);
 			var name = A3(elm$core$String$slice, s.b, s1.b, s.a);
-			return A2(elm$core$Set$member, name, i.dz) ? A2(
+			return A2(elm$core$Set$member, name, i.dA) ? A2(
 				elm$parser$Parser$Advanced$Bad,
 				false,
-				A2(elm$parser$Parser$Advanced$fromState, s, i.bM)) : A3(elm$parser$Parser$Advanced$Good, true, name, s1);
+				A2(elm$parser$Parser$Advanced$fromState, s, i.bN)) : A3(elm$parser$Parser$Advanced$Good, true, name, s1);
 		}
 	};
 };
 var elm$parser$Parser$variable = function (i) {
 	return elm$parser$Parser$Advanced$variable(
-		{bM: elm$parser$Parser$ExpectingVariable, di: i.di, dz: i.dz, dG: i.dG});
+		{bN: elm$parser$Parser$ExpectingVariable, dj: i.dj, dA: i.dA, dH: i.dH});
 };
 var author$project$World$Component$Direction$direction = function () {
 	var spec = {
-		dd: A2(
+		de: A2(
 			elm$core$Basics$composeR,
 			function ($) {
-				return $.c5;
+				return $.c6;
 			},
 			function ($) {
-				return $.a1;
+				return $.a2;
 			}),
-		dF: F2(
+		dG: F2(
 			function (comps, world) {
-				var dir = world.c5;
+				var dir = world.c6;
 				return _Utils_update(
 					world,
 					{
-						c5: _Utils_update(
+						c6: _Utils_update(
 							dir,
-							{a1: comps})
+							{a2: comps})
 					});
 			})
 	};
@@ -13479,19 +13512,19 @@ var author$project$World$Component$Direction$direction = function () {
 						case 'Move.south':
 							return _Utils_update(
 								comp,
-								{a2: key});
+								{a3: key});
 						case 'Move.west':
 							return _Utils_update(
 								comp,
-								{a6: key});
+								{a7: key});
 						case 'Move.east':
 							return _Utils_update(
 								comp,
-								{bi: key});
+								{bj: key});
 						case 'Move.north':
 							return _Utils_update(
 								comp,
-								{bu: key});
+								{bv: key});
 						default:
 							break _n5$4;
 					}
@@ -13507,11 +13540,11 @@ var author$project$World$Component$Direction$direction = function () {
 			var registered = _n4.b;
 			var typeVar = elm$parser$Parser$variable(
 				{
-					di: function (c) {
+					dj: function (c) {
 						return elm$core$Char$isAlphaNum(c) || (c === '_');
 					},
-					dz: elm$core$Set$empty,
-					dG: elm$core$Char$isAlphaNum
+					dA: elm$core$Set$empty,
+					dH: elm$core$Char$isAlphaNum
 				});
 			var onKey = A2(
 				elm$parser$Parser$keeper,
@@ -13533,7 +13566,7 @@ var author$project$World$Component$Direction$direction = function () {
 						typeVar,
 						elm$parser$Parser$symbol(']')),
 					elm$parser$Parser$end));
-			var emptyComp = {a2: '', a6: '', bi: '', bu: '', by: 0, bz: 0};
+			var emptyComp = {a3: '', a7: '', bj: '', bv: '', bz: 0, bA: 0};
 			return A3(
 				elm$core$Dict$foldl,
 				F3(
@@ -13556,23 +13589,23 @@ var author$project$World$Component$Direction$direction = function () {
 				props);
 		});
 	return {
-		aG: {a1: author$project$Logic$Component$empty, dw: elm$core$Set$empty, bg: elm$core$Dict$empty},
-		dx: _Utils_update(
+		aH: {a2: author$project$Logic$Component$empty, dx: elm$core$Set$empty, bh: elm$core$Dict$empty},
+		dy: _Utils_update(
 			author$project$World$Component$Common$defaultRead,
 			{
-				cq: author$project$World$Component$Common$Sync(
+				cr: author$project$World$Component$Common$Sync(
 					F2(
 						function (_n0, _n1) {
-							var x = _n0.by;
-							var y = _n0.bz;
+							var x = _n0.bz;
+							var y = _n0.bA;
 							var properties = _n0.R;
 							var entityId = _n1.a;
 							var world = _n1.b;
-							var dir = world.c5;
+							var dir = world.c6;
 							var _n2 = A2(
 								filterKeys,
 								properties,
-								_Utils_Tuple2(entityId, world.c5.bg));
+								_Utils_Tuple2(entityId, world.c6.bh));
 							var comp = _n2.a;
 							var registered = _n2.b;
 							return A2(
@@ -13583,13 +13616,13 @@ var author$project$World$Component$Direction$direction = function () {
 									_Utils_update(
 										world,
 										{
-											c5: _Utils_update(
+											c6: _Utils_update(
 												dir,
-												{bg: registered})
+												{bh: registered})
 										})));
 						}))
 			}),
-		cL: spec
+		cM: spec
 	};
 }();
 var author$project$World$Component$direction = author$project$World$Component$Direction$direction;
@@ -13607,31 +13640,31 @@ var author$project$World$Component$Object$boolToFloat = function (bool) {
 };
 var author$project$World$Component$Object$objects = function () {
 	var spec = {
-		dd: function ($) {
-			return $.$7;
+		de: function ($) {
+			return $.dp;
 		},
-		dF: F2(
+		dG: F2(
 			function (comps, world) {
 				return _Utils_update(
 					world,
-					{$7: comps});
+					{dp: comps});
 			})
 	};
 	return {
-		aG: author$project$Logic$Component$empty,
-		dx: _Utils_update(
+		aH: author$project$Logic$Component$empty,
+		dy: _Utils_update(
 			author$project$World$Component$Common$defaultRead,
 			{
-				cq: author$project$World$Component$Common$Async(
+				cr: author$project$World$Component$Common$Async(
 					function (_n0) {
-						var x = _n0.by;
-						var y = _n0.bz;
-						var width = _n0.ak;
+						var x = _n0.bz;
+						var y = _n0.bA;
+						var width = _n0.al;
 						var height = _n0.ae;
-						var gid = _n0.bV;
-						var fh = _n0.bO;
-						var fv = _n0.bT;
-						var getTilesetByGid = _n0.bU;
+						var gid = _n0.bW;
+						var fh = _n0.bP;
+						var fv = _n0.bU;
+						var getTilesetByGid = _n0.bV;
 						return A2(
 							elm$core$Basics$composeR,
 							getTilesetByGid(gid),
@@ -13645,26 +13678,26 @@ var author$project$World$Component$Object$objects = function () {
 											var anim = _n2.a;
 											return A2(
 												elm$core$Basics$composeR,
-												author$project$ResourceTask$getTexture('/assets/' + t.a3),
+												author$project$ResourceTask$getTexture(t.a4),
 												author$project$ResourceTask$map(
 													function (tileSetImage) {
 														var tilsetProps = author$project$Tiled$Util$properties(t);
 														var obj = author$project$World$Component$Object$Animated(
 															{
 																ae: height,
-																bb: A2(
+																bc: A2(
 																	elm_explorations$linear_algebra$Math$Vector2$vec2,
 																	author$project$World$Component$Object$boolToFloat(fh),
 																	author$project$World$Component$Object$boolToFloat(fv)),
-																dD: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 1, 1),
-																bl: tileIndex,
-																bm: tileSetImage,
-																bn: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.aM, t.aL),
-																bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.bs, t.bq),
-																dO: A2(tilsetProps.a0, 'transparentcolor', author$project$Defaults$default.dO),
-																ak: width,
-																by: x,
-																bz: y
+																dE: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 1, 1),
+																bm: tileIndex,
+																bn: tileSetImage,
+																bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.aN, t.aM),
+																bp: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.bt, t.br),
+																dP: A2(tilsetProps.a1, 'transparentcolor', author$project$Defaults$default.dP),
+																al: width,
+																bz: x,
+																bA: y
 															});
 														return author$project$Logic$Entity$with(
 															_Utils_Tuple2(spec, obj));
@@ -13672,26 +13705,26 @@ var author$project$World$Component$Object$objects = function () {
 										} else {
 											return A2(
 												elm$core$Basics$composeR,
-												author$project$ResourceTask$getTexture('/assets/' + t.a3),
+												author$project$ResourceTask$getTexture(t.a4),
 												author$project$ResourceTask$map(
 													function (tileSetImage) {
 														var tilsetProps = author$project$Tiled$Util$properties(t);
 														var obj = author$project$World$Component$Object$Tile(
 															{
 																ae: height,
-																bb: A2(
+																bc: A2(
 																	elm_explorations$linear_algebra$Math$Vector2$vec2,
 																	author$project$World$Component$Object$boolToFloat(fh),
 																	author$project$World$Component$Object$boolToFloat(fv)),
-																dD: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 1, 1),
-																bl: tileIndex,
-																bm: tileSetImage,
-																bn: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.aM, t.aL),
-																bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.bs, t.bq),
-																dO: A2(tilsetProps.a0, 'transparentcolor', author$project$Defaults$default.dO),
-																ak: width,
-																by: x,
-																bz: y
+																dE: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 1, 1),
+																bm: tileIndex,
+																bn: tileSetImage,
+																bo: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.aN, t.aM),
+																bp: A2(elm_explorations$linear_algebra$Math$Vector2$vec2, t.bt, t.br),
+																dP: A2(tilsetProps.a1, 'transparentcolor', author$project$Defaults$default.dP),
+																al: width,
+																bz: x,
+																bA: y
 															});
 														return author$project$Logic$Entity$with(
 															_Utils_Tuple2(spec, obj));
@@ -13704,42 +13737,42 @@ var author$project$World$Component$Object$objects = function () {
 								}));
 					})
 			}),
-		cL: spec
+		cM: spec
 	};
 }();
 var author$project$World$Component$objects = author$project$World$Component$Object$objects;
 var author$project$World$Component$positions = function () {
 	var spec = {
-		dd: function ($) {
-			return $.dv;
+		de: function ($) {
+			return $.dw;
 		},
-		dF: F2(
+		dG: F2(
 			function (comps, world) {
 				return _Utils_update(
 					world,
-					{dv: comps});
+					{dw: comps});
 			})
 	};
 	return {
-		aG: author$project$Logic$Component$empty,
-		dx: _Utils_update(
+		aH: author$project$Logic$Component$empty,
+		dy: _Utils_update(
 			author$project$World$Component$Common$defaultRead,
 			{
-				cq: author$project$World$Component$Common$Sync(
+				cr: author$project$World$Component$Common$Sync(
 					function (_n0) {
-						var x = _n0.by;
-						var y = _n0.bz;
+						var x = _n0.bz;
+						var y = _n0.bA;
 						return author$project$Logic$Entity$with(
 							_Utils_Tuple2(
 								spec,
 								A2(elm_explorations$linear_algebra$Math$Vector2$vec2, x, y)));
 					})
 			}),
-		cL: spec
+		cM: spec
 	};
 }();
 var author$project$Main$read = _List_fromArray(
-	[author$project$World$Component$positions.dx, author$project$World$Component$dimensions.dx, author$project$World$Component$objects.dx, author$project$World$Component$direction.dx]);
+	[author$project$World$Component$positions.dy, author$project$World$Component$dimensions.dy, author$project$World$Component$objects.dy, author$project$World$Component$direction.dy]);
 var elm$core$Basics$sin = _Basics_sin;
 var elm_explorations$linear_algebra$Math$Vector2$add = _MJS_v2add;
 var elm_explorations$linear_algebra$Math$Vector2$scale = _MJS_v2scale;
@@ -13752,13 +13785,13 @@ var author$project$World$System$autoScrollCamera = F3(
 			elm_explorations$linear_algebra$Math$Vector2$sub,
 			A2(
 				elm_explorations$linear_algebra$Math$Vector2$scale,
-				elm$core$Basics$sin((common.aI - 1) / 30),
+				elm$core$Basics$sin((common.aJ - 1) / 30),
 				rand),
 			A2(
 				elm_explorations$linear_algebra$Math$Vector2$scale,
-				elm$core$Basics$sin(common.aI / 30),
+				elm$core$Basics$sin(common.aJ / 30),
 				rand));
-		var camera = common.c$;
+		var camera = common.c0;
 		var newPos = A2(
 			elm_explorations$linear_algebra$Math$Vector2$add,
 			rand_,
@@ -13767,7 +13800,7 @@ var author$project$World$System$autoScrollCamera = F3(
 			_Utils_update(
 				common,
 				{
-					c$: _Utils_update(
+					c0: _Utils_update(
 						camera,
 						{dR: newPos})
 				}),
@@ -13853,11 +13886,11 @@ var author$project$Logic$System$step2 = F4(
 				return _Utils_update(
 					acc,
 					{
-						g: A3(
+						f: A3(
 							elm$core$Array$set,
 							i,
 							elm$core$Maybe$Just(b),
-							acc.g)
+							acc.f)
 					});
 			});
 		var set1 = F3(
@@ -13865,16 +13898,16 @@ var author$project$Logic$System$step2 = F4(
 				return _Utils_update(
 					acc,
 					{
-						f: A3(
+						e: A3(
 							elm$core$Array$set,
 							i,
 							elm$core$Maybe$Just(a),
-							acc.f)
+							acc.e)
 					});
 			});
 		var combined = {
-			f: spec1.dd(world),
-			g: spec2.dd(world)
+			e: spec1.de(world),
+			f: spec2.de(world)
 		};
 		var result = A3(
 			author$project$Logic$Internal$indexedFoldlArray,
@@ -13899,20 +13932,20 @@ var author$project$Logic$System$step2 = F4(
 												set2(n)),
 											acc);
 									},
-									A2(elm$core$Array$get, n, acc.g));
+									A2(elm$core$Array$get, n, acc.f));
 							},
 							value1));
 				}),
 			combined,
-			combined.f);
+			combined.e);
 		return A3(
 			author$project$Logic$System$applyIf,
-			!_Utils_eq(result.g, combined.g),
-			spec2.dF(result.g),
+			!_Utils_eq(result.f, combined.f),
+			spec2.dG(result.f),
 			A3(
 				author$project$Logic$System$applyIf,
-				!_Utils_eq(result.f, combined.f),
-				spec1.dF(result.f),
+				!_Utils_eq(result.e, combined.e),
+				spec1.dG(result.e),
 				world));
 	});
 var author$project$World$System$linearMovement = F3(
@@ -13926,8 +13959,8 @@ var author$project$World$System$linearMovement = F3(
 				function (_n1, _n2, acc) {
 					var pos = _n1.a;
 					var setPos = _n1.b;
-					var x = _n2.a.by;
-					var y = _n2.a.bz;
+					var x = _n2.a.bz;
+					var y = _n2.a.bA;
 					return A3(
 						elm$core$Basics$apR,
 						A2(
@@ -13945,8 +13978,8 @@ var author$project$World$System$linearMovement = F3(
 var author$project$Main$system = function (world_) {
 	return A3(
 		author$project$World$System$linearMovement,
-		author$project$World$Component$positions.cL,
-		author$project$World$Component$direction.cL,
+		author$project$World$Component$positions.cM,
+		author$project$World$Component$direction.cM,
 		A3(
 			author$project$World$System$autoScrollCamera,
 			A2(elm_explorations$linear_algebra$Math$Vector2$vec2, 2, 0),
@@ -13985,71 +14018,71 @@ var author$project$Logic$System$foldl3 = F5(
 var author$project$Layer$Object$Animated$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        //uniform vec3 transparentcolor;\n        uniform sampler2D tileSet;\n        uniform vec2 tileSetSize;\n        //uniform float pixelsPerUnit;\n        uniform vec2 tileSize;\n        uniform vec2 mirror;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform float tileIndex;\n\n        float color2float(vec4 c) {\n            return c.z * 255.0\n            + c.y * 256.0 * 255.0\n            + c.x * 256.0 * 256.0 * 255.0\n            ;\n        }\n\n        float modI(float a, float b) {\n            float m = a - floor((a + 0.5) / b) * b;\n            return floor(m + 0.5);\n        }\n\n        void main () {\n            vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;\n            vec2 grid = tileSetSize / tileSize;\n            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));\n\n            // inverting reading botom to top\n            tile.y = grid.y - tile.y - 1.;\n            vec2 fragmentOffsetPx = floor((point) * tileSize);\n\n\n            //vec2 fragmentOffsetPx = floor(point * tileSize);\n            fragmentOffsetPx.x = abs(((tileSize.x - 1.) * mirror.x ) - fragmentOffsetPx.x);\n            fragmentOffsetPx.y = abs(((tileSize.y - 1.)  * mirror.y ) - fragmentOffsetPx.y);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;\n\n            //gl_FragColor = texture2D(tileSet, pixel);\n            gl_FragColor = texture2D(tileSet, pixel);\n            gl_FragColor.r += 0.3;\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {mirror: 'bb', scrollRatio: 'dD', tileIndex: 'bl', tileSet: 'bm', tileSetSize: 'bn', tileSize: 'bo', viewportOffset: 'dR'}
+	uniforms: {mirror: 'bc', scrollRatio: 'dE', tileIndex: 'bm', tileSet: 'bn', tileSetSize: 'bo', tileSize: 'bp', viewportOffset: 'dR'}
 };
 var author$project$Layer$Object$Common$vertexShader = {
 	src: '\n        precision mediump float;\n        attribute vec2 position;\n        uniform float widthRatio;\n        uniform float pixelsPerUnit;\n        uniform float x;\n        uniform float y;\n        uniform float height;\n        uniform float width;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        varying vec2 vcoord;\n\n        float px = 1.0 / pixelsPerUnit;\n        //https://gist.github.com/patriciogonzalezvivo/986341af1560138dde52\n        mat4 translate(float x, float y, float z) {\n            return mat4(\n                vec4(1.0, 0.0, 0.0, 0.0),\n                vec4(0.0, 1.0, 0.0, 0.0),\n                vec4(0.0, 0.0, 1.0, 0.0),\n                vec4(x,   y,   z,   1.0)\n            );\n        }\n\n        mat4 viewport = mat4(\n            (2.0 / widthRatio), 0, 0, 0,\n		 	                 0, 2, 0, 0,\n		 			         0, 0,-1, 0,\n		 			        -1,-1, 0, 1);\n        void main () {\n            vcoord = position;\n            vec2 fullScreen = vec2(position.x * widthRatio, position.y);\n            vec2 sized = vec2(position * vec2(width * px, height * px));\n            mat4 move = translate(\n                (x - viewportOffset.x * scrollRatio.x - width / 2.) * px,\n                (y - viewportOffset.y * scrollRatio.y - height / 2.) * px,\n                0.0\n            );\n            gl_Position = viewport * move * vec4(sized, 0, 1.0);\n        }\n    ',
-	attributes: {position: 'du'},
-	uniforms: {height: 'ae', pixelsPerUnit: 'dt', scrollRatio: 'dD', viewportOffset: 'dR', width: 'ak', widthRatio: 'bw', x: 'by', y: 'bz'}
+	attributes: {position: 'dv'},
+	uniforms: {height: 'ae', pixelsPerUnit: 'du', scrollRatio: 'dE', viewportOffset: 'dR', width: 'al', widthRatio: 'bx', x: 'bz', y: 'bA'}
 };
 var author$project$Layer$Object$Animated$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Object$Common$vertexShader,
 		author$project$Layer$Object$Animated$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{ae: individual.ae, bb: individual.bb, dt: common.dt, dD: individual.dD, bl: individual.bl, bm: individual.bm, bn: individual.bn, bo: individual.bo, cT: common.cT, dO: individual.dO, dR: common.dR, ak: individual.ak, bw: common.bw, by: individual.by, bz: individual.bz});
+		{ae: individual.ae, bc: individual.bc, du: common.du, dE: individual.dE, bm: individual.bm, bn: individual.bn, bo: individual.bo, bp: individual.bp, cU: common.cU, dP: individual.dP, dR: common.dR, al: individual.al, bx: common.bx, bz: individual.bz, bA: individual.bA});
 };
 var author$project$Layer$Object$Ellipse$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        uniform vec4 color;\n        uniform float width;\n        uniform float height;\n        vec2 px = vec2( 1.0 / width, 1.0 / height );\n        void main () {\n            gl_FragColor = color;\n            vec2 delme = vcoord * 2. - 1.;\n            float result = dot(delme, delme);\n            gl_FragColor.a = float(result < 1.0);\n            gl_FragColor.a -= float(result < .85) * .75;\n        }\n    ',
 	attributes: {},
-	uniforms: {color: 'a0', height: 'ae', width: 'ak'}
+	uniforms: {color: 'a1', height: 'ae', width: 'al'}
 };
 var author$project$Layer$Object$Ellipse$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Object$Common$vertexShader,
 		author$project$Layer$Object$Ellipse$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{a0: individual.a0, ae: individual.ae, dt: common.dt, dD: individual.dD, cT: common.cT, dO: individual.dO, dR: common.dR, ak: individual.ak, bw: common.bw, by: individual.by, bz: individual.bz});
+		{a1: individual.a1, ae: individual.ae, du: common.du, dE: individual.dE, cU: common.cU, dP: individual.dP, dR: common.dR, al: individual.al, bx: common.bx, bz: individual.bz, bA: individual.bA});
 };
 var author$project$Layer$Object$Rectangle$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        uniform vec4 color;\n        uniform float width;\n        uniform float height;\n        float widthPx =  1.0 / width;\n        float heightPx =  1.0 / height;\n        void main () {\n            gl_FragColor = color;\n            if (vcoord.x < 1.0 - widthPx\n                && vcoord.x > widthPx\n                && vcoord.y < 1.0 - heightPx\n                && vcoord.y > heightPx\n                ) {\n                 gl_FragColor.a = 0.25;\n            }\n        }\n    ',
 	attributes: {},
-	uniforms: {color: 'a0', height: 'ae', width: 'ak'}
+	uniforms: {color: 'a1', height: 'ae', width: 'al'}
 };
 var author$project$Layer$Object$Rectangle$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Object$Common$vertexShader,
 		author$project$Layer$Object$Rectangle$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{a0: individual.a0, ae: individual.ae, dt: common.dt, dD: individual.dD, cT: common.cT, dO: individual.dO, dR: common.dR, ak: individual.ak, bw: common.bw, by: individual.by, bz: individual.bz});
+		{a1: individual.a1, ae: individual.ae, du: common.du, dE: individual.dE, cU: common.cU, dP: individual.dP, dR: common.dR, al: individual.al, bx: common.bx, bz: individual.bz, bA: individual.bA});
 };
 var author$project$Layer$Object$Tile$fragmentShader = {
 	src: '\n        precision mediump float;\n        varying vec2 vcoord;\n        //uniform vec3 transparentcolor;\n        uniform sampler2D tileSet;\n        uniform vec2 tileSetSize;\n        //uniform float pixelsPerUnit;\n        uniform vec2 tileSize;\n        uniform vec2 mirror;\n        uniform vec2 viewportOffset;\n        uniform vec2 scrollRatio;\n        uniform float tileIndex;\n\n        float color2float(vec4 c) {\n            return c.z * 255.0\n            + c.y * 256.0 * 255.0\n            + c.x * 256.0 * 256.0 * 255.0\n            ;\n        }\n\n        float modI(float a, float b) {\n            float m = a - floor((a + 0.5) / b) * b;\n            return floor(m + 0.5);\n        }\n\n        void main () {\n            vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;\n            vec2 grid = tileSetSize / tileSize;\n            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));\n\n            // inverting reading botom to top\n            tile.y = grid.y - tile.y - 1.;\n            vec2 fragmentOffsetPx = floor((point) * tileSize);\n\n\n            fragmentOffsetPx.x = abs(((tileSize.x - 1.) * mirror.x ) - fragmentOffsetPx.x);\n            fragmentOffsetPx.y = abs(((tileSize.y - 1.)  * mirror.y ) - fragmentOffsetPx.y);\n\n            //(2i + 1)/(2N) Pixel center\n            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;\n\n            gl_FragColor = texture2D(tileSet, pixel);\n            gl_FragColor.rgb *= gl_FragColor.a;\n        }\n    ',
 	attributes: {},
-	uniforms: {mirror: 'bb', scrollRatio: 'dD', tileIndex: 'bl', tileSet: 'bm', tileSetSize: 'bn', tileSize: 'bo', viewportOffset: 'dR'}
+	uniforms: {mirror: 'bc', scrollRatio: 'dE', tileIndex: 'bm', tileSet: 'bn', tileSetSize: 'bo', tileSize: 'bp', viewportOffset: 'dR'}
 };
 var author$project$Layer$Object$Tile$render = function (_n0) {
 	var common = _n0.a;
 	var individual = _n0.b;
 	return A5(
 		elm_explorations$webgl$WebGL$entityWith,
-		author$project$Defaults$default.c7,
+		author$project$Defaults$default.c8,
 		author$project$Layer$Object$Common$vertexShader,
 		author$project$Layer$Object$Tile$fragmentShader,
 		author$project$Layer$Common$mesh,
-		{ae: individual.ae, bb: individual.bb, dt: common.dt, dD: individual.dD, bl: individual.bl, bm: individual.bm, bn: individual.bn, bo: individual.bo, cT: common.cT, dO: individual.dO, dR: common.dR, ak: individual.ak, bw: common.bw, by: individual.by, bz: individual.bz});
+		{ae: individual.ae, bc: individual.bc, du: common.du, dE: individual.dE, bm: individual.bm, bn: individual.bn, bo: individual.bo, bp: individual.bp, cU: common.cU, dP: individual.dP, dR: common.dR, al: individual.al, bx: common.bx, bz: individual.bz, bA: individual.bA});
 };
 var elm_explorations$linear_algebra$Math$Vector2$getX = _MJS_v2getX;
 var elm_explorations$linear_algebra$Math$Vector2$getY = _MJS_v2getY;
@@ -14067,8 +14100,8 @@ var author$project$World$RenderSystem$render = F5(
 							_Utils_update(
 								info,
 								{
-									by: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
-									bz: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
+									bz: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
+									bA: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
 								}))),
 					acc);
 			case 3:
@@ -14082,8 +14115,8 @@ var author$project$World$RenderSystem$render = F5(
 							_Utils_update(
 								info,
 								{
-									by: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
-									bz: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
+									bz: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
+									bA: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
 								}))),
 					acc);
 			case 0:
@@ -14097,8 +14130,8 @@ var author$project$World$RenderSystem$render = F5(
 							_Utils_update(
 								info,
 								{
-									by: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
-									bz: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
+									bz: elm_explorations$linear_algebra$Math$Vector2$getX(pos),
+									bA: elm_explorations$linear_algebra$Math$Vector2$getY(pos)
 								}))),
 					acc);
 			default:
@@ -14118,8 +14151,8 @@ var author$project$World$RenderSystem$preview = F2(
 			author$project$Logic$System$foldl3,
 			author$project$World$RenderSystem$render(common),
 			inLayer,
-			author$project$World$Component$objects.cL.dd(ecs),
-			author$project$World$Component$positions.cL.dd(ecs),
+			author$project$World$Component$objects.cM.de(ecs),
+			author$project$World$Component$positions.cM.de(ecs),
 			_List_Nil);
 	});
 var author$project$Main$view = F2(
@@ -14131,10 +14164,10 @@ var author$project$Main$view = F2(
 			common,
 			_Utils_Tuple2(ecs, objLayer));
 	});
-var author$project$Main$world = {c4: author$project$World$Component$dimensions.aG, c5: author$project$World$Component$direction.aG, $7: author$project$World$Component$objects.aG, dv: author$project$World$Component$positions.aG};
+var author$project$Main$world = {c5: author$project$World$Component$dimensions.aH, c6: author$project$World$Component$direction.aH, dp: author$project$World$Component$objects.aH, dw: author$project$World$Component$positions.aH};
 var author$project$World$Subscription$isRegistered = F2(
 	function (direction, key) {
-		return A2(elm$core$Dict$member, key, direction.bg) ? elm$json$Json$Decode$succeed(key) : elm$json$Json$Decode$fail('not registered key');
+		return A2(elm$core$Dict$member, key, direction.bh) ? elm$json$Json$Decode$succeed(key) : elm$json$Json$Decode$fail('not registered key');
 	});
 var author$project$World$Subscription$boolToInt = function (bool) {
 	return bool ? 1 : 0;
@@ -14147,25 +14180,25 @@ var author$project$World$Subscription$keyToInt = function (key) {
 };
 var author$project$World$Subscription$arrows = F2(
 	function (_n0, keys) {
-		var up = _n0.bu;
-		var right = _n0.bi;
-		var down = _n0.a2;
-		var left = _n0.a6;
+		var up = _n0.bv;
+		var right = _n0.bj;
+		var down = _n0.a3;
+		var left = _n0.a7;
 		var y = A2(author$project$World$Subscription$keyToInt, up, keys) - A2(author$project$World$Subscription$keyToInt, down, keys);
 		var x = A2(author$project$World$Subscription$keyToInt, right, keys) - A2(author$project$World$Subscription$keyToInt, left, keys);
-		return {by: x, bz: y};
+		return {bz: x, bA: y};
 	});
 var author$project$World$Subscription$updateKeys = F3(
 	function (keyChanged, _n0, pressed) {
 		var world1 = _n0.a;
 		var world2 = _n0.b;
-		var direction = world2.c5;
-		if (_Utils_eq(world2.c5.dw, pressed)) {
+		var direction = world2.c6;
+		if (_Utils_eq(world2.c6.dx, pressed)) {
 			return elm$json$Json$Decode$fail('nothing chnaged');
 		} else {
 			var newComps = A2(
 				elm$core$Maybe$withDefault,
-				direction.a1,
+				direction.a2,
 				A2(
 					elm$core$Maybe$andThen,
 					function (id) {
@@ -14173,34 +14206,34 @@ var author$project$World$Subscription$updateKeys = F3(
 							elm$core$Maybe$map,
 							function (comp) {
 								var _n1 = A2(author$project$World$Subscription$arrows, comp, pressed);
-								var x = _n1.by;
-								var y = _n1.bz;
+								var x = _n1.bz;
+								var y = _n1.bA;
 								return A3(
 									author$project$Logic$Entity$setComponent,
 									id,
 									_Utils_update(
 										comp,
-										{by: x, bz: y}),
-									direction.a1);
+										{bz: x, bA: y}),
+									direction.a2);
 							},
 							A2(
 								elm$core$Maybe$andThen,
 								elm$core$Basics$identity,
-								A2(elm$core$Array$get, id, direction.a1)));
+								A2(elm$core$Array$get, id, direction.a2)));
 					},
-					A2(elm$core$Dict$get, keyChanged, direction.bg)));
+					A2(elm$core$Dict$get, keyChanged, direction.bh)));
 			var updatedDirection = _Utils_update(
 				direction,
-				{a1: newComps});
+				{a2: newComps});
 			return elm$json$Json$Decode$succeed(
 				_Utils_Tuple2(
 					world1,
 					_Utils_update(
 						world2,
 						{
-							c5: _Utils_update(
+							c6: _Utils_update(
 								updatedDirection,
-								{dw: pressed})
+								{dx: pressed})
 						})));
 		}
 	});
@@ -14212,7 +14245,7 @@ var elm$core$Set$insert = F2(
 var author$project$World$Subscription$onKeyDown = function (_n0) {
 	var world1 = _n0.a;
 	var world2 = _n0.b;
-	var direction = world2.c5;
+	var direction = world2.c6;
 	return A2(
 		elm$json$Json$Decode$andThen,
 		function (key) {
@@ -14220,7 +14253,7 @@ var author$project$World$Subscription$onKeyDown = function (_n0) {
 				author$project$World$Subscription$updateKeys,
 				key,
 				_Utils_Tuple2(world1, world2),
-				A2(elm$core$Set$insert, key, direction.dw));
+				A2(elm$core$Set$insert, key, direction.dx));
 		},
 		A2(
 			elm$json$Json$Decode$andThen,
@@ -14235,7 +14268,7 @@ var elm$core$Set$remove = F2(
 var author$project$World$Subscription$onKeyUp = function (_n0) {
 	var world1 = _n0.a;
 	var world2 = _n0.b;
-	var direction = world2.c5;
+	var direction = world2.c6;
 	return A2(
 		elm$json$Json$Decode$andThen,
 		function (key) {
@@ -14243,7 +14276,7 @@ var author$project$World$Subscription$onKeyUp = function (_n0) {
 				author$project$World$Subscription$updateKeys,
 				key,
 				_Utils_Tuple2(world1, world2),
-				A2(elm$core$Set$remove, key, direction.dw));
+				A2(elm$core$Set$remove, key, direction.dx));
 		},
 		A2(
 			elm$json$Json$Decode$andThen,
@@ -14264,5 +14297,5 @@ var author$project$World$Subscription$keyboard = function (world) {
 			]));
 };
 var author$project$Main$main = author$project$Game$document(
-	{dx: author$project$Main$read, cQ: author$project$World$Subscription$keyboard, dL: author$project$Main$system, cV: author$project$Main$view, dT: author$project$Main$world});
+	{dy: author$project$Main$read, cR: author$project$World$Subscription$keyboard, dM: author$project$Main$system, cW: author$project$Main$view, dT: author$project$Main$world});
 _Platform_export({'Main':{'init':author$project$Main$main(elm$json$Json$Decode$value)(0)}});}(this));
