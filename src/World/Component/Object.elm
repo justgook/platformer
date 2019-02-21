@@ -49,7 +49,7 @@ objects =
                                             in
                                             case Tiled.Util.animation t tileIndex of
                                                 Just anim ->
-                                                    ResourceTask.getTexture ("/assets/" ++ t.image)
+                                                    ResourceTask.getTexture t.image
                                                         >> ResourceTask.map
                                                             (\tileSetImage ->
                                                                 let
@@ -75,7 +75,7 @@ objects =
                                                             )
 
                                                 Nothing ->
-                                                    ResourceTask.getTexture ("/assets/" ++ t.image)
+                                                    ResourceTask.getTexture t.image
                                                         >> ResourceTask.map
                                                             (\tileSetImage ->
                                                                 let

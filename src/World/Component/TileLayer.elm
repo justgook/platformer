@@ -60,7 +60,7 @@ splitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc) =
                         splitTileLayerByTileSet tilesets rest (fillTiles gid info acc)
 
                     Just ((Tiled.Tileset.Source { firstgid, source }) as was) ->
-                        ResourceTask.getTileset ("/assets/" ++ source) firstgid
+                        ResourceTask.getTileset source firstgid
                             >> ResourceTask.andThen
                                 (\tileset ->
                                     splitTileLayerByTileSet
@@ -106,7 +106,7 @@ tileStaticLayerBuilder layerData =
                 tilsetProps =
                     Tiled.Util.properties tileset
             in
-            ResourceTask.getTexture ("/assets/" ++ tileset.image)
+            ResourceTask.getTexture tileset.image
                 >> ResourceTask.andThen
                     (\tileSetImage ->
                         ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)
@@ -146,7 +146,7 @@ tileAnimatedLayerBuilder layerData =
                 animLength =
                     List.length animLutData
             in
-            ResourceTask.getTexture ("/assets/" ++ tileset.image)
+            ResourceTask.getTexture tileset.image
                 >> ResourceTask.andThen
                     (\tileSetImage ->
                         ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)

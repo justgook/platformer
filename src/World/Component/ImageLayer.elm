@@ -19,7 +19,7 @@ imageLayer imageData =
         props =
             Tiled.Util.properties imageData
     in
-    ResourceTask.getTexture ("/assets/" ++ imageData.image)
+    ResourceTask.getTexture imageData.image
         >> ResourceTask.map
             (\t ->
                 let

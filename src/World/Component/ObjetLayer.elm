@@ -17,7 +17,7 @@ getTilesetByGid : List Tileset -> GetTileset
 getTilesetByGid tilesets gid =
     case tilesetById tilesets gid of
         Just (Tiled.Tileset.Source info) ->
-            ResourceTask.getTileset ("/assets/" ++ info.source) info.firstgid
+            ResourceTask.getTileset info.source info.firstgid
 
         Just t ->
             ResourceTask.succeed t

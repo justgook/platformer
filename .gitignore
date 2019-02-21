@@ -6,6 +6,7 @@ logs
 node_modules/
 elm-stuff/
 assets/
+gh-pages/assets
 gh-pages/assets/
 # Yarn Integrity file
 .yarn-integrity
