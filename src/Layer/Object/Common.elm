@@ -1,8 +1,6 @@
 module Layer.Object.Common exposing (vertexShader)
 
-import Defaults exposing (default)
-import Layer.Common exposing (Layer(..), mesh)
-import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector2 exposing (Vec2)
 import WebGL exposing (Mesh, Shader)
 
 

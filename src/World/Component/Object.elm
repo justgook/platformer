@@ -1,48 +1,117 @@
 module World.Component.Object exposing (Object(..), objects)
 
 import Defaults exposing (default)
+import Error exposing (Error(..))
 import Layer.Common as Common
+import Layer.Object.Animated
 import Layer.Object.Ellipse
 import Layer.Object.Rectangle
 import Layer.Object.Tile
+import Logic.Component
 import Logic.Entity as Entity
 import Math.Vector2 exposing (vec2)
-import Math.Vector4 exposing (vec4)
-import World.Component.Common exposing (Read3(..), defaultRead)
+import ResourceTask
+import Tiled.Tileset
+import Tiled.Util
+import World.Component.Common exposing (Read(..), defaultRead)
 
 
 type Object
     = Rectangle (Common.Individual Layer.Object.Rectangle.Model)
     | Ellipse (Common.Individual Layer.Object.Ellipse.Model)
     | Tile (Common.Individual Layer.Object.Tile.Model)
+    | Animated (Common.Individual Layer.Object.Animated.Model)
 
 
 objects =
     --TODO create other for isometric view
     let
         spec =
-            { get = identity
-            , set = \comps _ -> comps
+            { get = .objects
+            , set = \comps world -> { world | objects = comps }
             }
     in
     { spec = spec
+    , empty = Logic.Component.empty
     , read =
         { defaultRead
-            | objectTileRenderable =
-                Sync3
-                    (\{ x, y } { width, height } gid ->
-                        Entity.with ( spec, Rectangle { delme | width = width, height = height, x = x, y = y } )
+            | objectTile =
+                Async
+                    (\{ x, y, width, height, gid, fh, fv, getTilesetByGid } ->
+                        getTilesetByGid gid
+                            >> ResourceTask.andThen
+                                (\t_ ->
+                                    case t_ of
+                                        Tiled.Tileset.Embedded t ->
+                                            let
+                                                tileIndex =
+                                                    gid - t.firstgid
+                                            in
+                                            case Tiled.Util.animation t tileIndex of
+                                                Just anim ->
+                                                    ResourceTask.getTexture ("/assets/" ++ t.image)
+                                                        >> ResourceTask.map
+                                                            (\tileSetImage ->
+                                                                let
+                                                                    tilsetProps =
+                                                                        Tiled.Util.properties t
+
+                                                                    obj =
+                                                                        Animated
+                                                                            { x = x
+                                                                            , y = y
+                                                                            , width = width
+                                                                            , height = height
+                                                                            , tileIndex = toFloat tileIndex
+                                                                            , tileSet = tileSetImage
+                                                                            , tileSetSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
+                                                                            , tileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
+                                                                            , mirror = vec2 (boolToFloat fh) (boolToFloat fv)
+                                                                            , scrollRatio = vec2 1 1
+                                                                            , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                                                            }
+                                                                in
+                                                                Entity.with ( spec, obj )
+                                                            )
+
+                                                Nothing ->
+                                                    ResourceTask.getTexture ("/assets/" ++ t.image)
+                                                        >> ResourceTask.map
+                                                            (\tileSetImage ->
+                                                                let
+                                                                    tilsetProps =
+                                                                        Tiled.Util.properties t
+
+                                                                    obj =
+                                                                        Tile
+                                                                            { x = x
+                                                                            , y = y
+                                                                            , width = width
+                                                                            , height = height
+                                                                            , tileIndex = toFloat tileIndex
+                                                                            , tileSet = tileSetImage
+                                                                            , tileSetSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
+                                                                            , tileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
+                                                                            , mirror = vec2 (boolToFloat fh) (boolToFloat fv)
+                                                                            , scrollRatio = vec2 1 1
+                                                                            , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                                                            }
+                                                                in
+                                                                Entity.with ( spec, obj )
+                                                            )
+
+                                        _ ->
+                                            ResourceTask.fail (Error 6002 "object tile readers works only with single image tilesets")
+                                )
                     )
         }
     }
 
 
-delme =
-    { x = 106
-    , y = 30
-    , width = 16
-    , height = 16
-    , color = vec4 1 0 1 1
-    , scrollRatio = vec2 1 1
-    , transparentcolor = default.transparentcolor
-    }
+boolToFloat : Bool -> Float
+boolToFloat bool =
+    if bool then
+        1
+
+    else
+        0

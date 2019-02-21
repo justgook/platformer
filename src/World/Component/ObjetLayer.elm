@@ -1,78 +1,104 @@
-module World.Component.ObjetLayer exposing (objectLayer)
+module World.Component.ObjetLayer exposing (objectLayer, validateAndUpdate)
 
-import Layer
+import Error exposing (Error(..))
+import Layer exposing (Layer)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
-import ResourceTask
+import ResourceTask exposing (CacheTask, ResourceTask)
+import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Object
-import World.Component.Common exposing (Read1(..), Read2(..), Read3(..), Reader)
+import Tiled.Tileset exposing (Tileset)
+import Tiled.Util exposing (tilesetById)
+import World.Component.Common exposing (GetTileset, Read(..), Reader, commonDimensionArgs, commonDimensionPolyPointsArgs, tileArgs)
+
+
+getTilesetByGid : List Tileset -> GetTileset
+getTilesetByGid tilesets gid =
+    case tilesetById tilesets gid of
+        Just (Tiled.Tileset.Source info) ->
+            ResourceTask.getTileset ("/assets/" ++ info.source) info.firstgid
+
+        Just t ->
+            ResourceTask.succeed t
+
+        Nothing ->
+            ResourceTask.fail (Error 5001 ("Not found Tileset for GID:" ++ String.fromInt gid))
 
 
 objectLayer :
     (Tiled.Object.Object -> Tiled.Object.Object)
-    -> List (Reader world (Component.Set comp))
+    -> List (Reader world)
     ->
         { c
             | ecs : world
             , idSource : Int
-            , layers : List (Layer.Layer (Component.Set comp))
+            , layers : List Layer
+            , tilesets : List Tileset
         }
     -> Tiled.Layer.ObjectData
-    -> ResourceTask.CacheTask
+    -> CacheTask
     ->
-        ResourceTask.ResourceTask
+        ResourceTask
             { c
                 | ecs : world
                 , idSource : Int
-                , layers : List (Layer.Layer (Component.Set comp))
+                , layers : List Layer
+                , tilesets : List Tileset
             }
 objectLayer fix readers info_ objectData start =
+    let
+        spec =
+            { get = identity
+            , set = \comps _ -> comps
+            }
+
+        readFor f args ( layerECS, acc ) =
+            combine1 f args readers (Entity.create acc.idSource acc.ecs)
+                >> ResourceTask.map
+                    (\newECS ->
+                        layerECS
+                            |> Entity.create acc.idSource
+                            |> Entity.with ( spec, () )
+                            |> Tuple.second
+                            |> validateAndUpdate ( layerECS, acc ) newECS
+                    )
+    in
     objectData.objects
         |> List.foldr
             (\obj ->
                 case fix obj of
                     Tiled.Object.Point common ->
-                        ResourceTask.andThen
-                            (\( layerECS, info ) ->
-                                combine1 .objectPoint common readers (Entity.create info.idSource info.ecs)
-                                    >> ResourceTask.map (\newECS -> validateAndUpdate ( layerECS, info ) newECS layerECS)
-                            )
+                        readFor .objectPoint common |> ResourceTask.andThen
 
                     Tiled.Object.Rectangle common dimension ->
-                        ResourceTask.andThen
-                            (\( layerECS, info ) ->
-                                combine2 .objectRectangle { a = common, b = dimension } readers (Entity.create info.idSource info.ecs)
-                                    >> ResourceTask.map (\newECS -> validateAndUpdate ( layerECS, info ) newECS layerECS)
-                            )
+                        commonDimensionArgs common dimension
+                            |> readFor .objectRectangle
+                            |> ResourceTask.andThen
 
                     Tiled.Object.Ellipse common dimension ->
-                        ResourceTask.andThen
-                            (\( layerECS, info ) ->
-                                combine2 .objectEllipse { a = common, b = dimension } readers (Entity.create info.idSource info.ecs)
-                                    >> ResourceTask.map (\newECS -> validateAndUpdate ( layerECS, info ) newECS layerECS)
-                            )
+                        commonDimensionArgs common dimension
+                            |> readFor .objectEllipse
+                            |> ResourceTask.andThen
 
                     Tiled.Object.Polygon common dimension polyPoints ->
-                        ResourceTask.andThen
-                            (\( layerECS, info ) ->
-                                combine3 .objectPolygon { a = common, b = dimension, c = polyPoints } readers (Entity.create info.idSource info.ecs)
-                                    >> ResourceTask.map (\newECS -> validateAndUpdate ( layerECS, info ) newECS layerECS)
-                            )
+                        commonDimensionPolyPointsArgs common dimension polyPoints
+                            |> readFor .objectPolygon
+                            |> ResourceTask.andThen
 
                     Tiled.Object.PolyLine common dimension polyPoints ->
-                        ResourceTask.andThen
-                            (\( layerECS, info ) ->
-                                combine3 .objectPolyLine { a = common, b = dimension, c = polyPoints } readers (Entity.create info.idSource info.ecs)
-                                    >> ResourceTask.map (\newECS -> validateAndUpdate ( layerECS, info ) newECS layerECS)
-                            )
+                        commonDimensionPolyPointsArgs common dimension polyPoints
+                            |> readFor .objectPolyLine
+                            |> ResourceTask.andThen
 
                     Tiled.Object.Tile common dimension gid ->
                         ResourceTask.andThen
                             (\( layerECS, info ) ->
-                                ResourceTask.map2 (validateAndUpdate ( layerECS, info ))
-                                    (combine3 .objectTile { a = common, b = dimension, c = gid } readers (Entity.create info.idSource info.ecs))
-                                    (combine3 .objectTileRenderable { a = common, b = dimension, c = gid } readers (Entity.create info.idSource layerECS))
+                                let
+                                    args =
+                                        tileArgs common dimension (gidInfo gid) (getTilesetByGid info.tilesets)
+                                in
+                                readFor .objectTile args ( layerECS, info )
                             )
             )
             (ResourceTask.succeed ( Component.empty, info_ ) start)
@@ -83,23 +109,23 @@ objectLayer fix readers info_ objectData start =
 
 
 combine1 :
-    (reader -> Read1 world a)
+    (reader -> Read world a)
     -> a
     -> List reader
     -> ( EntityID, world )
-    -> ResourceTask.CacheTask
-    -> ResourceTask.ResourceTask world
+    -> CacheTask
+    -> ResourceTask world
 combine1 getKey arg readers acc =
     case readers of
         item :: rest ->
             case getKey item of
-                None1 ->
+                None ->
                     combine1 getKey arg rest acc
 
-                Sync1 f ->
+                Sync f ->
                     combine1 getKey arg rest (f arg acc)
 
-                Async1 f ->
+                Async f ->
                     f arg >> ResourceTask.andThen (\f1 -> combine1 getKey arg rest (f1 acc))
 
         [] ->
@@ -110,62 +136,7 @@ combine1 getKey arg readers acc =
             ResourceTask.succeed newECS
 
 
-combine2 :
-    (reader -> Read2 world a b)
-    -> { a : a, b : b }
-    -> List reader
-    -> ( EntityID, world )
-    -> ResourceTask.CacheTask
-    -> ResourceTask.ResourceTask world
-combine2 getKey ({ a, b } as args) readers acc =
-    case readers of
-        item :: rest ->
-            case getKey item of
-                None2 ->
-                    combine2 getKey args rest acc
-
-                Sync2 f ->
-                    combine2 getKey args rest (f a b acc)
-
-                Async2 f ->
-                    f a b >> ResourceTask.andThen (\f1 -> combine2 getKey args rest (f1 acc))
-
-        [] ->
-            let
-                ( _, newECS ) =
-                    acc
-            in
-            ResourceTask.succeed newECS
-
-
-combine3 :
-    (reader -> Read3 world a b c)
-    -> { a : a, b : b, c : c }
-    -> List reader
-    -> ( EntityID, world )
-    -> ResourceTask.CacheTask
-    -> ResourceTask.ResourceTask world
-combine3 getKey ({ a, b, c } as args) readers acc =
-    case readers of
-        item :: rest ->
-            case getKey item of
-                None3 ->
-                    combine3 getKey args rest acc
-
-                Sync3 f ->
-                    combine3 getKey args rest (f a b c acc)
-
-                Async3 f ->
-                    f a b c >> ResourceTask.andThen (\f1 -> combine3 getKey args rest (f1 acc))
-
-        [] ->
-            let
-                ( _, newECS ) =
-                    acc
-            in
-            ResourceTask.succeed newECS
-
-
+validateAndUpdate : ( a1, { b | ecs : a, idSource : number } ) -> a -> a1 -> ( a1, { b | ecs : a, idSource : number } )
 validateAndUpdate ( layerECS, info ) newECS newLayerECS =
     case ( newECS == info.ecs, layerECS == newLayerECS ) of
         ( True, True ) ->

@@ -5,15 +5,15 @@ import Dict exposing (Dict)
 import Error exposing (Error(..))
 import Image exposing (Order(..))
 import Image.BMP exposing (encodeWith)
-import Layer
+import Layer exposing (Layer)
 import Math.Vector2 exposing (vec2)
-import ResourceTask exposing (ResourceTask)
+import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer exposing (TileData)
-import Tiled.Tileset exposing (SpriteAnimation, Tileset)
+import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
 import Tiled.Util exposing (tilesetById, updateTileset)
 
 
-tileLayer : List Tileset -> TileData -> ResourceTask.CacheTask -> ResourceTask ( List (Layer.Layer object), List Tileset )
+tileLayer : List Tileset -> TileData -> CacheTask -> ResourceTask ( List Layer, List Tileset )
 tileLayer tilesets_ ({ data } as layerData) =
     splitTileLayerByTileSet
         tilesets_
@@ -31,17 +31,17 @@ splitTileLayerByTileSet :
     -> List Int
     ->
         { animated :
-            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
         , cache : Image.Pixels
-        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
         }
-    -> ResourceTask.CacheTask
+    -> CacheTask
     ->
-        ResourceTask.ResourceTask
+        ResourceTask
             { animated :
-                List ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
-            , static : List ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
-            , tilesets : List Tiled.Tileset.Tileset
+                List ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
+            , static : List ( EmbeddedTileData, Image.Pixels )
+            , tilesets : List Tileset
             }
 splitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc) =
     case dataLeft of
@@ -95,7 +95,7 @@ imageOptions =
 tileStaticLayerBuilder :
     TileData
     -> List ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
-    -> List (ResourceTask.CacheTask -> ResourceTask.ResourceTask (Layer.Layer object))
+    -> List (CacheTask -> ResourceTask Layer)
 tileStaticLayerBuilder layerData =
     List.map
         (\( tileset, data ) ->
@@ -128,8 +128,8 @@ tileStaticLayerBuilder layerData =
 
 tileAnimatedLayerBuilder :
     TileData
-    -> List ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
-    -> List (ResourceTask.CacheTask -> ResourceTask.ResourceTask (Layer.Layer object))
+    -> List ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
+    -> List (CacheTask -> ResourceTask Layer)
 tileAnimatedLayerBuilder layerData =
     List.map
         (\( ( tileset, anim ), data ) ->
@@ -183,18 +183,18 @@ animationFraming anim =
 
 fillTiles :
     Int
-    -> Tiled.Tileset.EmbeddedTileData
+    -> EmbeddedTileData
     ->
         { animated :
-            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
         , cache : List Int
-        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
         }
     ->
         { animated :
-            Dict.Dict Int ( ( Tiled.Tileset.EmbeddedTileData, List Tiled.Tileset.SpriteAnimation ), Image.Pixels )
+            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
         , cache : List Int
-        , static : Dict.Dict Int ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
+        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
         }
 fillTiles tileId info ({ cache, static, animated } as acc) =
     case Dict.get tileId animated of
@@ -205,7 +205,7 @@ fillTiles tileId info ({ cache, static, animated } as acc) =
             }
 
         Nothing ->
-            case animation info (tileId - info.firstgid) of
+            case Tiled.Util.animation info (tileId - info.firstgid) of
                 Just anim ->
                     { cache = 0 :: cache
                     , static = others 0 static
@@ -241,12 +241,7 @@ fillTiles tileId info ({ cache, static, animated } as acc) =
                             }
 
 
-animation : Tiled.Tileset.EmbeddedTileData -> Int -> Maybe (List Tiled.Tileset.SpriteAnimation)
-animation { tiles } id =
-    Dict.get id tiles |> Maybe.map .animation
-
-
-others : comparable -> Dict.Dict comparable ( b, List Int ) -> Dict.Dict comparable ( b, List Int )
+others : comparable -> Dict comparable ( b, List Int ) -> Dict comparable ( b, List Int )
 others =
     updateOthers (prepend 0)
 

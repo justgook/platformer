@@ -9,7 +9,7 @@ import WebGL.Texture as Texture exposing (Texture, linear, nearest, nonPowerOfTw
 
 
 default =
-    { pixelsPerUnit = 460
+    { pixelsPerUnit = 160
     , viewportOffset = vec2 0 0
     , transparentcolor = vec3 0 0 0
     , scrollRatio = 1

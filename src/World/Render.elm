@@ -20,14 +20,23 @@ view objRender env ({ camera, layers, frame } as world) ecs =
         |> List.concatMap
             (\income ->
                 case income of
-                    Image info ->
-                        [ Common.Layer common info |> Layer.Image.render ]
-
                     Tiles info ->
                         [ Common.Layer common info |> Layer.Tiles.render ]
 
                     AbimatedTiles info ->
                         [ Common.Layer common info |> Layer.Tiles.Animated.render ]
+
+                    Image info ->
+                        [ Common.Layer common info |> Layer.Image.render ]
+
+                    ImageX info ->
+                        [ Common.Layer common info |> Layer.Image.renderX ]
+
+                    ImageY info ->
+                        [ Common.Layer common info |> Layer.Image.renderY ]
+
+                    ImageNo info ->
+                        [ Common.Layer common info |> Layer.Image.renderNo ]
 
                     Object info ->
                         objRender common ( ecs, info )

@@ -1,23 +1,44 @@
 module World.Component.Common exposing
     ( EcsSpec
-    , Read1(..)
-    , Read2(..)
-    , Read3(..)
+    , GetTileset
+    , Read(..)
     , Reader
+    , commonDimensionArgs
+    , commonDimensionPolyPointsArgs
     , defaultRead
+    , tileArgs
     )
 
 import Logic.Component
 import Logic.Entity exposing (EntityID)
 import ResourceTask exposing (CacheTask, ResourceTask)
+import Tiled exposing (GidInfo)
 import Tiled.Object exposing (Common, Dimension, Gid, PolyPoints)
+import Tiled.Properties
+import Tiled.Tileset exposing (Tileset)
 
 
-type alias EcsSpec esc layer comp empty =
+type alias EcsSpec esc comp empty =
     { spec : Logic.Component.Spec comp esc
-    , read : Reader esc layer
+    , read : Reader esc
     , empty : empty
     }
+
+
+type alias Reader world =
+    { objectTile : Read world TileArg
+
+    --    , objectTileRenderable : Read layer TileArg
+    , objectPoint : Read world Common
+    , objectRectangle : Read world CommonDimensionArg
+    , objectEllipse : Read world CommonDimensionArg
+    , objectPolygon : Read world CommonDimensionPolyPointsArg
+    , objectPolyLine : Read world CommonDimensionPolyPointsArg
+    }
+
+
+type alias GetTileset =
+    Int -> CacheTask -> ResourceTask Tileset
 
 
 type alias ReturnSync world =
@@ -28,42 +49,119 @@ type alias ReturnAsync world =
     CacheTask -> ResourceTask (( EntityID, world ) -> ( EntityID, world ))
 
 
-type alias Reader world layer =
-    { objectTile : Read3 world Common Dimension Gid
-    , objectTileRenderable : Read3 layer Common Dimension Gid
-    , objectPoint : Read1 world Common
-    , objectRectangle : Read2 world Common Dimension
-    , objectEllipse : Read2 world Common Dimension
-    , objectPolygon : Read3 world Common Dimension PolyPoints
-    , objectPolyLine : Read3 world Common Dimension PolyPoints
+type Read world a
+    = Sync (a -> ReturnSync world)
+    | Async (a -> ReturnAsync world)
+    | None
+
+
+defaultRead : Reader world
+defaultRead =
+    { objectTile = None
+
+    --    , objectTileRenderable = None
+    , objectPoint = None
+    , objectRectangle = None
+    , objectEllipse = None
+    , objectPolygon = None
+    , objectPolyLine = None
     }
 
 
-type Read1 world a
-    = Sync1 (a -> ReturnSync world)
-    | Async1 (a -> ReturnAsync world)
-    | None1
+type alias TileArg =
+    { fd : Bool
+    , fh : Bool
+    , fv : Bool
+    , getTilesetByGid : GetTileset
+    , gid : Int
+    , height : Float
+    , id : Int
+    , kind : String
+    , name : String
+    , properties : Tiled.Properties.Properties
+    , rotation : Float
+    , visible : Bool
+    , width : Float
+    , x : Float
+    , y : Float
+    }
 
 
-type Read2 world a b
-    = Sync2 (a -> b -> ReturnSync world)
-    | Async2 (a -> b -> ReturnAsync world)
-    | None2
+type alias CommonDimensionArg =
+    { height : Float
+    , id : Int
+    , kind : String
+    , name : String
+    , properties : Tiled.Properties.Properties
+    , rotation : Float
+    , visible : Bool
+    , width : Float
+    , x : Float
+    , y : Float
+    }
 
 
-type Read3 world a b c
-    = Sync3 (a -> b -> c -> ReturnSync world)
-    | Async3 (a -> b -> c -> ReturnAsync world)
-    | None3
+type alias CommonDimensionPolyPointsArg =
+    { height : Float
+    , id : Int
+    , kind : String
+    , name : String
+    , properties : Tiled.Properties.Properties
+    , rotation : Float
+    , visible : Bool
+    , width : Float
+    , x : Float
+    , y : Float
+    , points : List { x : Float, y : Float }
+    }
 
 
-defaultRead : Reader world layer
-defaultRead =
-    { objectTile = None3
-    , objectTileRenderable = None3
-    , objectPoint = None1
-    , objectRectangle = None2
-    , objectEllipse = None2
-    , objectPolygon = None3
-    , objectPolyLine = None3
+commonDimensionArgs : Common -> Dimension -> CommonDimensionArg
+commonDimensionArgs a b =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    }
+
+
+commonDimensionPolyPointsArgs : Common -> Dimension -> PolyPoints -> CommonDimensionPolyPointsArg
+commonDimensionPolyPointsArgs a b c =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    , points = c
+    }
+
+
+tileArgs : Common -> Dimension -> GidInfo -> GetTileset -> TileArg
+tileArgs a b c d =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    , getTilesetByGid = d
+    , gid = c.gid
+    , fh = c.fh
+    , fv = c.fv
+    , fd = c.fd
     }

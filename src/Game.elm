@@ -16,8 +16,8 @@ import World.Create
 import World.Render
 
 
-type alias World world obj =
-    World.World world obj
+type alias World world =
+    World.World world
 
 
 type alias Model world =
@@ -26,10 +26,10 @@ type alias Model world =
     }
 
 
-type Message world obj defineMe
+type Message world defineMe
     = Environment Environment.Message
     | Frame Float
-    | Subscription ( Flow.Model { camera : Camera, layers : List (Layer obj) }, world )
+    | Subscription ( Flow.Model { camera : Camera, layers : List Layer }, world )
     | Resource (Result Error defineMe)
 
 

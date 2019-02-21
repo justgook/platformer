@@ -3,7 +3,7 @@ module Layer.Object.Rectangle exposing (Model, render)
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh)
 import Layer.Object.Common exposing (vertexShader)
-import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector2 exposing (Vec2)
 import Math.Vector4 exposing (Vec4)
 import WebGL exposing (Mesh, Shader)
 

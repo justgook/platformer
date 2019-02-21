@@ -1,46 +1,37 @@
-module Game.View.Object.Animated exposing (Model, render)
+module Layer.Object.Animated exposing (Model, render)
 
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh)
-import Layer.Object exposing (vertexShader)
+import Layer.Object.Common exposing (vertexShader)
 import Math.Vector2 exposing (Vec2)
-import Math.Vector3 exposing (Vec3)
-import WebGL exposing (Mesh, Shader)
-import WebGL.Settings as WebGL
-import WebGL.Settings.Blend as Blend
+import WebGL exposing (Shader)
 import WebGL.Texture exposing (Texture)
 
 
 type alias Model =
-    { columns : Int
-    , frame : Int
-    , imageSize : Vec2
-    , frames : Int
-    , height : Float
-    , width : Float
-    , lut : Texture
-    , mirror : Vec2
-    , sprite : Texture
-    , started : Int
-    , x : Float
+    { x : Float
     , y : Float
+    , width : Float
+    , height : Float
+    , tileIndex : Float
+    , tileSet : Texture
+    , tileSetSize : Vec2
+    , tileSize : Vec2
+    , mirror : Vec2
     }
 
 
 render : Layer Model -> WebGL.Entity
 render (Layer common individual) =
-    { columns = individual.columns
-    , frame = individual.frame
-    , imageSize = individual.imageSize
-    , frames = individual.frames
-    , height = individual.height
+    { height = individual.height
     , width = individual.width
-    , lut = individual.lut
-    , mirror = individual.mirror
-    , sprite = individual.sprite
-    , started = individual.started
     , x = individual.x
     , y = individual.y
+    , tileSet = individual.tileSet
+    , tileSetSize = individual.tileSetSize
+    , tileSize = individual.tileSize
+    , tileIndex = individual.tileIndex
+    , mirror = individual.mirror
 
     -- General
     , transparentcolor = individual.transparentcolor
@@ -57,56 +48,53 @@ render (Layer common individual) =
             mesh
 
 
-fragmentShader : Shader {} (Uniform Model) { vcoord : Vec2 }
+fragmentShader : Shader a (Uniform Model) { vcoord : Vec2 }
 fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 vcoord;
-        uniform sampler2D sprite;
-        uniform sampler2D lut;
-        uniform int frame;
-        uniform vec3 transparentcolor;
-        uniform int frames;
-        uniform int started;
-        uniform vec2 imageSize;
-        uniform int columns;
+        //uniform vec3 transparentcolor;
+        uniform sampler2D tileSet;
+        uniform vec2 tileSetSize;
+        //uniform float pixelsPerUnit;
+        uniform vec2 tileSize;
         uniform vec2 mirror;
+        uniform vec2 viewportOffset;
+        uniform vec2 scrollRatio;
+        uniform float tileIndex;
 
-        uniform float height;
-        uniform float width;
-
-        float runtime = abs(float(frame) - float(started));
-        float fFrames = float(frames);
-        float LUTpixel = floor(runtime - floor((runtime + 0.5) / fFrames) * fFrames + 0.5);
-        float LUTpixelCoord = floor(LUTpixel * 2. + 1.) / (fFrames * 2.); //(2i + 1)/(2N) -  pixel center
-
-        float color2float(vec4 c){
+        float color2float(vec4 c) {
             return c.z * 255.0
             + c.y * 256.0 * 255.0
             + c.x * 256.0 * 256.0 * 255.0
             ;
         }
 
-        float modI(float a,float b) {
+        float modI(float a, float b) {
             float m = a - floor((a + 0.5) / b) * b;
             return floor(m + 0.5);
         }
 
         void main () {
-            vec4 takeFromSprite = texture2D(lut, vec2(LUTpixelCoord, 0.5)); //Only one pixel height - so y can be anythink
-            float tileId = color2float(takeFromSprite);
-            float xOffset = modI(tileId, float(columns)) * width; // Ugly float rounding fix
-            float yOffset = (float(columns) - floor(tileId / float(columns))) * height; // Some magic to invert calculation form top to bottom
+            vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;
+            vec2 grid = tileSetSize / tileSize;
+            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
 
-            vec2 look = floor(vcoord * vec2(width, height));
-            look.x = width - look.x * mirror.x;
-            look.y = height - look.y * mirror.y;
+            // inverting reading botom to top
+            tile.y = grid.y - tile.y - 1.;
+            vec2 fragmentOffsetPx = floor((point) * tileSize);
 
-            vec2 pixel = floor( (look + vec2(xOffset, yOffset))  * 2. + 1.) / (imageSize * 2.);
-            gl_FragColor = texture2D(sprite, pixel);
+
+            //vec2 fragmentOffsetPx = floor(point * tileSize);
+            fragmentOffsetPx.x = abs(((tileSize.x - 1.) * mirror.x ) - fragmentOffsetPx.x);
+            fragmentOffsetPx.y = abs(((tileSize.y - 1.)  * mirror.y ) - fragmentOffsetPx.y);
+
+            //(2i + 1)/(2N) Pixel center
+            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
+
+            //gl_FragColor = texture2D(tileSet, pixel);
+            gl_FragColor = texture2D(tileSet, pixel);
+            gl_FragColor.r += 0.3;
             gl_FragColor.rgb *= gl_FragColor.a;
-            if (gl_FragColor.rgb == transparentcolor) {
-                discard;
-            }
         }
     |]

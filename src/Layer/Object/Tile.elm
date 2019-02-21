@@ -1,7 +1,7 @@
 module Layer.Object.Tile exposing (Model, render)
 
 import Defaults exposing (default)
-import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
+import Layer.Common exposing (Layer(..), Uniform, mesh)
 import Layer.Object.Common exposing (vertexShader)
 import Math.Vector2 exposing (Vec2)
 import WebGL exposing (Shader)
@@ -53,10 +53,10 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 vcoord;
-        uniform vec3 transparentcolor;
+        //uniform vec3 transparentcolor;
         uniform sampler2D tileSet;
         uniform vec2 tileSetSize;
-        uniform float pixelsPerUnit;
+        //uniform float pixelsPerUnit;
         uniform vec2 tileSize;
         uniform vec2 mirror;
         uniform vec2 viewportOffset;
@@ -76,21 +76,22 @@ fragmentShader =
         }
 
         void main () {
-            vec2 point = vcoord + viewportOffset * scrollRatio;
-            float magic = tileIndex / tileIndex;
+            vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;
             vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI(tileIndex, grid.x), floor( (tileIndex - 1.) / grid.x));
+            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
 
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
-            vec2 fragmentOffsetPx = floor(point * tileSize);
-            fragmentOffsetPx.x = abs((tileSize.x * mirror.x) - fragmentOffsetPx.x);
-            fragmentOffsetPx.y = abs((tileSize.y * mirror.y) - fragmentOffsetPx.y);
+            vec2 fragmentOffsetPx = floor((point) * tileSize);
+
+
+            fragmentOffsetPx.x = abs(((tileSize.x - 1.) * mirror.x ) - fragmentOffsetPx.x);
+            fragmentOffsetPx.y = abs(((tileSize.y - 1.)  * mirror.y ) - fragmentOffsetPx.y);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 pixel = floor((tile * tileSize + fragmentOffsetPx) * 2. + 1.) / (tileSetSize * 2.);
+            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
+
             gl_FragColor = texture2D(tileSet, pixel);
-            gl_FragColor.a *= magic;
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

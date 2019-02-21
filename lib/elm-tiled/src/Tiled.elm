@@ -1,6 +1,6 @@
 module Tiled exposing
     ( decode, encode
-    , gidInfo
+    , GidInfo, gidInfo
     )
 
 {-| Use the [`decode`](#decode) to get [`Level`](Tiled-Level)
@@ -35,7 +35,11 @@ decode =
 -- http://doc.mapeditor.org/en/latest/reference/tmx-map-format/#tile-flipping
 
 
-gidInfo : Int -> { gid : Int, fh : Bool, fv : Bool, fd : Bool }
+type alias GidInfo =
+    { gid : Int, fh : Bool, fv : Bool, fd : Bool }
+
+
+gidInfo : Int -> GidInfo
 gidInfo gid =
     { gid = cleanGid gid
     , fh = flippedHorizontally gid

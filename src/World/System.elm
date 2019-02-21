@@ -1,4 +1,4 @@
-module World.System exposing (demoCamera, linearMovement)
+module World.System exposing (autoScrollCamera, demoCamera, linearMovement)
 
 import Ease exposing (Easing)
 import List.Nonempty as NE exposing (Nonempty)
@@ -14,7 +14,7 @@ linearMovement posSpec dirSpec ( common, ecs ) =
             3
 
         newEcs =
-            System.foldl2
+            System.step2
                 (\( pos, setPos ) ( { x, y }, _ ) acc ->
                     acc
                         |> (vec2 (toFloat x * speed) (toFloat y * speed)
@@ -29,7 +29,29 @@ linearMovement posSpec dirSpec ( common, ecs ) =
     ( common, newEcs )
 
 
-demoCamera : Easing -> List Vec3 -> WorldTuple world object -> WorldTuple world object
+autoScrollCamera : Vec2 -> Vec2 -> WorldTuple world -> WorldTuple world
+autoScrollCamera speed rand ( common, ecs ) =
+    let
+        camera =
+            common.camera
+
+        rand_ =
+            Vec2.scale (sin (toFloat common.frame / 30)) rand
+                |> Vec2.sub (Vec2.scale (sin (toFloat (common.frame - 1) / 30)) rand)
+
+        newPos =
+            camera.viewportOffset
+                |> Vec2.add speed
+                |> Vec2.add rand_
+    in
+    ( { common
+        | camera = { camera | viewportOffset = newPos }
+      }
+    , ecs
+    )
+
+
+demoCamera : Easing -> List Vec3 -> WorldTuple world -> WorldTuple world
 demoCamera easing points_ ( common, ecs ) =
     let
         points =

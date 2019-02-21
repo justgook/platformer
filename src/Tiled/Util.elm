@@ -1,4 +1,4 @@
-module Tiled.Util exposing (common, firstGid, levelProps, properties, scrollRatio, tilesetById, tilesets, updateTileset)
+module Tiled.Util exposing (animation, common, firstGid, levelProps, properties, scrollRatio, tilesetById, tilesets, updateTileset)
 
 import Defaults exposing (default)
 import Dict
@@ -6,7 +6,7 @@ import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Properties exposing (Properties, Property(..))
-import Tiled.Tileset
+import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation)
 
 
 common level =
@@ -114,8 +114,13 @@ updateTileset was now begin end =
             end |> List.reverse
 
 
+animation : EmbeddedTileData -> Int -> Maybe (List SpriteAnimation)
+animation { tiles } id =
+    Dict.get id tiles |> Maybe.map .animation
+
+
 tilesetById : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
-tilesetById tileset id =
+tilesetById tilesets_ id =
     let
         innerfind predicate list =
             case list of
@@ -151,7 +156,7 @@ tilesetById tileset id =
                 ( Tiled.Tileset.ImageCollection info, _ ) ->
                     id >= info.firstgid && id < info.firstgid + info.tilecount
         )
-        tileset
+        tilesets_
 
 
 firstGid : Tiled.Tileset.Tileset -> Int

@@ -5,19 +5,19 @@ import Logic.GameFlow as Flow
 import World.Camera exposing (Camera)
 
 
-type World world object
+type World world
     = World
         (Flow.Model
-            { layers : List (Layer object)
+            { layers : List Layer
             , camera : Camera
             }
         )
         world
 
 
-type alias WorldTuple world object =
+type alias WorldTuple world =
     ( Flow.Model
-        { layers : List (Layer object)
+        { layers : List Layer
         , camera : Camera
         }
     , world

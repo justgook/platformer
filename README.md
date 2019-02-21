@@ -16,7 +16,7 @@
       * `scrollRatio.y` - set relative scrolling speed to offset of screen vertically
       * `scrollRatio` - set relative scrolling speed to offset of screen both dirrections
 ### Image Layer
-  1. **NOT IMPLEMENTED** `repeat` - `string` - (Default `repeat`)
+  1. `repeat` - `string` - (Default `repeat`)
       * `repeat` repeated both vertically and horizontally
       * `repeat-x` repeated only horizontally
       * `repeat-y` repeated only vertically

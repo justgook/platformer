@@ -5,12 +5,10 @@ module World.Component exposing
     , positions
     )
 
-import Array exposing (Array)
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
 import Math.Vector2 exposing (Vec2, vec2)
-import ResourceTask
-import World.Component.Common exposing (EcsSpec, Read3(..), defaultRead)
+import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 import World.Component.Direction
 import World.Component.Object
 
@@ -27,7 +25,7 @@ objects =
     World.Component.Object.objects
 
 
-positions : EcsSpec { a | positions : Logic.Component.Set Vec2 } layer Vec2 (Logic.Component.Set Vec2)
+positions : EcsSpec { a | positions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
 positions =
     --TODO create other for isometric view
     let
@@ -37,20 +35,19 @@ positions =
             }
     in
     { spec = spec
-    , empty = Array.empty
+    , empty = Logic.Component.empty
     , read =
         { defaultRead
             | objectTile =
-                Async3
-                    (\{ x, y } _ _ ->
-                        ResourceTask.getTexture "/assets/apotile.png"
-                            >> ResourceTask.map (\img -> Entity.with ( spec, vec2 x y ))
+                Sync
+                    (\{ x, y } ->
+                        Entity.with ( spec, vec2 x y )
                     )
         }
     }
 
 
-dimensions : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } layer Vec2 (Logic.Component.Set Vec2)
+dimensions : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
 dimensions =
     let
         spec =
@@ -59,12 +56,12 @@ dimensions =
             }
     in
     { spec = spec
-    , empty = Array.empty
+    , empty = Logic.Component.empty
     , read =
         { defaultRead
             | objectTile =
-                Sync3
-                    (\_ { height, width } _ ->
+                Sync
+                    (\{ height, width } ->
                         Entity.with ( spec, vec2 width height )
                     )
         }

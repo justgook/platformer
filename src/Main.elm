@@ -1,12 +1,9 @@
 port module Main exposing (main)
 
---import Json.Encode as E
-
-import Ease exposing (Easing)
 import Game exposing (World, document)
-import Math.Vector3 exposing (vec3)
+import Math.Vector2 exposing (vec2)
 import World.Component as Component
-import World.RenderSystem exposing (customSystem)
+import World.RenderSystem
 import World.Subscription exposing (keyboard)
 import World.System as System
 
@@ -22,14 +19,7 @@ main =
 
 
 view common ( ecs, objLayer ) =
-    customSystem common ( ecs, objLayer )
-
-
-
---port gamepadDown : (E.Value -> msg) -> Sub msg
---
---
---port gamepadUp : (E.Value -> msg) -> Sub msg
+    World.RenderSystem.preview common ( ecs, objLayer )
 
 
 read =
@@ -44,22 +34,11 @@ world =
     { positions = Component.positions.empty
     , dimensions = Component.dimensions.empty
     , direction = Component.direction.empty
+    , objects = Component.objects.empty
     }
 
 
 system world_ =
-    let
-        cameraPoints =
-            [ vec3 0 0 160
-
-            --            , vec3 150 0 360
-            --            , vec3 150 150 360
-            --            , vec3 0 150 160
-            ]
-
-        easing =
-            Ease.bezier 0.645 0.045 0.355 1
-    in
     world_
-        |> System.demoCamera easing cameraPoints
+        |> System.autoScrollCamera (vec2 2 0) (vec2 0 5)
         |> System.linearMovement Component.positions.spec Component.direction.spec
