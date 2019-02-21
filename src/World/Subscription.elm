@@ -15,7 +15,8 @@ gamePad ( gamepadDown, gamepadUp ) port_ world =
                 _ =
                     income
                         |> Decode.decodeValue Decode.string
-                        |> Debug.log "gamePad msg"
+
+                --                        |> Debug.log "gamePad msg"
             in
             world
         )
