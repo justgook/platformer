@@ -44,11 +44,6 @@ render (Layer common individual) =
             mesh
 
 
-
--- https://stackoverflow.com/questions/5879403/opengl-texture-coordinates-in-pixel-space/5879551#5879551
--- https://gamedev.stackexchange.com/questions/121051/webgl-pixel-perfect-tilemap-rendering
-
-
 fragmentShader : Shader a (Uniform Model) { vcoord : Vec2 }
 fragmentShader =
     --TODO /Add suport for tiles-sets that is bigger than level tile size
@@ -95,7 +90,6 @@ fragmentShader =
             float currentFrame = modI(time_, animLength_);
             float newIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 ))) + 1.;
             float tileIndex = color2float(texture2D(lut, coordinate)) * newIndex;
-            float magic = tileIndex / tileIndex;
             tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
             vec2 grid = tileSetSize / tileSize;
             vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
@@ -108,23 +102,8 @@ fragmentShader =
             vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
             gl_FragColor = texture2D(tileSet, pixel);
 
-            gl_FragColor.a *= magic;
+            gl_FragColor.a *= float(tileIndex > 0.);
             gl_FragColor.rgb *= gl_FragColor.a;
 
         }
     |]
-
-
-
--- float magic = tileIndex / tileIndex;
--- tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
--- vec2 grid = tileSetSize / tileSize;
--- vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
--- // inverting reading botom to top
--- tile.y = grid.y - tile.y - 1.;
--- vec2 fragmentOffsetPx = floor((point - look) * tileSize);
--- //(2i + 1)/(2N) Pixel center
--- vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
--- gl_FragColor = texture2D(tileSet, pixel);
--- gl_FragColor.a *= magic;
--- gl_FragColor.rgb *= gl_FragColor.a;
