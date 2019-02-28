@@ -1,4 +1,4 @@
-module Tiled.Util exposing (animation, common, firstGid, levelProps, properties, scrollRatio, tilesetById, tilesets, updateTileset)
+module Tiled.Util exposing (animation, animationFraming, common, firstGid, hexColor2Vec3, levelProps, properties, scrollRatio, tilesetById, tilesets, updateTileset)
 
 import Defaults exposing (default)
 import Dict
@@ -101,6 +101,15 @@ tilesets level =
             info.tilesets
 
 
+animationFraming : List { a | duration : Int, tileid : b } -> List b
+animationFraming anim =
+    anim
+        |> List.concatMap
+            (\{ duration, tileid } ->
+                List.repeat (toFloat duration / 1000 * default.fps |> floor) tileid
+            )
+
+
 updateTileset was now begin end =
     case begin of
         item :: left ->
@@ -116,7 +125,15 @@ updateTileset was now begin end =
 
 animation : EmbeddedTileData -> Int -> Maybe (List SpriteAnimation)
 animation { tiles } id =
-    Dict.get id tiles |> Maybe.map .animation
+    Dict.get id tiles
+        |> Maybe.andThen
+            (\info ->
+                if List.length info.animation > 0 then
+                    Just info.animation
+
+                else
+                    Nothing
+            )
 
 
 tilesetById : List Tiled.Tileset.Tileset -> Int -> Maybe Tiled.Tileset.Tileset
@@ -285,13 +302,106 @@ hexColor2Vec3 str =
     in
     case String.toList withoutHash of
         [ r1, r2, g1, g2, b1, b2 ] ->
-            let
-                makeFloat a b =
-                    String.fromList [ '0', 'x', a, b ]
-                        |> String.toInt
-                        |> Maybe.map (\i -> toFloat i / 255)
-            in
-            Maybe.map3 vec3 (makeFloat r1 r2) (makeFloat g1 g2) (makeFloat b1 b2)
+            maybeMap6
+                (\a b c d e f ->
+                    vec3 ((a * 16 + b) / 255) ((c * 16 + d) / 255) ((e * 16 + f) / 255)
+                )
+                (intFromHexChar r1)
+                (intFromHexChar r2)
+                (intFromHexChar g1)
+                (intFromHexChar g2)
+                (intFromHexChar b1)
+                (intFromHexChar b2)
 
         _ ->
             Nothing
+
+
+intFromHexChar : Char -> Maybe Float
+intFromHexChar s =
+    case s of
+        '0' ->
+            Just 0
+
+        '1' ->
+            Just 1
+
+        '2' ->
+            Just 2
+
+        '3' ->
+            Just 3
+
+        '4' ->
+            Just 4
+
+        '5' ->
+            Just 5
+
+        '6' ->
+            Just 6
+
+        '7' ->
+            Just 7
+
+        '8' ->
+            Just 8
+
+        '9' ->
+            Just 9
+
+        'a' ->
+            Just 10
+
+        'b' ->
+            Just 11
+
+        'c' ->
+            Just 12
+
+        'd' ->
+            Just 13
+
+        'e' ->
+            Just 14
+
+        'f' ->
+            Just 15
+
+        _ ->
+            Nothing
+
+
+maybeMap6 : (a -> b -> c -> d -> e -> f -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe d -> Maybe e -> Maybe f -> Maybe value
+maybeMap6 func ma mb mc md me mf =
+    case ma of
+        Nothing ->
+            Nothing
+
+        Just a ->
+            case mb of
+                Nothing ->
+                    Nothing
+
+                Just b ->
+                    case mc of
+                        Nothing ->
+                            Nothing
+
+                        Just c ->
+                            case md of
+                                Nothing ->
+                                    Nothing
+
+                                Just d ->
+                                    case me of
+                                        Nothing ->
+                                            Nothing
+
+                                        Just e ->
+                                            case mf of
+                                                Nothing ->
+                                                    Nothing
+
+                                                Just f ->
+                                                    Just (func a b c d e f)

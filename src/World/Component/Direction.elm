@@ -57,7 +57,7 @@ direction =
                     , up = ""
                     }
 
-                typeVar =
+                var =
                     Parser.variable
                         { start = Char.isAlphaNum
                         , inner = \c -> Char.isAlphaNum c || c == '_'
@@ -65,10 +65,10 @@ direction =
                         }
 
                 onKey =
-                    Parser.succeed (\a b -> b)
-                        |= Parser.keyword "onKey"
+                    Parser.succeed identity
+                        |. Parser.keyword "onKey"
                         |. Parser.symbol "["
-                        |= typeVar
+                        |= var
                         |. Parser.symbol "]"
                         |. Parser.end
             in

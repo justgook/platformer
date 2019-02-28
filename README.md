@@ -34,20 +34,19 @@
 
 
 ## Custom Object properties
-  1. **OUTDATED** `buttonLeft` (Maybe change to `onKey[event.key] - Move.N` - where `Player` is name of object) - [`keyCode`](http://keycode.info/) - (Fallback to `37`)
-  1. `buttonRight` - [`event.key`](http://keycode.info/)
+  1. `onKey[event.key]` - `Move.south` | `Move.west` | `Move.east` | `Move.north`
   1. **NOT IMPLEMENTED** `atomove.x` - `float` - auto move by horizontal axis
   1. **NOT IMPLEMENTED** `atomove.y` - `float` - auto move by vertical axis
   1. **NOT IMPLEMENTED** `cameraOffset` - `Vec2` of `%, float(px)`
-  1. `onHit.[ID].loadLevel` - `filename`
-  1. `onClick.[ID].loadLevel` - `filename`
+  1. **NOT IMPLEMENTED** `onHit.[ID].loadLevel` - `filename`
+  1. **NOT IMPLEMENTED** `onClick.[ID].loadLevel` - `filename`
 ### Animactions
 
   **NOT IMPLEMENTED**
 
-  Can be be assigned only to Tile-Object, and tile will be used as `Anim.idle.E.id`
+  Can be be assigned only to Tile-Object, and tile will be used as `anim.idle.E.id`
 
-  `Anim.(name).(direction).(id|tileset)` - `Int` - Animation atlas
+  `anim.(name).(direction).(id|tileset)` - `Int` - Animation atlas
 
   1. `name`
       * `walk` - walk animation

@@ -5,13 +5,17 @@ import Layer.Common as Common
 import Layer.Image
 import Layer.Tiles
 import Layer.Tiles.Animated
+import Math.Vector2 as Vec2 exposing (vec2)
 
 
 view objRender env ({ camera, layers, frame } as world) ecs =
     let
+        { x, y } =
+            Vec2.toRecord camera.viewportOffset
+
         common =
             { pixelsPerUnit = camera.pixelsPerUnit
-            , viewportOffset = camera.viewportOffset
+            , viewportOffset = vec2 x y
             , widthRatio = env.widthRatio
             , time = frame
             }

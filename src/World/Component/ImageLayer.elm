@@ -45,14 +45,3 @@ imageLayer imageData =
                                 Layer.Image
                        )
             )
-
-
-
--- type Repeat
---     = Repeat
---     | RepeatX
---     | RepeatY
---     | NoRepeat
--- -- repeat : String -> Repeat -> Repeat
--- -- repeat s d =
--- --

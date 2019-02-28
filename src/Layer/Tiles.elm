@@ -3,9 +3,7 @@ module Layer.Tiles exposing (Model, render)
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
 import Math.Vector2 exposing (Vec2)
-import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
-import WebGL.Settings as WebGL
 import WebGL.Texture exposing (Texture)
 
 
@@ -92,7 +90,7 @@ fragmentShader =
             vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
             gl_FragColor = texture2D(tileSet, pixel);
 
-            gl_FragColor.a *= float(tileIndex > 0.);
+            gl_FragColor.a *= float(tileIndex >= 0.);
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

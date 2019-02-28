@@ -1,5 +1,6 @@
 port module Game exposing (World, document)
 
+import Broad.QuadTree
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Defaults exposing (default)
@@ -131,8 +132,11 @@ view_ objRender model =
             }
 
         Err (Error code e) ->
+            let
+                _ =
+                    Debug.log "Error" e
+            in
             { title = "Failure:" ++ String.fromInt code
             , body =
-                [ WebGL.toHtmlWith default.webGLOption (Environment.style model.env) []
-                ]
+                []
             }

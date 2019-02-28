@@ -112,7 +112,7 @@ getTexture url cache =
                             d.url ++ url
                         )
                             |> WebGL.Texture.loadWith default.textureOption
-                            |> Task.mapError textureError
+                            |> Task.mapError (textureError url)
                             |> Task.map (\r -> ( r, d ))
             )
         |> Task.map
@@ -121,14 +121,14 @@ getTexture url cache =
             )
 
 
-textureError : WebGL.Texture.Error -> Error
-textureError e =
+textureError : String -> WebGL.Texture.Error -> Error
+textureError url e =
     case e of
         WebGL.Texture.LoadError ->
-            Error 4005 "Texture.LoadError"
+            Error 4005 ("Texture.LoadError: " ++ url)
 
         WebGL.Texture.SizeError a b ->
-            Error 4006 "Texture.LoadError"
+            Error 4006 ("Texture.SizeError: " ++ url)
 
 
 getLevel : String -> CacheTask -> ResourceTask Tiled.Level.Level

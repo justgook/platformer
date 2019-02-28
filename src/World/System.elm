@@ -39,13 +39,20 @@ autoScrollCamera speed rand ( common, ecs ) =
             Vec2.scale (sin (toFloat common.frame / 30)) rand
                 |> Vec2.sub (Vec2.scale (sin (toFloat (common.frame - 1) / 30)) rand)
 
-        newPos =
+        { x, y } =
             camera.viewportOffset
                 |> Vec2.add speed
                 |> Vec2.add rand_
+                |> Vec2.toRecord
+
+        newX =
+            x
+                |> round
+                |> modBy 724200
+                |> toFloat
     in
     ( { common
-        | camera = { camera | viewportOffset = newPos }
+        | camera = { camera | viewportOffset = vec2 newX y }
       }
     , ecs
     )

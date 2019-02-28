@@ -10,7 +10,7 @@ import Math.Vector2 exposing (vec2)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer exposing (TileData)
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
-import Tiled.Util exposing (tilesetById, updateTileset)
+import Tiled.Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
 
 
 tileLayer : List Tileset -> TileData -> CacheTask -> ResourceTask ( List Layer, List Tileset )
@@ -118,7 +118,7 @@ tileStaticLayerBuilder layerData =
                                         , tileSet = tileSetImage
                                         , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                         , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                        , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                        , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
                                         , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                         }
                                 )
@@ -136,9 +136,6 @@ tileAnimatedLayerBuilder layerData =
             let
                 layerProps =
                     Tiled.Util.properties layerData
-
-                tilsetProps =
-                    Tiled.Util.properties tileset
 
                 animLutData =
                     animationFraming anim
@@ -161,7 +158,7 @@ tileAnimatedLayerBuilder layerData =
                                                     , tileSet = tileSetImage
                                                     , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                                     , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                                    , transparentcolor = tilsetProps.color "transparentcolor" default.transparentcolor
+                                                    , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
                                                     , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                                     , animLUT = animLUT
                                                     , animLength = animLength
@@ -170,15 +167,6 @@ tileAnimatedLayerBuilder layerData =
                                 )
                     )
         )
-
-
-animationFraming : List { a | duration : Int, tileid : b } -> List b
-animationFraming anim =
-    anim
-        |> List.concatMap
-            (\{ duration, tileid } ->
-                List.repeat (toFloat duration / 1000 * default.fps |> floor) tileid
-            )
 
 
 fillTiles :

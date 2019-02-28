@@ -20,7 +20,6 @@ import Dict
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
-import Tiled.Helper exposing (indexedFoldl)
 import Tiled.Layer as Layer exposing (Layer)
 import Tiled.Properties as Properties exposing (Properties)
 import Tiled.Tileset as Tileset exposing (Tileset)

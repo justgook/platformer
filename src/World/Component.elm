@@ -1,5 +1,6 @@
 module World.Component exposing
-    ( dimensions
+    ( animations
+    , dimensions
     , direction
     , objects
     , positions
@@ -8,6 +9,7 @@ module World.Component exposing
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
 import Math.Vector2 exposing (Vec2, vec2)
+import World.Component.Animation
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 import World.Component.Direction
 import World.Component.Object
@@ -23,6 +25,10 @@ direction =
 
 objects =
     World.Component.Object.objects
+
+
+animations =
+    World.Component.Animation.animations
 
 
 positions : EcsSpec { a | positions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)

@@ -53,7 +53,7 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 vcoord;
-        //uniform vec3 transparentcolor;
+        uniform vec3 transparentcolor;
         uniform sampler2D tileSet;
         uniform vec2 tileSetSize;
         //uniform float pixelsPerUnit;
@@ -92,6 +92,7 @@ fragmentShader =
             vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
 
             gl_FragColor = texture2D(tileSet, pixel);
+            gl_FragColor.a *= float(gl_FragColor.rgb != transparentcolor);
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

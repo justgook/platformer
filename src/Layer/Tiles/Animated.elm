@@ -3,10 +3,7 @@ module Layer.Tiles.Animated exposing (Model, render)
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
 import Math.Vector2 exposing (Vec2)
-import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
-import WebGL.Settings as WebGL
-import WebGL.Settings.Blend as Blend
 import WebGL.Texture exposing (Texture)
 
 
@@ -87,7 +84,7 @@ fragmentShader =
 
             //(2i + 1)/(2N) Pixel center
             vec2 coordinate = (look + 0.5) / lutSize;
-            float currentFrame = modI(time_, animLength_);
+            float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
             float newIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 ))) + 1.;
             float tileIndex = color2float(texture2D(lut, coordinate)) * newIndex;
             tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
@@ -102,7 +99,8 @@ fragmentShader =
             vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
             gl_FragColor = texture2D(tileSet, pixel);
 
-            gl_FragColor.a *= float(tileIndex > 0.);
+            gl_FragColor.a *= float(tileIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
+
             gl_FragColor.rgb *= gl_FragColor.a;
 
         }

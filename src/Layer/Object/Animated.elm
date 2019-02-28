@@ -13,11 +13,12 @@ type alias Model =
     , y : Float
     , width : Float
     , height : Float
-    , tileIndex : Float
     , tileSet : Texture
     , tileSetSize : Vec2
     , tileSize : Vec2
     , mirror : Vec2
+    , animLUT : Texture
+    , animLength : Int
     }
 
 
@@ -30,8 +31,9 @@ render (Layer common individual) =
     , tileSet = individual.tileSet
     , tileSetSize = individual.tileSetSize
     , tileSize = individual.tileSize
-    , tileIndex = individual.tileIndex
     , mirror = individual.mirror
+    , animLUT = individual.animLUT
+    , animLength = individual.animLength
 
     -- General
     , transparentcolor = individual.transparentcolor
@@ -53,7 +55,7 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 vcoord;
-        //uniform vec3 transparentcolor;
+        uniform vec3 transparentcolor;
         uniform sampler2D tileSet;
         uniform vec2 tileSetSize;
         //uniform float pixelsPerUnit;
@@ -61,7 +63,11 @@ fragmentShader =
         uniform vec2 mirror;
         uniform vec2 viewportOffset;
         uniform vec2 scrollRatio;
-        uniform float tileIndex;
+        uniform sampler2D animLUT;
+        uniform int animLength;
+        uniform int time;
+        float animLength_ = float(animLength);
+        float time_ = float(time);
 
         float color2float(vec4 c) {
             return c.z * 255.0
@@ -76,6 +82,8 @@ fragmentShader =
         }
 
         void main () {
+            float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
+            float tileIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 )));
             vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;
             vec2 grid = tileSetSize / tileSize;
             vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
@@ -94,7 +102,7 @@ fragmentShader =
 
             //gl_FragColor = texture2D(tileSet, pixel);
             gl_FragColor = texture2D(tileSet, pixel);
-            gl_FragColor.r += 0.3;
+            gl_FragColor.a *= float(gl_FragColor.rgb != transparentcolor);
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

@@ -1,18 +1,16 @@
 {
   "type": "package",
-  "name": "justgook/elm-resources",
-  "summary": "A library for downloading lot if files in async and sync",
+  "name": "justgook/elm-collision",
+  "summary": "collision detection for game engine",
   "license": "BSD-3-Clause",
   "version": "1.0.0",
   "exposed-modules": [
-    "Resources"
+    "Broad.QuadTree"
   ],
   "elm-version": "0.19.0 <= v < 0.20.0",
   "dependencies": {
     "elm/core": "1.0.0 <= v < 2.0.0",
-    "elm/http": "2.0.0 <= v < 3.0.0",
-    "elm/json": "1.1.2 <= v < 2.0.0",
-    "/elm-explorations/webgl": "1.0.1 <= v < 2.0.0"
+    "elm-explorations/linear-algebra": "1.0.3 <= 2.0.0"
   },
   "test-dependencies": {
     "elm-explorations/test": "1.0.0 <= v < 2.0.0"

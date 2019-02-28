@@ -70,6 +70,10 @@ init emptyECS readers level start =
     in
     ResourceTask.map
         (\{ layers, ecs } ->
+            --            let
+            --                _ =
+            --                    Debug.log "WORLD CREATED" ecs
+            --            in
             World
                 { camera = camera
                 , layers = layers

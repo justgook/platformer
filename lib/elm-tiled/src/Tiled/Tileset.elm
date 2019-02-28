@@ -219,22 +219,41 @@ decodeTiles =
     Decode.list decodeTilesData
         |> Decode.andThen
             (List.foldl
-                (\{ id, objectgroup, animation, properties } acc ->
-                    acc |> Decode.andThen (Dict.insert id { objectgroup = objectgroup, animation = animation, properties = properties } >> Decode.succeed)
+                (\info_ acc ->
+                    case info_ of
+                        Just info ->
+                            acc
+                                |> Decode.andThen
+                                    (Dict.insert info.id
+                                        { objectgroup = info.objectgroup
+                                        , animation = info.animation
+                                        , properties = info.properties
+                                        }
+                                        >> Decode.succeed
+                                    )
+
+                        Nothing ->
+                            acc
                 )
                 (Decode.succeed Dict.empty)
             )
 
 
-decodeTilesData : Decoder (TilesDataPlain { id : Int })
+decodeTilesData : Decoder (Maybe (TilesDataPlain { id : Int }))
 decodeTilesData =
     Decode.succeed
         (\a b c d ->
-            { animation = a
-            , objectgroup = b
-            , properties = c
-            , id = d
-            }
+            case ( a, b, Dict.toList c ) of
+                ( [], Nothing, [] ) ->
+                    Nothing
+
+                _ ->
+                    Just
+                        { animation = a
+                        , objectgroup = b
+                        , properties = c
+                        , id = d
+                        }
         )
         |> optional "animation" (Decode.list decodeSpriteAnimation) []
         |> optional "objectgroup" (Decode.maybe decodeTilesDataObjectgroup) Nothing
