@@ -1,49 +1,47 @@
-module Broad.QuadTree exposing (QuadTree, debug, drawPoints, empty, insert, query)
+module Broad.QuadTree exposing (Node, draw, empty, insert, query)
 
+import Broad exposing (Boundary)
 import Math.Vector2 exposing (vec2)
 import Math.Vector3 exposing (vec3)
 import Math.Vector4 exposing (Vec4, vec4)
 import Set exposing (Set)
 
 
-drawPoints f ((QuadTree { boundary }) as income) =
+draw f1 f2 (( _, boundary ) as income) =
     query boundary income
         |> Set.toList
-        |> List.map f
+        |> List.map (\( x, y ) -> f2 { x = x, y = y, w = 10, h = 10 })
+        |> (++) (debugDig f1 income [])
 
 
-debug f ((QuadTree { boundary }) as income) =
-    debugDig (debugDig_ f) income []
-
-
-debugDig f ((QuadTree qTree) as income) acc =
-    case qTree.body of
+debugDig f ( Node body, boundary ) acc =
+    let
+        data =
+            { x = boundary.x
+            , y = boundary.y
+            , w = boundary.w
+            , h = boundary.h
+            , active = False
+            }
+    in
+    case body of
         Leaf points ->
-            f qTree.boundary :: acc
+            f data :: acc
 
         Branch { ne, nw, se, sw } ->
-            f qTree.boundary
+            let
+                delme2 =
+                    getBoundary boundary
+            in
+            f data
                 :: acc
-                |> debugDig f ne
-                |> debugDig f nw
-                |> debugDig f se
-                |> debugDig f sw
-
-
-debugDig_ f boundary =
-    f
-        { x = boundary.x
-        , y = boundary.y
-        , width = boundary.w * 2
-        , height = boundary.h * 2
-        , color = vec4 1 0 0 1
-        , scrollRatio = vec2 1 1
-        , transparentcolor = vec3 0 0 0
-        }
+                |> debugDig f ( ne, delme2.ne )
+                |> debugDig f ( nw, delme2.nw )
+                |> debugDig f ( se, delme2.se )
+                |> debugDig f ( sw, delme2.sw )
 
 
 type alias XY =
-    --    { x : Float, y : Float }
     ( Float, Float )
 
 
@@ -53,10 +51,6 @@ type alias AABB =
     , w : Float
     , h : Float
     }
-
-
-
---    p : Vec2, xw : Vec2, yw : Vec2
 
 
 type Branch b l
@@ -74,53 +68,54 @@ type alias Points =
     Set XY
 
 
-type QuadTree
-    = QuadTree
-        { capacity : Int
-        , boundary : AABB
-        , body :
-            Branch
-                { nw : QuadTree
-                , ne : QuadTree
-                , sw : QuadTree
-                , se : QuadTree
-                }
-                Points
-        }
+type alias QuadTree =
+    ( Node, AABB )
 
 
-empty : Int -> AABB -> QuadTree
-empty capacity boundary =
-    QuadTree
-        { capacity = capacity
-        , center = boundary
-        , body = Leaf Set.empty
-        }
+type Node
+    = Node (Branch { nw : Node, ne : Node, sw : Node, se : Node } Points)
+
+
+capacity =
+    4
+
+
+type alias Config =
+    ()
+
+
+empty : Boundary -> QuadTree
+empty { xmin, xmax, ymin, ymax } =
+    let
+        boundary =
+            { x = xmin + xmax / 2
+            , y = ymin + ymax / 2
+            , w = abs (xmax - xmin) / 2
+            , h = abs (ymax - ymin) / 2
+            }
+    in
+    ( Node (Leaf Set.empty), boundary )
 
 
 insert : XY -> QuadTree -> QuadTree
-insert point ((QuadTree qTree) as income) =
-    if not (isInQuadTree point income) then
-        income
+insert point ( (Node body) as income, aabb ) =
+    if not (isIn aabb point) then
+        ( income, aabb )
 
     else
-        case qTree.body of
+        case body of
             Leaf points ->
-                if Set.size points < qTree.capacity then
-                    QuadTree
-                        { qTree
-                            | body = Leaf (Set.insert point points)
-                        }
+                if Set.size points < capacity then
+                    ( Node (Leaf (Set.insert point points)), aabb )
 
                 else
-                    subdivide income (Set.insert point points)
+                    ( subdivide aabb (Set.insert point points), aabb )
 
             Branch branches ->
-                QuadTree { qTree | body = insertToBranches point branches |> Branch }
+                ( insertToBranches aabb point branches |> Branch |> Node, aabb )
 
 
-subdivide : QuadTree -> Set.Set XY -> QuadTree
-subdivide (QuadTree { capacity, boundary }) points =
+getBoundary boundary =
     let
         { x, y, w, h } =
             boundary
@@ -128,45 +123,42 @@ subdivide (QuadTree { capacity, boundary }) points =
         quad =
             { x = 0, y = 0, w = w / 2, h = h / 2 }
     in
-    QuadTree
-        { capacity = capacity
-        , boundary = boundary
-        , body =
-            Branch
-                (Set.foldl insertToBranches
-                    { ne = empty capacity { quad | x = x + w / 2, y = y + h / 2 }
-                    , nw = empty capacity { quad | x = x - w / 2, y = y + h / 2 }
-                    , se = empty capacity { quad | x = x + w / 2, y = y - h / 2 }
-                    , sw = empty capacity { quad | x = x - w / 2, y = y - h / 2 }
-                    }
-                    points
-                )
-        }
+    { ne = { quad | x = x + w / 2, y = y + h / 2 }
+    , nw = { quad | x = x - w / 2, y = y + h / 2 }
+    , se = { quad | x = x + w / 2, y = y - h / 2 }
+    , sw = { quad | x = x - w / 2, y = y - h / 2 }
+    }
+
+
+subdivide : AABB -> Set.Set XY -> Node
+subdivide boundary points =
+    let
+        empty_ =
+            Node (Leaf Set.empty)
+    in
+    Set.foldl (insertToBranches boundary) { ne = empty_, nw = empty_, se = empty_, sw = empty_ } points
+        |> Branch
+        |> Node
 
 
 insertToBranches :
-    XY
-    -> { ne : QuadTree, nw : QuadTree, se : QuadTree, sw : QuadTree }
-    -> { ne : QuadTree, nw : QuadTree, se : QuadTree, sw : QuadTree }
-insertToBranches p acc =
-    if isInQuadTree p acc.ne then
-        { acc | ne = insert p acc.ne }
+    AABB
+    -> XY
+    -> { ne : Node, nw : Node, se : Node, sw : Node }
+    -> { ne : Node, nw : Node, se : Node, sw : Node }
+insertToBranches aabb (( px, py ) as point) branches =
+    case ( px > aabb.x, py > aabb.y ) of
+        ( True, True ) ->
+            { branches | ne = insert point ( branches.ne, (getBoundary aabb).ne ) |> Tuple.first }
 
-    else if isInQuadTree p acc.nw then
-        { acc | nw = insert p acc.nw }
+        ( True, False ) ->
+            { branches | se = insert point ( branches.se, (getBoundary aabb).se ) |> Tuple.first }
 
-    else if isInQuadTree p acc.se then
-        { acc | se = insert p acc.se }
+        ( False, True ) ->
+            { branches | nw = insert point ( branches.nw, (getBoundary aabb).nw ) |> Tuple.first }
 
-    else if isInQuadTree p acc.sw then
-        { acc | sw = insert p acc.sw }
-
-    else
-        let
-            _ =
-                Debug.log "not in" " branch?"
-        in
-        acc
+        ( False, False ) ->
+            { branches | sw = insert point ( branches.sw, (getBoundary aabb).sw ) |> Tuple.first }
 
 
 intersectsAABB : AABB -> AABB -> Bool
@@ -178,28 +170,23 @@ intersectsAABB rect1 rect2 =
 
 
 query : AABB -> QuadTree -> Set XY
-query range (QuadTree qTree) =
-    if intersectsAABB range qTree.boundary then
-        case qTree.body of
+query range ( Node body, boundary ) =
+    if intersectsAABB range boundary then
+        case body of
             Leaf points ->
                 Set.filter (isIn range) points
 
             Branch { ne, nw, se, sw } ->
                 let
-                    delme =
-                        query range
+                    delme2 =
+                        getBoundary boundary
                 in
                 Set.union
-                    (Set.union (delme ne) (delme nw))
-                    (Set.union (delme se) (delme sw))
+                    (Set.union (query range ( ne, delme2.ne )) (query range ( nw, delme2.nw )))
+                    (Set.union (query range ( se, delme2.se )) (query range ( sw, delme2.sw )))
 
     else
         Set.empty
-
-
-isInQuadTree : XY -> QuadTree -> Bool
-isInQuadTree p (QuadTree { boundary }) =
-    isIn boundary p
 
 
 isIn : AABB -> XY -> Bool

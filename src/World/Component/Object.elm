@@ -16,6 +16,7 @@ import ResourceTask
 import Tiled.Tileset
 import Tiled.Util exposing (animationFraming, hexColor2Vec3)
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
+import World.Component.Util exposing (boolToFloat)
 
 
 type Object
@@ -115,12 +116,3 @@ objects =
                     )
         }
     }
-
-
-boolToFloat : Bool -> Float
-boolToFloat bool =
-    if bool then
-        1
-
-    else
-        0

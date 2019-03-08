@@ -1,4 +1,14 @@
-module World.DirectionHelper exposing (Direction(..), fromInt, fromString, opposite, toInt, toRecord, toString)
+module World.DirectionHelper exposing
+    ( Direction(..)
+    , fromInt
+    , fromRecord
+    , fromString
+    , opposite
+    , oppositeMirror
+    , toInt
+    , toRecord
+    , toString
+    )
 
 
 type Direction
@@ -44,6 +54,37 @@ opposite dir =
             NoDirection
 
 
+oppositeMirror : Direction -> DirectionRecord
+oppositeMirror dir =
+    case dir of
+        North ->
+            { x = 0, y = 1 }
+
+        NorthEast ->
+            { x = 1, y = 1 }
+
+        East ->
+            { x = 1, y = 0 }
+
+        SouthEast ->
+            { x = 1, y = 1 }
+
+        South ->
+            { x = 0, y = 1 }
+
+        SouthWest ->
+            { x = 1, y = 1 }
+
+        West ->
+            { x = 1, y = 0 }
+
+        NorthWest ->
+            { x = 1, y = 1 }
+
+        NoDirection ->
+            { x = 0, y = 0 }
+
+
 toRecord : Direction -> DirectionRecord
 toRecord dir =
     case dir of
@@ -73,6 +114,38 @@ toRecord dir =
 
         NoDirection ->
             noDirection
+
+
+fromRecord : { a | x : Float, y : Float } -> Direction
+fromRecord { x, y } =
+    if x > 0 then
+        if y > 0 then
+            NorthEast
+
+        else if y < 0 then
+            SouthEast
+
+        else
+            East
+
+    else if x < 0 then
+        if y > 0 then
+            NorthWest
+
+        else if y < 0 then
+            SouthWest
+
+        else
+            West
+
+    else if y > 0 then
+        North
+
+    else if y < 0 then
+        South
+
+    else
+        NoDirection
 
 
 fromString : String -> Direction
@@ -224,7 +297,7 @@ fromInt dir =
 
 
 type alias DirectionRecord =
-    { x : Int, y : Int }
+    { x : Float, y : Float }
 
 
 north : DirectionRecord

@@ -132,10 +132,6 @@ view_ objRender model =
             }
 
         Err (Error code e) ->
-            let
-                _ =
-                    Debug.log "Error" e
-            in
             { title = "Failure:" ++ String.fromInt code
             , body =
                 []

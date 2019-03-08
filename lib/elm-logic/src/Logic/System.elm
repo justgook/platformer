@@ -8,6 +8,7 @@ module Logic.System exposing
     , andMap
     , end
     , endCustom
+    , foldl
     , foldl2
     , foldl3
     , foldl4
@@ -42,6 +43,18 @@ type UnfinishedSystem world acc next func
             }
         , world : world
         }
+
+
+foldl : (comp1 -> acc -> acc) -> Component.Set comp1 -> acc -> acc
+foldl f comp1 acc_ =
+    indexedFoldlArray
+        (\n value1 acc ->
+            value1
+                |> Maybe.map (\a -> f a acc)
+                |> Maybe.withDefault acc
+        )
+        acc_
+        comp1
 
 
 foldl2 : (comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc

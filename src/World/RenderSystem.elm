@@ -1,6 +1,7 @@
-module World.RenderSystem exposing (debugQadtree, preview)
+module World.RenderSystem exposing (debugCollision, preview)
 
-import Broad.QuadTree
+import Array
+import Broad.Grid
 import Layer.Common as Common
 import Layer.Object.Animated
 import Layer.Object.Ellipse
@@ -14,31 +15,47 @@ import World.Component
 import World.Component.Object as ObjectComponent
 
 
-debugQadtree common ( ecs, inLayer ) acc =
+debugCollision common ( ecs, inLayer ) acc =
     let
-        fn =
-            Common.Layer common
-                >> Layer.Object.Rectangle.render
+        fn1 { x, y, w, h, active } =
+            let
+                color =
+                    if active then
+                        vec4 0 1 0 0.4
 
-        fn2 ( x, y ) =
+                    else
+                        vec4 1 0 0 0.4
+            in
             { x = x
             , y = y
-            , width = 10
-            , height = 10
-            , color = vec4 0 1 0 1
+            , width = w
+            , height = h
+            , color = color
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
                 |> Common.Layer common
-                |> Layer.Object.Ellipse.render
+                |> Layer.Object.Rectangle.render
 
-        points =
-            Broad.QuadTree.drawPoints fn2 ecs.collisions
+        fn2 { x, y, w, h } =
+            { x = x
+            , y = y
+            , width = w
+            , height = h
+            , color = vec4 0 1 1 1
+            , scrollRatio = vec2 1 1
+            , transparentcolor = vec3 0 0 0
+            }
+                |> Common.Layer common
+                |> Layer.Object.Rectangle.render
+
+        singleton =
+            { get = identity
+            , set = \comps _ -> comps
+            }
     in
-    points
-        |> (++) (Broad.QuadTree.debug fn ecs.collisions)
-        |> (++)
-            acc
+    Broad.Grid.draw fn1 fn2 ecs.collisions
+        ++ acc
 
 
 preview common ( ecs, inLayer ) =

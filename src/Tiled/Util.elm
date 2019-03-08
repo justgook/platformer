@@ -1,12 +1,42 @@
-module Tiled.Util exposing (animation, animationFraming, common, firstGid, hexColor2Vec3, levelProps, properties, scrollRatio, tilesetById, tilesets, updateTileset)
+module Tiled.Util exposing (animation, animationFraming, common, firstGid, hexColor2Vec3, levelProps, objFix, properties, scrollRatio, tilesetById, tilesets, updateTileset)
 
 import Defaults exposing (default)
 import Dict
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Level as Level exposing (Level)
+import Tiled.Object
 import Tiled.Properties exposing (Properties, Property(..))
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation)
+
+
+objFix levelHeight obj =
+    case obj of
+        Tiled.Object.Point c ->
+            --Tiled.Object.Point common
+            obj
+
+        Tiled.Object.Rectangle c dimension ->
+            --Tiled.Object.Rectangle common dimension
+            obj
+
+        Tiled.Object.Ellipse c dimension ->
+            --Tiled.Object.Ellipse common dimension
+            obj
+
+        Tiled.Object.Polygon c dimension polyPoints ->
+            --Tiled.Object.Polygon common dimension polyPoints
+            obj
+
+        Tiled.Object.PolyLine c dimension polyPoints ->
+            --Tiled.Object.PolyLine common dimension polyPoints
+            obj
+
+        Tiled.Object.Tile c dimension gid ->
+            Tiled.Object.Tile
+                { c | y = levelHeight - c.y + dimension.height / 2, x = c.x + dimension.width / 2 }
+                dimension
+                gid
 
 
 common level =

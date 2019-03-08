@@ -1,12 +1,12 @@
 module World.Component.Collision exposing (collisions)
 
-import Broad.QuadTree
-import Random
-import World.Component.Common exposing (EcsSpec, defaultRead)
-
-
-
---collisions : EcsSpec { a | collisions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
+import Broad.Grid
+import Dict
+import ResourceTask
+import Tiled.Object exposing (Object(..))
+import Tiled.Tileset exposing (Tileset(..))
+import Tiled.Util
+import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 
 
 collisions =
@@ -17,43 +17,148 @@ collisions =
             }
     in
     { spec = spec
-    , empty = empty --Logic.Component.empty
+    , empty =
+        Broad.Grid.empty { xmin = 0, ymin = 0, xmax = 0, ymax = 0 } { cellWidth = 0, cellHeight = 0 }
     , read =
-        defaultRead
+        { defaultRead
+            | level =
+                Sync
+                    (\level ( entityID, world ) ->
+                        let
+                            { tileheight, tilewidth, width, height } =
+                                Tiled.Util.common level
+
+                            boundary =
+                                { xmin = 0
+                                , ymin = 0
+                                , xmax = toFloat (width * tilewidth)
+                                , ymax = toFloat (height * tileheight)
+                                }
+
+                            newData =
+                                Broad.Grid.empty
+                                    boundary
+                                    { cellWidth = toFloat tilewidth, cellHeight = toFloat tileheight }
+                        in
+                        ( entityID, spec.set newData world )
+                    )
+            , layerTile =
+                Async
+                    (\{ data, width, height, getTilesetByGid } ->
+                        recursionSpawn getTilesetByGid data ( 0, Dict.empty, identity )
+                            >> ResourceTask.map
+                                (\spawn ( mId, world ) ->
+                                    let
+                                        result =
+                                            spawn (spec.get world)
+                                                |> Broad.Grid.optimize
+
+                                        newWorld =
+                                            spec.set result world
+                                    in
+                                    ( mId, newWorld )
+                                )
+                    )
+        }
     }
 
 
-empty =
-    let
-        seed0 =
-            Random.initialSeed 1420
+spawnMagic index acc =
+    .objects >> List.foldl (\o a -> a >> spawnRect index (identity o)) acc
 
-        --            Random.step
-        aabb =
-            { x = 300
-            , y = 500
-            , w = 200
-            , h = 450
+
+recursionSpawn get dataLeft ( i, cache, acc ) =
+    case dataLeft of
+        gid_ :: rest ->
+            case ( gid_, Dict.get gid_ cache ) of
+                ( 0, _ ) ->
+                    recursionSpawn get rest ( i + 1, cache, acc )
+
+                ( _, Just Nothing ) ->
+                    recursionSpawn get rest ( i + 1, cache, acc )
+
+                ( _, Just (Just info) ) ->
+                    recursionSpawn get rest ( i + 1, cache, spawnMagic i acc info )
+
+                ( gid, Nothing ) ->
+                    get gid
+                        >> ResourceTask.andThen
+                            (\t ->
+                                let
+                                    cacheValue =
+                                        extractObjectData gid t
+
+                                    newAcc =
+                                        cacheValue
+                                            |> Maybe.map (spawnMagic i acc)
+                                            |> Maybe.withDefault acc
+                                in
+                                recursionSpawn get rest ( i + 1, Dict.insert gid cacheValue cache, newAcc )
+                            )
+
+        [] ->
+            ResourceTask.succeed acc
+
+
+objectAABB obj =
+    case obj of
+        Point { x, y } ->
+            { x = x, y = y, width = 0, height = 0 }
+
+        Rectangle { x, y } { width, height } ->
+            { x = x, y = y, width = width, height = height }
+
+        Ellipse { x, y } { width, height } ->
+            { x = x, y = y, width = width, height = height }
+
+        Polygon { x, y } { width, height } polyPoints ->
+            { x = x, y = y, width = width, height = height }
+
+        PolyLine { x, y } { width, height } polyPoints ->
+            { x = x, y = y, width = width, height = height }
+
+        Tile { x, y } { width, height } gid ->
+            { x = x, y = y, width = width, height = height }
+
+
+extractObjectData gid t_ =
+    case t_ of
+        Embedded t ->
+            Dict.get (gid - t.firstgid) t.tiles
+                |> Maybe.andThen .objectgroup
+
+        _ ->
+            Nothing
+
+
+spawnRect i obj ( table, config ) =
+    let
+        { x, y, width, height } =
+            objectAABB obj
+
+        singleton =
+            { get = identity
+            , set = \comps _ -> comps
             }
 
-        tenFractions =
-            Random.map2 Tuple.pair
-                (Random.float (aabb.x - aabb.w) (aabb.x + aabb.w))
-                (Random.float (aabb.y - aabb.h) (aabb.y + aabb.h))
-                |> Random.list 500
+        ( cellW, cellH ) =
+            config.cell
 
-        qtree =
-            Broad.QuadTree.empty 4 aabb
+        offSetX =
+            toFloat (modBy config.rows i)
+                * cellW
 
-        --                |> Broad.QuadTree.insert ( 200, 200 )
-        --                |> Broad.QuadTree.insert ( 300, 200 )
-        --                |> Broad.QuadTree.insert ( 400, 200 )
-        --                |> Broad.QuadTree.insert ( 500, 200 )
-        --                |> Broad.QuadTree.insert ( 500, 250 )
-        --                |> Broad.QuadTree.insert ( 500, 250 )
-        --                |> Broad.QuadTree.insert ( 500, 251 )
-        --                |> Broad.QuadTree.insert ( 500, 252 )
+        offSetY =
+            config.rows - 1 - (toFloat i / toFloat config.rows |> floor) |> toFloat |> (*) cellH
+
+        boundary =
+            { xmin = offSetX + x
+            , xmax = offSetX + x + width
+            , ymin = offSetY + cellH - height - y
+            , ymax = offSetY + cellH - y
+            }
+
+        result =
+            Broad.Grid.insert boundary "CollisionType goes Here" ( table, config )
     in
-    Random.step tenFractions seed0
-        |> Tuple.first
-        |> List.foldl Broad.QuadTree.insert qtree
+    result

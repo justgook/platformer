@@ -1,19 +1,20 @@
-module World.Component.Animation exposing (animations)
-
---animations : EcsSpec { a | animations : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
+module World.Component.Animation exposing (Animation, Animations, animations)
 
 import Dict exposing (Dict)
 import Error exposing (Error(..))
+import Image
+import Image.BMP exposing (encodeWith)
 import Logic.Component
 import Logic.Entity as Entity
-import Math.Vector2 exposing (Vec2)
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
 import ResourceTask
 import Set
 import Tiled.Properties exposing (Property(..))
 import Tiled.Tileset
+import Tiled.Util exposing (animationFraming)
 import WebGL.Texture exposing (Texture)
-import World.Component.Common exposing (Read(..), defaultRead)
+import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 import World.DirectionHelper as DirectionHelper exposing (Direction(..))
 
 
@@ -37,6 +38,7 @@ spec =
     }
 
 
+animations : EcsSpec { a | animations : Logic.Component.Set Animations } Animations (Logic.Component.Set Animations)
 animations =
     { spec = spec
     , empty = Logic.Component.empty
@@ -52,7 +54,7 @@ animations =
                                         Tiled.Tileset.Embedded t ->
                                             properties
                                                 |> Dict.filter (\a _ -> String.startsWith "anim" a)
-                                                |> fillAnimation Dict.empty
+                                                |> fillAnimation t getTilesetByGid Dict.empty
 
                                         _ ->
                                             ResourceTask.fail (Error 6003 "object tile readers works only with single image tilesets")
@@ -67,49 +69,57 @@ type What
     | Tileset
 
 
-fillAnimation acc all =
+fillAnimation t getTilesetByGid acc all =
     case Dict.toList all of
         ( k, v ) :: _ ->
             case ( Parser.run parseKey k, v ) of
                 ( Ok ( _, NoDirection, _ ), _ ) ->
-                    fillAnimation acc (Dict.remove k all)
+                    fillAnimation t getTilesetByGid acc (Dict.remove k all)
 
                 ( Ok ( name, dir, Id ), PropInt tileIndex ) ->
-                    let
-                        rest =
-                            Dict.remove k all
+                    animLutPlusImageTask t tileIndex
+                        >> ResourceTask.andThen
+                            (\info ->
+                                let
+                                    rest =
+                                        Dict.remove k all
 
-                        newAcc =
-                            Dict.insert ( name, DirectionHelper.toInt dir ) "tileIndex" acc
+                                    accWithCurrent =
+                                        Dict.insert ( name, DirectionHelper.toInt dir ) info acc
 
-                        opposite =
-                            dir
-                                |> DirectionHelper.opposite
+                                    opposite =
+                                        dir
+                                            |> DirectionHelper.opposite
 
-                        haveOpposite =
-                            opposite
-                                |> DirectionHelper.toString
-                                |> List.map (\k2 -> "anim." ++ name ++ "." ++ k2 ++ ".id")
+                                    haveOpposite =
+                                        opposite
+                                            |> DirectionHelper.toString
+                                            |> List.map (\k2 -> "anim." ++ name ++ "." ++ k2 ++ ".id")
+                                in
+                                case dictGetFirst haveOpposite all of
+                                    Just ( k2, PropInt tileIndex2 ) ->
+                                        animLutPlusImageTask t tileIndex2
+                                            >> ResourceTask.andThen
+                                                (\info2 ->
+                                                    fillAnimation
+                                                        t
+                                                        getTilesetByGid
+                                                        (Dict.insert ( name, DirectionHelper.toInt opposite ) info2 accWithCurrent)
+                                                        (Dict.remove k2 rest)
+                                                )
 
-                        ( restWithoutOpposite, accWithOpposite ) =
-                            case dictGetFirst haveOpposite all of
-                                Just ( k2, PropInt tileIndex2 ) ->
-                                    let
-                                        _ =
-                                            Debug.log "hello" k2
-                                    in
-                                    ( Dict.remove k2 rest, newAcc )
-
-                                _ ->
-                                    ( rest, newAcc )
-                    in
-                    fillAnimation accWithOpposite restWithoutOpposite
+                                    _ ->
+                                        fillAnimation t
+                                            getTilesetByGid
+                                            (Dict.insert ( name, DirectionHelper.toInt opposite ) { info | mirror = DirectionHelper.oppositeMirror dir |> Vec2.fromRecord } accWithCurrent)
+                                            rest
+                            )
 
                 ( Ok ( name, dir, Tileset ), PropInt tileIndex ) ->
                     ResourceTask.fail (Error 6004 "Animation from other tile set not implemented yet")
 
                 _ ->
-                    fillAnimation acc (Dict.remove k all)
+                    fillAnimation t getTilesetByGid acc (Dict.remove k all)
 
         _ ->
             if Dict.isEmpty acc then
@@ -150,10 +160,39 @@ parseKey =
         |= var
         |. Parser.symbol "."
         |= Parser.map DirectionHelper.fromString var
-        --        |= Parser.map (DirectionHelper.fromString >> DirectionHelper.toInt) var
         |. Parser.symbol "."
         |= Parser.oneOf
             [ Parser.map (\_ -> Id) (Parser.keyword "id")
             , Parser.map (\_ -> Tileset) (Parser.keyword "tileset")
             ]
         |. Parser.end
+
+
+animLutPlusImageTask t tileIndex =
+    ResourceTask.getTexture t.image
+        >> ResourceTask.andThen
+            (\tileSetImage ->
+                case Tiled.Util.animation t tileIndex of
+                    Just anim ->
+                        let
+                            animLutData =
+                                animationFraming anim
+
+                            animLength =
+                                List.length animLutData
+                        in
+                        ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
+                            >> ResourceTask.map
+                                (\animLUT ->
+                                    { tileSet = tileSetImage
+                                    , tileSetSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
+                                    , tileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
+                                    , mirror = vec2 0 0
+                                    , animLUT = animLUT
+                                    , animLength = animLength
+                                    }
+                                )
+
+                    Nothing ->
+                        ResourceTask.fail (Error 6005 ("Sprite with index " ++ String.fromInt tileIndex ++ "must have animation"))
+            )

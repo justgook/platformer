@@ -1,11 +1,14 @@
-module World.System exposing (autoScrollCamera, demoCamera, linearMovement)
+module World.System exposing (animChange, autoScrollCamera, demoCamera, linearMovement)
 
+import Dict
 import Ease exposing (Easing)
 import List.Nonempty as NE exposing (Nonempty)
 import Logic.System as System exposing (System)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import World exposing (WorldTuple)
+import World.Component.Object exposing (Object(..))
+import World.DirectionHelper as Dir exposing (fromRecord)
 
 
 linearMovement posSpec dirSpec ( common, ecs ) =
@@ -17,13 +20,54 @@ linearMovement posSpec dirSpec ( common, ecs ) =
             System.step2
                 (\( pos, setPos ) ( { x, y }, _ ) acc ->
                     acc
-                        |> (vec2 (toFloat x * speed) (toFloat y * speed)
+                        |> (vec2 (x * speed) (y * speed)
                                 |> Vec2.add pos
                                 |> setPos
                            )
                 )
                 posSpec
                 dirSpec
+                ecs
+    in
+    ( common, newEcs )
+
+
+
+--    { tileSet : Texture
+--    , tileSetSize : Vec2
+--    , tileSize : Vec2
+--    , mirror : Vec2
+--    , animLUT : Texture
+--    , animLength : Int
+--    }
+
+
+animChange dirSpec objSpec animSpec ( common, ecs ) =
+    let
+        newEcs =
+            System.step3
+                (\( dir, _ ) ( obj_, setObj ) ( anim, _ ) acc ->
+                    case ( obj_, Dict.get ( "walk", Dir.fromRecord dir |> Dir.toInt ) anim ) of
+                        ( Animated obj, Just a ) ->
+                            acc
+                                |> setObj
+                                    (Animated
+                                        { obj
+                                            | tileSet = a.tileSet
+                                            , tileSetSize = a.tileSetSize
+                                            , tileSize = a.tileSize
+                                            , mirror = a.mirror
+                                            , animLUT = a.animLUT
+                                            , animLength = a.animLength
+                                        }
+                                    )
+
+                        _ ->
+                            acc
+                )
+                dirSpec
+                objSpec
+                animSpec
                 ecs
     in
     ( common, newEcs )

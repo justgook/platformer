@@ -10,8 +10,8 @@ import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 
 
 type alias Direction =
-    { x : Int
-    , y : Int
+    { x : Float
+    , y : Float
     , down : String
     , left : String
     , right : String

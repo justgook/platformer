@@ -6,6 +6,7 @@ import Dict
 import Json.Decode as Decode
 import Logic.Entity as Entity exposing (EntityID)
 import Set exposing (Set)
+import World.Component.Util exposing (boolToFloat)
 
 
 gamePad ( gamepadDown, gamepadUp ) port_ world =
@@ -96,7 +97,7 @@ updateKeys keyChanged ( world1, { direction } as world2 ) pressed =
             )
 
 
-arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Int, y : Int }
+arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Float, y : Float }
 arrows { up, right, down, left } keys =
     let
         x =
@@ -108,18 +109,9 @@ arrows { up, right, down, left } keys =
     { x = x, y = y }
 
 
-keyToInt : comparable -> Set comparable -> Int
+keyToInt : comparable -> Set comparable -> Float
 keyToInt key =
-    Set.member key >> boolToInt
-
-
-boolToInt : Bool -> Int
-boolToInt bool =
-    if bool then
-        1
-
-    else
-        0
+    Set.member key >> boolToFloat
 
 
 

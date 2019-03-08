@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Game exposing (World, document)
+import Math.Vector2 exposing (vec2)
 import World.Component as Component
 import World.Component.Collision
 import World.RenderSystem
@@ -24,7 +25,7 @@ main =
 
 view common ( ecs, objLayer ) =
     World.RenderSystem.preview common ( ecs, objLayer )
-        |> World.RenderSystem.debugQadtree common ( ecs, objLayer )
+        |> World.RenderSystem.debugCollision common ( ecs, objLayer )
 
 
 read =
@@ -33,6 +34,7 @@ read =
     , Component.objects.read
     , Component.direction.read
     , Component.animations.read
+    , World.Component.Collision.collisions.read
     ]
 
 
@@ -48,5 +50,6 @@ world =
 
 system world_ =
     world_
-        --        |> System.autoScrollCamera (vec2 1 0) (vec2 0 5)
+        |> System.autoScrollCamera (vec2 1 0) (vec2 0 5)
+        |> System.animChange Component.direction.spec Component.objects.spec Component.animations.spec
         |> System.linearMovement Component.positions.spec Component.direction.spec

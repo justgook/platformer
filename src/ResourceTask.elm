@@ -22,7 +22,6 @@ import Dict exposing (Dict)
 import Error exposing (Error(..))
 import Http
 import Json.Decode as Decode exposing (Decoder)
-import Parser exposing ((|.), (|=))
 import Task exposing (Task)
 import Tiled.Level
 import Tiled.Tileset

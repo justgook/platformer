@@ -2,7 +2,7 @@ module Layer.Object.Rectangle exposing (Model, render)
 
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh)
-import Layer.Object.Common exposing (vertexShader)
+import Layer.Object.Common exposing (vertexShader, vertexShaderHalfDimension)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector4 exposing (Vec4)
 import WebGL exposing (Mesh, Shader)
@@ -35,7 +35,7 @@ render (Layer common individual) =
     }
         |> WebGL.entityWith
             default.entitySettings
-            vertexShader
+            vertexShaderHalfDimension
             fragmentShader
             mesh
 
@@ -48,8 +48,8 @@ fragmentShader =
         uniform vec4 color;
         uniform float width;
         uniform float height;
-        float widthPx =  1.0 / width;
-        float heightPx =  1.0 / height;
+        float widthPx =  0.5 / width;
+        float heightPx =  0.5 / height ;
         void main () {
             gl_FragColor = color;
             if (vcoord.x < 1.0 - widthPx

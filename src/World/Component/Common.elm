@@ -3,16 +3,20 @@ module World.Component.Common exposing
     , GetTileset
     , Read(..)
     , Reader
+    , combine
     , commonDimensionArgs
     , commonDimensionPolyPointsArgs
     , defaultRead
     , tileArgs
+    , tileDataWith
     )
 
 import Logic.Component
 import Logic.Entity exposing (EntityID)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
+import Tiled.Layer
+import Tiled.Level
 import Tiled.Object exposing (Common, Dimension, Gid, PolyPoints)
 import Tiled.Properties
 import Tiled.Tileset exposing (Tileset)
@@ -27,13 +31,13 @@ type alias EcsSpec esc comp empty =
 
 type alias Reader world =
     { objectTile : Read world TileArg
-
-    --    , objectTileRenderable : Read layer TileArg
     , objectPoint : Read world Common
     , objectRectangle : Read world CommonDimensionArg
     , objectEllipse : Read world CommonDimensionArg
     , objectPolygon : Read world CommonDimensionPolyPointsArg
     , objectPolyLine : Read world CommonDimensionPolyPointsArg
+    , layerTile : Read world TileDataWith
+    , level : Read world Tiled.Level.Level
     }
 
 
@@ -58,13 +62,13 @@ type Read world a
 defaultRead : Reader world
 defaultRead =
     { objectTile = None
-
-    --    , objectTileRenderable = None
     , objectPoint = None
     , objectRectangle = None
     , objectEllipse = None
     , objectPolygon = None
     , objectPolyLine = None
+    , layerTile = None
+    , level = None
     }
 
 
@@ -113,6 +117,37 @@ type alias CommonDimensionPolyPointsArg =
     , x : Float
     , y : Float
     , points : List { x : Float, y : Float }
+    }
+
+
+type alias TileDataWith =
+    { getTilesetByGid : GetTileset
+    , id : Int
+    , data : List Int
+    , name : String
+    , opacity : Float
+    , visible : Bool
+    , width : Int
+    , height : Int
+    , x : Float
+    , y : Float
+    , properties : Tiled.Properties.Properties
+    }
+
+
+tileDataWith : GetTileset -> Tiled.Layer.TileData -> TileDataWith
+tileDataWith getTilesetByGid tileData =
+    { getTilesetByGid = getTilesetByGid
+    , id = tileData.id
+    , data = tileData.data
+    , name = tileData.name
+    , opacity = tileData.opacity
+    , visible = tileData.visible
+    , width = tileData.width
+    , height = tileData.height
+    , x = tileData.x
+    , y = tileData.y
+    , properties = tileData.properties
     }
 
 
@@ -165,3 +200,27 @@ tileArgs a b c d =
     , fv = c.fv
     , fd = c.fd
     }
+
+
+combine :
+    (reader -> Read world a)
+    -> a
+    -> List reader
+    -> ( EntityID, world )
+    -> CacheTask
+    -> ResourceTask ( EntityID, world )
+combine getKey arg readers acc =
+    case readers of
+        item :: rest ->
+            case getKey item of
+                None ->
+                    combine getKey arg rest acc
+
+                Sync f ->
+                    combine getKey arg rest (f arg acc)
+
+                Async f ->
+                    f arg >> ResourceTask.andThen (\f1 -> combine getKey arg rest (f1 acc))
+
+        [] ->
+            ResourceTask.succeed acc
