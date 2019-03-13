@@ -1,24 +1,30 @@
-module World.Component.Collision exposing (collisions)
+module World.Component.Physics exposing (physics, physicsWith)
 
-import Broad.Grid
+--physics : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
+
 import Dict
+import Physic.Body
+import Physics
 import ResourceTask
 import Tiled.Object exposing (Object(..))
 import Tiled.Util
-import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
+import World.Component.Common exposing (Read(..), defaultRead)
 import World.Component.Util exposing (extractObjectData)
 
 
-collisions =
+physics =
     let
         spec =
-            { get = .collisions
-            , set = \comps world -> { world | collisions = comps }
+            { get = .physics
+            , set = \comps world -> { world | physics = comps }
             }
     in
+    physicsWith spec
+
+
+physicsWith spec =
     { spec = spec
-    , empty =
-        Broad.Grid.empty_ { xmin = 0, ymin = 0, xmax = 0, ymax = 0 } { cellWidth = 0, cellHeight = 0 }
+    , empty = Physics.empty
     , read =
         { defaultRead
             | level =
@@ -35,12 +41,25 @@ collisions =
                                 , ymax = toFloat (height * tileheight)
                                 }
 
-                            newData =
-                                Broad.Grid.empty_
-                                    boundary
-                                    { cellWidth = toFloat tilewidth, cellHeight = toFloat tileheight }
+                            info =
+                                spec.get world
+
+                            config =
+                                info
+                                    |> Physics.getConfig
+
+                            newConfig =
+                                { config
+                                    | grid =
+                                        { boundary = boundary
+                                        , cell =
+                                            { width = toFloat tilewidth
+                                            , height = toFloat tileheight
+                                            }
+                                        }
+                                }
                         in
-                        ( entityID, spec.set newData world )
+                        ( entityID, spec.set (Physics.setConfig newConfig info) world )
                     )
             , layerTile =
                 Async
@@ -51,8 +70,8 @@ collisions =
                                     let
                                         result =
                                             spawn (spec.get world)
+                                                |> Physics.clear
 
-                                        --                                                |> Broad.Grid.optimize
                                         newWorld =
                                             spec.set result world
                                     in
@@ -64,7 +83,7 @@ collisions =
 
 
 spawnMagic index acc =
-    .objects >> List.foldl (\o a -> a >> spawnRect index (identity o)) acc
+    .objects >> List.foldl (\o a -> a >> spawnRect index o) acc
 
 
 recursionSpawn get dataLeft ( i, cache, acc ) =
@@ -100,50 +119,56 @@ recursionSpawn get dataLeft ( i, cache, acc ) =
             ResourceTask.succeed acc
 
 
-objectAABB obj =
+createBody obj offSetX offSetY =
+    let
+        getX x width =
+            offSetX + x + width / 2
+
+        getY y height =
+            offSetY - height / 2 - y
+    in
     case obj of
         Point { x, y } ->
-            { x = x, y = y, width = 0, height = 0 }
+            Physic.Body.rect (offSetX + x) (offSetY + y) 0 0
 
         Rectangle { x, y } { width, height } ->
-            { x = x, y = y, width = width, height = height }
+            Physic.Body.rect (getX x width) (getY y height) width height
 
         Ellipse { x, y } { width, height } ->
-            { x = x, y = y, width = width, height = height }
+            Physic.Body.ellipse (getX x width) (getY y height) width height
 
         Polygon { x, y } { width, height } polyPoints ->
-            { x = x, y = y, width = width, height = height }
+            Physic.Body.rect (getX x width) (getY y height) width height
 
         PolyLine { x, y } { width, height } polyPoints ->
-            { x = x, y = y, width = width, height = height }
+            Physic.Body.rect (getX x width) (getY y height) width height
 
         Tile { x, y } { width, height } gid ->
-            { x = x, y = y, width = width, height = height }
+            Physic.Body.rect (getX x width) (getY y height) width height
 
 
-spawnRect i obj ( table, config ) =
+spawnRect i obj physicsWorld =
     let
-        { x, y, width, height } =
-            objectAABB obj
+        config =
+            Physics.getConfig physicsWorld
 
         ( cellW, cellH ) =
-            config.cell
+            ( config.grid.cell.width, config.grid.cell.height )
+
+        rows =
+            abs (config.grid.boundary.ymax - config.grid.boundary.ymin) / cellH |> ceiling
 
         offSetX =
-            toFloat (modBy config.rows i)
-                * cellW
+            toFloat (modBy rows i) * cellW
 
         offSetY =
-            config.rows - 1 - (toFloat i / toFloat config.rows |> floor) |> toFloat |> (*) cellH
+            rows - 1 - (toFloat i / toFloat rows |> floor) |> toFloat |> (*) cellH |> (+) cellH
 
-        boundary =
-            { xmin = offSetX + x
-            , xmax = offSetX + x + width
-            , ymin = offSetY + cellH - height - y
-            , ymax = offSetY + cellH - y
-            }
+        body =
+            createBody obj offSetX offSetY
+                |> Physic.Body.toStatic
 
         result =
-            Broad.Grid.insert boundary "CollisionType goes Here" ( table, config )
+            Physics.addBody body physicsWorld
     in
     result

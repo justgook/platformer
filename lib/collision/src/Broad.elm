@@ -7,3 +7,7 @@ type alias Boundary =
     , ymin : Float
     , ymax : Float
     }
+
+
+
+--https://github.com/mapbox/utfgrid-spec

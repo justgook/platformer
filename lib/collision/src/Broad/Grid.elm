@@ -1,16 +1,37 @@
-module Broad.Grid exposing (draw, empty, insert, optimize, query)
+module Broad.Grid exposing (Grid, NewConfig, draw, empty, empty_, getConfig, insert, optimize, query, setConfig, toList)
 
 import Broad exposing (Boundary)
 import Dict exposing (Dict)
-import Set exposing (Set)
+
+
+type alias Grid a =
+    ( Dict ( Int, Int ) (Result a)
+    , { cols : Int
+      , rows : Int
+      , xmin : Float
+      , ymin : Float
+      , cell : ( Float, Float )
+      }
+    )
 
 
 type alias Config =
     { cellWidth : Float, cellHeight : Float }
 
 
-empty : Boundary -> Config -> Table a
-empty { xmin, xmax, ymin, ymax } config =
+type alias NewConfig =
+    { boundary : Boundary
+    , cell : { width : Float, height : Float }
+    }
+
+
+empty : Grid a
+empty =
+    empty_ { xmin = 0, ymin = 0, xmax = 0, ymax = 0 } { cellWidth = 0, cellHeight = 0 }
+
+
+empty_ : Boundary -> Config -> Grid a
+empty_ { xmin, xmax, ymin, ymax } config =
     ( Dict.empty
     , { cell = ( config.cellWidth, config.cellHeight )
       , xmin = xmin
@@ -21,15 +42,48 @@ empty { xmin, xmax, ymin, ymax } config =
     )
 
 
-type alias Table a =
-    ( Dict ( Int, Int ) (Result a)
-    , { cols : Int
-      , rows : Int
-      , xmin : Float
-      , ymin : Float
-      , cell : ( Float, Float )
+toList : Grid a -> List a
+toList ( table, _ ) =
+    table |> Dict.foldl (\_ -> Dict.union) Dict.empty |> Dict.values
+
+
+setConfig : NewConfig -> Grid a -> Grid a
+setConfig newConfig ( table, config ) =
+    let
+        { xmin, xmax, ymin, ymax } =
+            newConfig.boundary
+
+        cellW =
+            newConfig.cell.width
+
+        cellH =
+            newConfig.cell.height
+    in
+    ( table
+    , { config
+        | xmin = xmin
+        , ymin = ymin
+        , cols = abs (xmax - xmin) / cellW |> ceiling
+        , rows = abs (ymax - ymin) / cellH |> ceiling
+        , cell = ( cellW, cellH )
       }
     )
+
+
+getConfig : Grid a -> NewConfig
+getConfig ( _, config ) =
+    let
+        ( cellW, cellH ) =
+            config.cell
+    in
+    { boundary =
+        { xmin = config.xmin
+        , xmax = cellW * toFloat config.cols
+        , ymin = config.ymin
+        , ymax = cellH * toFloat config.rows
+        }
+    , cell = { width = cellW, height = cellH }
+    }
 
 
 type alias Result a =
@@ -59,10 +113,9 @@ draw f1 f2 ( table, config ) =
                             , h = (ymax - ymin) / 2
                             }
                     )
-    in
-    rects
-        |> (++)
-            (List.concatMap
+
+        gridCells =
+            List.concatMap
                 (\x ->
                     List.map
                         (\y ->
@@ -77,10 +130,11 @@ draw f1 f2 ( table, config ) =
                         rowList
                 )
                 colList
-            )
+    in
+    gridCells ++ rects
 
 
-insert : Boundary -> a -> Table a -> Table a
+insert : Boundary -> a -> Grid a -> Grid a
 insert boundary value (( table, config ) as grid) =
     let
         ( ( x11, y11 ), ( x22, y22 ) ) =
@@ -108,17 +162,16 @@ setUpdater k v =
     Maybe.map (Dict.insert k v) >> Maybe.withDefault (Dict.singleton k v) >> Just
 
 
-optimize : Table a -> Table a
-optimize (( table, _ ) as grid) =
+optimize : (a -> a -> Maybe a) -> Grid a -> Grid a
+optimize combineValue (( table, _ ) as grid) =
     let
         validate ( k1, v1 ) ( k2, v2 ) =
-            combine k1 v1 k2 v2
-                |> Maybe.map (\k_ -> ( k_, v1 ))
+            combine combineValue k1 v1 k2 v2
 
-        apply ( k1, v1 ) ( k2, v2 ) ( gotCombined, _ ) acc =
-            remove k1 v1 acc
-                |> remove k2 v2
-                |> insert (keyToBoundary gotCombined) v1
+        apply ( k1, _ ) ( k2, _ ) ( gotCombined, newValue ) acc =
+            remove k1 acc
+                |> remove k2
+                |> insert (keyToBoundary gotCombined) newValue
     in
     foldOverAll_ validate apply ( Dict.toList (getAll_ table), [] ) grid
 
@@ -160,7 +213,7 @@ keyToBoundary ( ( xmin, ymin ), ( xmax, ymax ) ) =
     { xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax }
 
 
-remove k v (( table, config ) as grid) =
+remove k (( table, config ) as grid) =
     let
         ( ( x11, y11 ), ( x22, y22 ) ) =
             intersectsCellsBoundary (keyToBoundary k) grid
@@ -171,17 +224,7 @@ remove k v (( table, config ) as grid) =
                     List.foldr
                         (\cellY ->
                             Dict.update ( cellX, cellY )
-                                (Maybe.map
-                                    (Dict.update k
-                                        (\inner ->
-                                            if inner == Just v then
-                                                Nothing
-
-                                            else
-                                                inner
-                                        )
-                                    )
-                                )
+                                (Maybe.map (Dict.remove k))
                         )
                         acc1
                         (List.range y11 y22)
@@ -192,7 +235,7 @@ remove k v (( table, config ) as grid) =
     ( newTable, config )
 
 
-combine k1 v1 k2 v2 =
+combine canCombine k1 v1 k2 v2 =
     let
         ( ( xmin1, ymin1 ), ( xmax1, ymax1 ) ) =
             k1
@@ -205,15 +248,18 @@ combine k1 v1 k2 v2 =
 
         horizontally =
             ymin1 == ymin2 && ymax1 == ymax2 && (xmin1 == xmax2 || xmin2 == xmax1)
+
+        combineValue =
+            canCombine v1 v2
     in
-    if v1 == v2 && (vertically || horizontally) then
-        Just ( ( min xmin1 xmin2, min ymin1 ymin2 ), ( max xmax1 xmax2, max ymax1 ymax2 ) )
+    if vertically || horizontally then
+        combineValue |> Maybe.map (\newValue -> ( ( ( min xmin1 xmin2, min ymin1 ymin2 ), ( max xmax1 xmax2, max ymax1 ymax2 ) ), newValue ))
 
     else
         Nothing
 
 
-query : Boundary -> Table a -> Result a
+query : Boundary -> Grid a -> Result a
 query boundary (( table, _ ) as grid) =
     let
         ( ( x11, y11 ), ( x22, y22 ) ) =
@@ -234,7 +280,7 @@ query boundary (( table, _ ) as grid) =
         (List.range x11 x22)
 
 
-intersectsCellsBoundary : Boundary -> Table a -> ( ( Int, Int ), ( Int, Int ) )
+intersectsCellsBoundary : Boundary -> Grid a -> ( ( Int, Int ), ( Int, Int ) )
 intersectsCellsBoundary { xmin, xmax, ymin, ymax } ( _, config ) =
     let
         edgeFix =

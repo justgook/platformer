@@ -1,8 +1,9 @@
-module World.Component.Util exposing (boolToFloat, getTilesetByGid)
+module World.Component.Util exposing (boolToFloat, extractObjectData, getTilesetByGid)
 
+import Dict
 import Error exposing (Error(..))
 import ResourceTask
-import Tiled.Tileset exposing (Tileset)
+import Tiled.Tileset exposing (Tileset(..))
 import Tiled.Util exposing (tilesetById)
 import World.Component.Common exposing (GetTileset)
 
@@ -27,3 +28,13 @@ getTilesetByGid tilesets gid =
 
         Nothing ->
             ResourceTask.fail (Error 5001 ("Not found Tileset for GID:" ++ String.fromInt gid))
+
+
+extractObjectData gid t_ =
+    case t_ of
+        Embedded t ->
+            Dict.get (gid - t.firstgid) t.tiles
+                |> Maybe.andThen .objectgroup
+
+        _ ->
+            Nothing

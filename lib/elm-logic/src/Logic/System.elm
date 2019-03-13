@@ -12,8 +12,8 @@ module Logic.System exposing
     , foldl2
     , foldl3
     , foldl4
-    , map
     , start
+    , step
     , step2
     , step3
     , step4
@@ -235,8 +235,8 @@ endCustom custom (UnfinishedSystem { world, acc, arrayFunction, apply }) =
         |> Tuple.mapFirst (apply world)
 
 
-map : (comp -> comp) -> Component.Spec comp world -> System world
-map f { get, set } world =
+step : (comp -> comp) -> Component.Spec comp world -> System world
+step f { get, set } world =
     set (get world |> Array.map (Maybe.map f)) world
 
 

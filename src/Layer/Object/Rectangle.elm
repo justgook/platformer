@@ -35,7 +35,7 @@ render (Layer common individual) =
     }
         |> WebGL.entityWith
             default.entitySettings
-            vertexShaderHalfDimension
+            vertexShader
             fragmentShader
             mesh
 

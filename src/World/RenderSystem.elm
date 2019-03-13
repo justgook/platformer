@@ -1,7 +1,5 @@
-module World.RenderSystem exposing (debugCollision, preview)
+module World.RenderSystem exposing (debugCollision, debugPhysics, physicsObjectRender, preview)
 
-import Array
-import Broad.Grid
 import Layer.Common as Common
 import Layer.Object.Animated
 import Layer.Object.Ellipse
@@ -11,35 +9,65 @@ import Logic.System as System exposing (System)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (vec3)
 import Math.Vector4 exposing (vec4)
+import Physic.Body exposing (Body(..), debuInfo)
+import Physics
 import World.Component
+import World.Component.Body
 import World.Component.Object as ObjectComponent
 
 
-debugCollision common ( ecs, inLayer ) acc =
+debugPhysics common ( ecs, inLayer ) acc =
     let
-        fn1 { x, y, w, h, active } =
-            let
-                color =
-                    if active then
-                        vec4 0 1 0 0.4
+        shapesDraw =
+            ecs.physics
+                |> Physics.toList
+                |> List.map (debuInfo (fromPhysics common))
 
-                    else
-                        vec4 1 0 0 0.4
-            in
-            { x = x
-            , y = y
-            , width = w
-            , height = h
-            , color = color
+        --
+        --        delme =
+        --            { x = 24
+        --            , y = 24
+        --            , width = 10
+        --            , height = 10
+        --            , color = vec4 0 1 1 1
+        --            , scrollRatio = vec2 1 1
+        --            , transparentcolor = vec3 0 0 0
+        --            }
+        --                |> Common.Layer common
+        --                |> Layer.Object.Rectangle.render
+    in
+    acc ++ shapesDraw
+
+
+fromPhysics common =
+    { circle =
+        \p r ->
+            { x = Vec2.getX p
+            , y = Vec2.getY p
+            , width = r * 2
+            , height = r * 2
+            , color = vec4 0 1 1 1
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
                 |> Common.Layer common
-                |> Layer.Object.Rectangle.render
-
-        fn2 { x, y, w, h } =
-            { x = x
-            , y = y
+                |> Layer.Object.Ellipse.render
+    , ellipse =
+        \p r r2 ->
+            { x = Vec2.getX p
+            , y = Vec2.getY p
+            , width = r * 2
+            , height = r2 * 2
+            , color = vec4 0 1 1 1
+            , scrollRatio = vec2 1 1
+            , transparentcolor = vec3 0 0 0
+            }
+                |> Common.Layer common
+                |> Layer.Object.Ellipse.render
+    , rectangle =
+        \p w h ->
+            { x = Vec2.getX p
+            , y = Vec2.getY p
             , width = w
             , height = h
             , color = vec4 0 1 1 1
@@ -48,14 +76,11 @@ debugCollision common ( ecs, inLayer ) acc =
             }
                 |> Common.Layer common
                 |> Layer.Object.Rectangle.render
+    }
 
-        singleton =
-            { get = identity
-            , set = \comps _ -> comps
-            }
-    in
-    Broad.Grid.draw fn1 fn2 ecs.collisions
-        ++ acc
+
+debugCollision common ( ecs, inLayer ) acc =
+    acc
 
 
 preview common ( ecs, inLayer ) =
@@ -84,6 +109,45 @@ render common _ obj pos acc =
 
         ObjectComponent.Rectangle info ->
             ({ info | x = Vec2.getX pos, y = Vec2.getY pos }
+                |> Common.Layer common
+                |> Layer.Object.Rectangle.render
+            )
+                :: acc
+
+        ObjectComponent.Ellipse info ->
+            (info
+                |> Common.Layer common
+                |> Layer.Object.Ellipse.render
+            )
+                :: acc
+
+
+physicsObjectRender common ( ecs, inLayer ) =
+    System.foldl3 (physicsObjectRender_ common)
+        inLayer
+        (World.Component.objects.spec.get ecs)
+        (World.Component.Body.bodies.spec.get ecs)
+        []
+
+
+physicsObjectRender_ common _ obj body acc =
+    case obj of
+        ObjectComponent.Tile info ->
+            ({ info | x = Vec2.getX (Physic.Body.getPosition body), y = Vec2.getY (Physic.Body.getPosition body) }
+                |> Common.Layer common
+                |> Layer.Object.Tile.render
+            )
+                :: acc
+
+        ObjectComponent.Animated info ->
+            ({ info | x = Vec2.getX (Physic.Body.getPosition body), y = Vec2.getY (Physic.Body.getPosition body) }
+                |> Common.Layer common
+                |> Layer.Object.Animated.render
+            )
+                :: acc
+
+        ObjectComponent.Rectangle info ->
+            ({ info | x = Vec2.getX (Physic.Body.getPosition body), y = Vec2.getY (Physic.Body.getPosition body) }
                 |> Common.Layer common
                 |> Layer.Object.Rectangle.render
             )
