@@ -5,7 +5,6 @@ import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer
 import Tiled.Util exposing (objFix)
 import World exposing (World(..))
-import World.Camera as Camera
 import World.Component.Common exposing (combine, tileDataWith)
 import World.Component.ImageLayer exposing (imageLayer)
 import World.Component.ObjetLayer exposing (objectLayer)
@@ -19,9 +18,6 @@ import World.Component.Util exposing (getTilesetByGid)
 
 init emptyECS readers level start =
     let
-        camera =
-            Camera.init level
-
         fix =
             Tiled.Util.common level |> (\{ height, tileheight } -> tileheight * height |> toFloat) |> objFix
 
@@ -34,7 +30,7 @@ init emptyECS readers level start =
 
         layersTask =
             (Tiled.Util.common level).layers
-                |> List.foldr
+                |> List.foldl
                     (\layer acc ->
                         case layer of
                             Tiled.Layer.Image imageData ->
@@ -49,12 +45,12 @@ init emptyECS readers level start =
                                 acc
                                     |> ResourceTask.andThen
                                         (\info ->
-                                            readFor .layerTile (tileDataWith (getTilesetByGid info.tilesets) tileData) info
+                                            tileLayer info.tilesets tileData
+                                                >> ResourceTask.map (\( l, t ) -> { info | layers = l ++ info.layers, tilesets = t })
                                         )
                                     |> ResourceTask.andThen
                                         (\info ->
-                                            tileLayer info.tilesets tileData
-                                                >> ResourceTask.map (\( l, t ) -> { info | layers = l ++ info.layers, tilesets = t })
+                                            readFor .layerTile (tileDataWith (getTilesetByGid info.tilesets) tileData) info
                                         )
 
                             Tiled.Layer.Object objectData ->
@@ -81,11 +77,18 @@ init emptyECS readers level start =
     ResourceTask.map
         (\{ layers, ecs } ->
             World
-                { camera = camera
-                , layers = layers
+                { layers = layers |> List.reverse
                 , frame = 0
                 , runtime_ = 0
                 , flow = Flow.Running
+
+                --                , flow = Flow.SlowMotion { frames = 1000, fps = 3 }
+                , env =
+                    { height = 0
+                    , width = 0
+                    , devicePixelRatio = 0
+                    , widthRatio = 0
+                    }
                 }
                 ecs
         )

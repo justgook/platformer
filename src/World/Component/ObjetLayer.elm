@@ -1,6 +1,5 @@
 module World.Component.ObjetLayer exposing (objectLayer, validateAndUpdate)
 
-import Error exposing (Error(..))
 import Layer exposing (Layer)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
@@ -9,7 +8,6 @@ import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Object
 import Tiled.Tileset exposing (Tileset)
-import Tiled.Util exposing (tilesetById)
 import World.Component.Common exposing (GetTileset, Read(..), Reader, combine, commonDimensionArgs, commonDimensionPolyPointsArgs, tileArgs)
 import World.Component.Util exposing (getTilesetByGid)
 
@@ -53,7 +51,7 @@ objectLayer fix readers info_ objectData start =
                     )
     in
     objectData.objects
-        |> List.foldr
+        |> List.foldl
             (\obj ->
                 case fix obj of
                     Tiled.Object.Point common ->

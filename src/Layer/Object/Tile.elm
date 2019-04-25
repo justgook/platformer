@@ -78,7 +78,8 @@ fragmentShader =
         void main () {
             vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;
             vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
+//            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
+            vec2 tile = vec2(modI((tileIndex), grid.x), int(tileIndex) / int(grid.x));
 
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;

@@ -49,21 +49,18 @@ type alias Cache =
 
 
 attempt : (Result Error a -> msg) -> ResourceTask a -> Cmd msg
-attempt f task =
-    task
-        |> Task.map Tuple.first
-        |> Task.attempt f
+attempt f =
+    Task.map Tuple.first >> Task.attempt f
 
 
 attemptWithCach : (Result Error ( a, Cache ) -> msg) -> ResourceTask a -> Cmd msg
-attemptWithCach f task =
-    task
-        |> Task.attempt f
+attemptWithCach f =
+    Task.attempt f
 
 
 sequence : List (CacheTask -> ResourceTask a) -> CacheTask -> ResourceTask (List a)
 sequence ltask cache =
-    List.foldr
+    List.foldl
         (\t acc ->
             acc
                 |> andThen
@@ -77,44 +74,42 @@ sequence ltask cache =
 
 
 getTileset : String -> Int -> CacheTask -> ResourceTask Tiled.Tileset.Tileset
-getTileset url firstgid cache =
-    cache
-        |> Task.andThen
-            (\d ->
-                case Dict.get url d.dict of
-                    Just (Tileset r) ->
-                        Task.succeed ( r, d )
+getTileset url firstgid =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Tileset r) ->
+                    Task.succeed ( r, d )
 
-                    _ ->
-                        getJson (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
-            )
-        |> Task.map
+                _ ->
+                    getJson (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
             (\( resp, d ) ->
                 ( resp, { d | dict = Dict.insert url (Tileset resp) d.dict } )
             )
 
 
 getTexture : String -> CacheTask -> ResourceTask WebGL.Texture.Texture
-getTexture url cache =
-    cache
-        |> Task.andThen
-            (\d ->
-                case Dict.get url d.dict of
-                    Just (Texture r) ->
-                        Task.succeed ( r, d )
+getTexture url =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Texture r) ->
+                    Task.succeed ( r, d )
 
-                    _ ->
-                        (if String.startsWith "data:image" url then
-                            url
+                _ ->
+                    (if String.startsWith "data:image" url then
+                        url
 
-                         else
-                            d.url ++ url
-                        )
-                            |> WebGL.Texture.loadWith default.textureOption
-                            |> Task.mapError (textureError url)
-                            |> Task.map (\r -> ( r, d ))
-            )
-        |> Task.map
+                     else
+                        d.url ++ url
+                    )
+                        |> WebGL.Texture.loadWith default.textureOption
+                        |> Task.mapError (textureError url)
+                        |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
             (\( resp, d ) ->
                 ( resp, { d | dict = Dict.insert url (Texture resp) d.dict } )
             )
@@ -131,18 +126,17 @@ textureError url e =
 
 
 getLevel : String -> CacheTask -> ResourceTask Tiled.Level.Level
-getLevel url cache =
-    cache
-        |> Task.andThen
-            (\d ->
-                case Dict.get url d.dict of
-                    Just (Level r) ->
-                        Task.succeed ( r, d )
+getLevel url =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Level r) ->
+                    Task.succeed ( r, d )
 
-                    _ ->
-                        getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
-            )
-        |> Task.map
+                _ ->
+                    getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
             (\( resp, d ) ->
                 let
                     relUrl =
@@ -168,9 +162,8 @@ fail e _ =
 
 
 getCache : ResourceTask a -> CacheTask
-getCache task =
-    task
-        |> Task.map Tuple.second
+getCache =
+    Task.map Tuple.second
 
 
 map : (a -> b) -> ResourceTask a -> ResourceTask b
@@ -190,13 +183,12 @@ map2 f task1 task2 =
 
 
 andThen : (a -> CacheTask -> ResourceTask b) -> ResourceTask a -> ResourceTask b
-andThen f task =
-    task
-        |> Task.andThen
-            (\( a, d1 ) ->
-                f a (Task.succeed d1)
-                    |> Task.map (\( b, d2 ) -> ( b, { d1 | dict = Dict.union d1.dict d2.dict } ))
-            )
+andThen f =
+    Task.andThen
+        (\( a, d1 ) ->
+            f a (Task.succeed d1)
+                |> Task.map (\( b, d2 ) -> ( b, { d1 | dict = Dict.union d1.dict d2.dict } ))
+        )
 
 
 getJson : String -> Decoder a -> Task.Task Error a

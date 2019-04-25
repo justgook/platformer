@@ -54,6 +54,7 @@ mesh =
 vertexShader : Shader { a | position : Vec2 } { b | widthRatio : Float } { vcoord : Vec2 }
 vertexShader =
     [glsl|
+        precision mediump float;
         attribute vec2 position;
         uniform float widthRatio;
 

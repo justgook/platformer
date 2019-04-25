@@ -1,4 +1,4 @@
-module World.Component.Object exposing (Object(..), objects)
+module World.Component.Sprite exposing (Sprite(..), sprites)
 
 import Defaults exposing (default)
 import Error exposing (Error(..))
@@ -6,8 +6,6 @@ import Image
 import Image.BMP exposing (encodeWith)
 import Layer.Common as Common
 import Layer.Object.Animated
-import Layer.Object.Ellipse
-import Layer.Object.Rectangle
 import Layer.Object.Tile
 import Logic.Component
 import Logic.Entity as Entity
@@ -19,22 +17,25 @@ import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 import World.Component.Util exposing (boolToFloat)
 
 
-type Object
-    = Rectangle (Common.Individual Layer.Object.Rectangle.Model)
-    | Ellipse (Common.Individual Layer.Object.Ellipse.Model)
-    | Tile (Common.Individual Layer.Object.Tile.Model)
+type Sprite
+    = Sprite (Common.Individual Layer.Object.Tile.Model)
     | Animated (Common.Individual Layer.Object.Animated.Model)
 
 
-objects : EcsSpec { a | objects : Logic.Component.Set Object } Object (Logic.Component.Set Object)
-objects =
-    --TODO create other for isometric view
+sprites : EcsSpec { a | sprites : Logic.Component.Set Sprite } Sprite (Logic.Component.Set Sprite)
+sprites =
     let
         spec =
-            { get = .objects
-            , set = \comps world -> { world | objects = comps }
+            { get = .sprites
+            , set = \comps world -> { world | sprites = comps }
             }
     in
+    spritesWith spec
+
+
+spritesWith : Logic.Component.Spec Sprite world -> EcsSpec world Sprite (Logic.Component.Set Sprite)
+spritesWith spec =
+    --TODO create other for isometric view
     { spec = spec
     , empty = Logic.Component.empty
     , read =
@@ -71,6 +72,7 @@ objects =
                                                                                     Animated
                                                                                         { x = x
                                                                                         , y = y
+                                                                                        , start = 0
                                                                                         , width = width
                                                                                         , height = height
                                                                                         , tileSet = tileSetImage
@@ -93,7 +95,7 @@ objects =
                                                             (\tileSetImage ->
                                                                 let
                                                                     obj =
-                                                                        Tile
+                                                                        Sprite
                                                                             { x = x
                                                                             , y = y
                                                                             , width = width

@@ -1,7 +1,9 @@
-module Logic.Entity exposing (EntityID, create, setComponent, with)
+module Logic.Entity exposing (EntityID, create, fromDict, fromList, setComponent, toDict, with)
 
 import Array
+import Dict exposing (Dict)
 import Logic.Component as Component
+import Logic.Internal exposing (indexedFoldlArray)
 
 
 {-| -}
@@ -35,3 +37,18 @@ setComponent index value components =
     else
         Array.append components (Array.repeat (index - Array.length components) Nothing)
             |> Array.push (Just value)
+
+
+fromList : List ( EntityID, a ) -> Component.Set a
+fromList =
+    List.foldl (\( index, value ) components -> setComponent index value components) Component.empty
+
+
+fromDict : Dict EntityID a -> Component.Set a
+fromDict =
+    Dict.foldl (\index value components -> setComponent index value components) Component.empty
+
+
+toDict : Component.Set a -> Dict EntityID a
+toDict =
+    indexedFoldlArray (\i a acc -> Maybe.map (\a_ -> Dict.insert i a_ acc) a |> Maybe.withDefault acc) Dict.empty

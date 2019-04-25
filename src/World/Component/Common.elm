@@ -3,6 +3,7 @@ module World.Component.Common exposing
     , GetTileset
     , Read(..)
     , Reader
+    , SingletonEcsSpec
     , combine
     , commonDimensionArgs
     , commonDimensionPolyPointsArgs
@@ -12,6 +13,7 @@ module World.Component.Common exposing
     )
 
 import Logic.Component
+import Logic.Component.Singleton
 import Logic.Entity exposing (EntityID)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
@@ -29,6 +31,13 @@ type alias EcsSpec esc comp empty =
     }
 
 
+type alias SingletonEcsSpec comp esc =
+    { spec : Logic.Component.Singleton.Spec comp esc
+    , read : Reader esc
+    , empty : comp
+    }
+
+
 type alias Reader world =
     { objectTile : Read world TileArg
     , objectPoint : Read world Common
@@ -37,6 +46,7 @@ type alias Reader world =
     , objectPolygon : Read world CommonDimensionPolyPointsArg
     , objectPolyLine : Read world CommonDimensionPolyPointsArg
     , layerTile : Read world TileDataWith
+    , layerImage : Read world Tiled.Layer.ImageData
     , level : Read world Tiled.Level.Level
     }
 
@@ -68,6 +78,7 @@ defaultRead =
     , objectPolygon = None
     , objectPolyLine = None
     , layerTile = None
+    , layerImage = None
     , level = None
     }
 

@@ -1,13 +1,22 @@
-module World.DirectionHelper exposing
+module Direction exposing
     ( Direction(..)
+    , east
     , fromInt
     , fromRecord
     , fromString
+    , neither
+    , north
+    , northEast
+    , northWest
     , opposite
     , oppositeMirror
+    , south
+    , southEast
+    , southWest
     , toInt
     , toRecord
     , toString
+    , west
     )
 
 
@@ -20,7 +29,7 @@ type Direction
     | SouthWest
     | West
     | NorthWest
-    | NoDirection
+    | Neither
 
 
 opposite : Direction -> Direction
@@ -50,8 +59,8 @@ opposite dir =
         NorthWest ->
             SouthEast
 
-        NoDirection ->
-            NoDirection
+        Neither ->
+            Neither
 
 
 oppositeMirror : Direction -> DirectionRecord
@@ -81,7 +90,7 @@ oppositeMirror dir =
         NorthWest ->
             { x = 1, y = 1 }
 
-        NoDirection ->
+        Neither ->
             { x = 0, y = 0 }
 
 
@@ -112,8 +121,8 @@ toRecord dir =
         NorthWest ->
             northWest
 
-        NoDirection ->
-            noDirection
+        Neither ->
+            neither
 
 
 fromRecord : { a | x : Float, y : Float } -> Direction
@@ -145,7 +154,7 @@ fromRecord { x, y } =
         South
 
     else
-        NoDirection
+        Neither
 
 
 fromString : String -> Direction
@@ -200,7 +209,7 @@ fromString dir =
             NorthWest
 
         _ ->
-            NoDirection
+            Neither
 
 
 toString : Direction -> List String
@@ -230,7 +239,7 @@ toString dir =
         NorthWest ->
             [ "north-west", "NW" ]
 
-        NoDirection ->
+        Neither ->
             []
 
 
@@ -261,7 +270,7 @@ toInt dir =
         NorthWest ->
             8
 
-        NoDirection ->
+        Neither ->
             0
 
 
@@ -293,7 +302,7 @@ fromInt dir =
             NorthWest
 
         _ ->
-            NoDirection
+            Neither
 
 
 type alias DirectionRecord =
@@ -340,6 +349,6 @@ northWest =
     { x = -1, y = 1 }
 
 
-noDirection : DirectionRecord
-noDirection =
+neither : DirectionRecord
+neither =
     { x = 0, y = 0 }

@@ -102,9 +102,6 @@ tileStaticLayerBuilder layerData =
             let
                 layerProps =
                     Tiled.Util.properties layerData
-
-                tilsetProps =
-                    Tiled.Util.properties tileset
             in
             ResourceTask.getTexture tileset.image
                 >> ResourceTask.andThen

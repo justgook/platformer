@@ -1,6 +1,5 @@
-port module Game exposing (World, document)
+port module Develop exposing (World, document)
 
-import Broad.QuadTree
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Defaults exposing (default)
@@ -12,9 +11,7 @@ import Logic.GameFlow as Flow
 import ResourceTask exposing (ResourceTask)
 import WebGL
 import World
-import World.Camera exposing (Camera)
 import World.Create
-import World.Render
 
 
 type alias World world =
@@ -22,7 +19,7 @@ type alias World world =
 
 
 type alias Model world =
-    { env : Environment
+    { tmpEnv : Environment
     , resource : world
     }
 
@@ -30,15 +27,17 @@ type alias Model world =
 type Message world defineMe
     = Environment Environment.Message
     | Frame Float
-    | Subscription ( Flow.Model { camera : Camera, layers : List Layer }, world )
+    | Subscription
+        ( Flow.Model
+            { env : Environment
+            , layers : List Layer
+            }
+        , world
+        )
     | Resource (Result Error defineMe)
 
 
 port start : () -> Cmd msg
-
-
-
--- document : Program Json.Value Model Message
 
 
 document { world, system, read, view, subscriptions } =
@@ -50,14 +49,14 @@ document { world, system, read, view, subscriptions } =
             \model_ ->
                 case model_.resource of
                     Ok (World.World world1 world2) ->
-                        [ Environment.subscriptions model_.env |> Sub.map Environment
+                        [ Environment.subscriptions world1.env |> Sub.map Environment
                         , Browser.onAnimationFrameDelta Frame
                         , subscriptions ( world1, world2 ) |> Sub.map Subscription
                         ]
                             |> Sub.batch
 
                     _ ->
-                        Environment.subscriptions model_.env |> Sub.map Environment
+                        Environment.subscriptions model_.tmpEnv |> Sub.map Environment
         }
 
 
@@ -76,7 +75,7 @@ init_ empty readers flags =
                 |> ResourceTask.getLevel levelUrl
                 |> ResourceTask.andThen (World.Create.init empty readers)
     in
-    ( { env = env
+    ( { tmpEnv = env
       , resource = Err (Error 0 "Loading...")
       }
     , Cmd.batch
@@ -96,11 +95,15 @@ update system msg model =
         ( Subscription custom, Ok (World.World world ecs) ) ->
             ( custom |> wrap model, Cmd.none )
 
-        ( Environment info, _ ) ->
-            ( { model | env = Environment.update info model.env }, Cmd.none )
+        ( Environment info, Ok (World.World common ecs) ) ->
+            ( ( { common | env = Environment.update info common.env }, ecs ) |> wrap model, Cmd.none )
 
-        ( Resource (Ok resource), _ ) ->
-            ( { model | resource = Ok resource }, start () )
+        ( Environment info, _ ) ->
+            ( { model | tmpEnv = Environment.update info model.tmpEnv }, Cmd.none )
+
+        ( Resource (Ok (World.World common ecs)), _ ) ->
+            --            ( { model | resource = Ok resource }, start () )
+            ( ( { common | env = model.tmpEnv }, ecs ) |> wrap model, start () )
 
         ( Resource resource, _ ) ->
             ( { model | resource = resource }, Cmd.none )
@@ -113,21 +116,17 @@ wrap m data =
     { m | resource = Ok (data |> (\( a, b ) -> World.World a b)) }
 
 
-view_ objRender model =
+view_ render model =
     case model.resource of
-        Ok (World.World world ecs) ->
+        Ok (World.World common ecs) ->
             { title = "Success"
-            , body =
-                [ World.Render.view objRender model.env world ecs
-                    |> WebGL.toHtmlWith default.webGLOption
-                        (Environment.style model.env)
-                ]
+            , body = render (Environment.style common.env) common ecs
             }
 
         Err (Error 0 t) ->
             { title = t
             , body =
-                [ WebGL.toHtmlWith default.webGLOption (Environment.style model.env) []
+                [ WebGL.toHtmlWith default.webGLOption (Environment.style model.tmpEnv) []
                 ]
             }
 

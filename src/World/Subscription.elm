@@ -1,4 +1,4 @@
-module World.Subscription exposing (gamePad, keyboard)
+module World.Subscription exposing (keyboard, portInput)
 
 import Array
 import Browser.Events
@@ -9,7 +9,8 @@ import Set exposing (Set)
 import World.Component.Util exposing (boolToFloat)
 
 
-gamePad ( gamepadDown, gamepadUp ) port_ world =
+portInput ( gamepadDown, gamepadUp ) port_ world =
+    --    https://github.com/jeromeetienne/virtualjoystick.js
     gamepadDown
         (\income ->
             let
@@ -112,95 +113,3 @@ arrows { up, right, down, left } keys =
 keyToInt : comparable -> Set comparable -> Float
 keyToInt key =
     Set.member key >> boolToFloat
-
-
-
--- type Direction
---     = North
---     | NorthEast
---     | East
---     | SouthEast
---     | South
---     | SouthWest
---     | West
---     | NorthWest
---     | NoDirection
--- fromString : String -> Direction
--- fromString dir =
---     case dir of
---         "north" ->
---             North
---         "N" ->
---             North
---         "north-east" ->
---             NorthEast
---         "NE" ->
---             NorthEast
---         "east" ->
---             East
---         "E" ->
---             East
---         "south-east" ->
---             SouthEast
---         "SE" ->
---             SouthEast
---         "south" ->
---             South
---         "S" ->
---             South
---         "south-west" ->
---             SouthWest
---         "SW" ->
---             SouthWest
---         "west" ->
---             West
---         "W" ->
---             West
---         "north-west" ->
---             NorthWest
---         "NW" ->
---             NorthWest
---         _ ->
---             NoDirection
--- toInt : Direction -> Int
--- toInt dir =
---     case dir of
---         North ->
---             1
---         NorthEast ->
---             2
---         East ->
---             3
---         SouthEast ->
---             4
---         South ->
---             5
---         SouthWest ->
---             6
---         West ->
---             7
---         NorthWest ->
---             8
---         NoDirection ->
---             0
--- fromInt : Int -> Direction
--- fromInt dir =
---     case dir of
---         1 ->
---             North
---         2 ->
---             NorthEast
---         3 ->
---             East
---         4 ->
---             SouthEast
---         5 ->
---             South
---         6 ->
---             SouthWest
---         7 ->
---             West
---         8 ->
---             NorthWest
---         _ ->
---             NoDirection

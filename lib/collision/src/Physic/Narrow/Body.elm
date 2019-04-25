@@ -1,87 +1,98 @@
-module Physic.Body exposing (Body, boundary, debuInfo, ellipse, getPosition, isStatic, rect, setVelocity, toStatic, translate, union, velocity)
+module Physic.Narrow.Body exposing
+    ( Body
+    , boundary
+    , debuInfo
+    , ellipse
+    , getIndex
+    , getPosition
+    , getVelocity
+    , isStatic
+    , rect
+    , rotate
+    , setVelocity
+    , toStatic
+    , translate
+    , union
+    , withIndex
+    )
 
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Physic.Util exposing (normal)
+import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import Broad exposing (Boundary)
+import Physic.Narrow.Common as Generic exposing (Generic, Options, defaultOptions)
+import Physic.Util exposing (normal, rotateClockwise)
 
 
-type Body
-    = Circle__ Generic
-    | Ellipse__ Generic { r2 : Float }
-    | Rectangle__ Generic { h : Float }
+
+--https://thebookofshaders.com/12/
+
+
+type Body i
+    = Circle__ (Generic i)
+    | Ellipse__ (Generic i) { r2 : Float }
+    | Rectangle__ (Generic i) { h : Float }
 
 
 
 --http://brm.io/matter-js/docs/classes/Bodies.html
 
 
-type alias Options =
-    { mass : Float
-    , sleep : Bool
-    }
+withIndex : i -> Body i -> Body i
+withIndex i body =
+    updateGeneric__ (\o -> { o | index = Just i }) body
 
 
-defaultOptions : Options
-defaultOptions =
-    { mass = 1
-    , sleep = False
-    }
+getIndex : Body i -> Maybe i
+getIndex body =
+    getFromGeneric__ .index body
 
 
-type alias Generic =
-    { p : Vec2
-    , r : Vec2
-    , velocity : Vec2
-    , mass : Float
-    }
-
-
-toStatic : Body -> Body
+toStatic : Body i -> Body i
 toStatic body =
-    updateGeneric__ (\o -> { o | mass = 0 }) body
+    updateGeneric__ (\o -> { o | invMass = 0 }) body
 
 
-isStatic : Body -> Bool
+isStatic : Body i -> Bool
 isStatic body =
-    getFromGeneric__ (.mass >> (==) 0) body
+    getFromGeneric__ (.invMass >> (==) 0) body
 
 
-rect : Float -> Float -> Float -> Float -> Body
+rect : Float -> Float -> Float -> Float -> Body comparable
 rect x y w h =
     rectWith x y w h defaultOptions
 
 
-rectWith : Float -> Float -> Float -> Float -> Options -> Body
+rectWith : Float -> Float -> Float -> Float -> Options comparable -> Body comparable
 rectWith x y w h options =
     Rectangle__
-        { mass = options.mass
-        , p = vec2 x y
-        , r = vec2 (w / 2) 0
-        , velocity = vec2 0 0
-        }
+        (Generic.empty (vec2 x y) (vec2 (w / 2) 0) options)
         { h = h / 2 }
 
 
-ellipseWith : Float -> Float -> Float -> Float -> Options -> Body
+ellipseWith : Float -> Float -> Float -> Float -> Options comparable -> Body comparable
 ellipseWith x y r1 r2 options =
     if r1 == r2 then
         Circle__
-            { mass = options.mass
-            , p = vec2 x y
-            , r = vec2 r1 0
-            , velocity = vec2 0 0
-            }
+            (Generic.empty (vec2 x y) (vec2 r1 0) options)
+        --            { invMass = 1 / options.mass
+        --            , index = options.index
+        --            , p = vec2 x y
+        --            , r = vec2 r1 0
+        --            , velocity = vec2 0 0
+        --            }
 
     else
         Ellipse__
-            { mass = options.mass
-            , p = vec2 x y
-            , r = vec2 r1 0
-            , velocity = vec2 0 0
-            }
+            --            { invMass = 1 / options.mass
+            --            , index = options.index
+            --            , p = vec2 x y
+            --            , r = vec2 r1 0
+            --            , velocity = vec2 0 0
+            --            }
+            (Generic.empty (vec2 x y) (vec2 r1 0) options)
             { r2 = r2 }
 
 
-ellipse : Float -> Float -> Float -> Float -> Body
+ellipse : Float -> Float -> Float -> Float -> Body comparable
 ellipse x y r1 r2 =
     ellipseWith x y r1 r2 defaultOptions
 
@@ -99,7 +110,7 @@ horizontalUnion o1 o2 h =
         { o1
             | r = newR_
             , p = newP__
-            , mass = o1.mass + o2.mass
+            , invMass = o1.invMass + o2.invMass
         }
         { h = h }
 
@@ -115,15 +126,17 @@ verticalUnion o1 o2 h o1r2 normal1 =
         { o1
             | r = o1.r
             , p = newP__
-            , mass = o1.mass + o2.mass
+            , invMass = o1.invMass + o2.invMass
         }
         { h = h }
 
 
-union : Body -> Body -> Maybe Body
+union : Body i -> Body i -> Maybe (Body i)
 union body1 body2 =
     case ( body1, body2 ) of
         ( Rectangle__ o1 o11, Rectangle__ o2 o22 ) ->
+            --Can produce wrong results when shapes have different sizes
+            -- TODO add support for 180° rotated shapes
             let
                 normal1 =
                     normal o1.r
@@ -164,10 +177,12 @@ union body1 body2 =
             Nothing
 
 
-velocity body =
-    updateGeneric__ (\o -> { o | p = Vec2.add o.p o.velocity }) body
+getVelocity : Body i -> Vec2
+getVelocity body =
+    getFromGeneric__ .velocity body
 
 
+getPosition : Body i -> Vec2
 getPosition body =
     getFromGeneric__ .p body
 
@@ -176,6 +191,14 @@ setPosition p body =
     updateGeneric__ (\o -> { o | p = p }) body
 
 
+rotate angle body =
+    --    add trnslation to correct point to make rotation around correct pivot
+    updateGeneric__
+        (\o -> { o | r = rotateClockwise angle o.r })
+        body
+
+
+boundary : Body a -> Boundary
 boundary body =
     case body of
         Circle__ o ->
@@ -221,17 +244,28 @@ boundary body =
             }
 
 
+setVelocity : Vec2 -> Body i -> Body i
 setVelocity v body =
     updateGeneric__ (\o -> { o | velocity = v }) body
 
 
+translate : Vec2 -> Body i -> Body i
 translate p body =
     updateGeneric__ (\o -> { o | p = Vec2.add o.p p }) body
 
 
-debuInfo : { b | circle : Vec2 -> Float -> a, ellipse : Vec2 -> Float -> Float -> a, rectangle : Vec2 -> Float -> Float -> a } -> Body -> a
+debuInfo :
+    { b
+        | circle : Vec2 -> Float -> a
+        , ellipse : Vec2 -> Float -> Float -> a
+        , rectangle : Vec2 -> Float -> Float -> a
+        , radiusRectangle : Vec2 -> Vec2 -> Float -> a
+    }
+    -> Body i
+    -> a
 debuInfo draw body =
     -- TODO add rotation
+    --    radiusRectangle
     case body of
         Circle__ o ->
             draw.circle o.p (Vec2.length o.r)
@@ -240,10 +274,14 @@ debuInfo draw body =
             draw.ellipse o.p (Vec2.length o.r) r2
 
         Rectangle__ o { h } ->
-            draw.rectangle o.p (Vec2.length o.r * 2) (h * 2)
+            draw.radiusRectangle o.p o.r h
 
 
-updateGeneric__ : (Generic -> Generic) -> Body -> Body
+
+--            draw.rectangle o.p (Vec2.length o.r * 2) (h * 2)
+
+
+updateGeneric__ : (Generic i -> Generic i) -> Body i -> Body i
 updateGeneric__ f body =
     case body of
         Circle__ o ->
@@ -256,7 +294,7 @@ updateGeneric__ f body =
             Rectangle__ (f o) a
 
 
-getFromGeneric__ : (Generic -> a) -> Body -> a
+getFromGeneric__ : (Generic i -> a) -> Body i -> a
 getFromGeneric__ f body =
     case body of
         Circle__ o ->

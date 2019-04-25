@@ -16,6 +16,12 @@ type alias Model =
     }
 
 
+
+--https://en.wikipedia.org/wiki/Moir%C3%A9_pattern
+--https://www.youtube.com/watch?v=aMcJ1Jvtef0 -- Way to add snow / rain
+--http://effectgames.com/demos/worlds/
+
+
 renderX =
     render_ fragmentShaderRepeatX
 

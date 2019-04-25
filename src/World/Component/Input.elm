@@ -1,4 +1,4 @@
-module World.Component.Direction exposing (Direction, direction)
+module World.Component.Input exposing (Direction, direction)
 
 import Dict exposing (Dict)
 import Logic.Component

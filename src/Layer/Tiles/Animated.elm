@@ -87,9 +87,9 @@ fragmentShader =
             float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
             float newIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 ))) + 1.;
             float tileIndex = color2float(texture2D(lut, coordinate)) * newIndex;
-            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
+//            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
             vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
+            vec2 tile = vec2(modI((tileIndex - 1.), grid.x), int(tileIndex - 1.) / int(grid.x));
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
 

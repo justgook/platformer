@@ -1,4 +1,16 @@
-module Broad.Grid exposing (Grid, NewConfig, draw, empty, empty_, getConfig, insert, optimize, query, setConfig, toList)
+module Broad.Grid exposing
+    ( Grid
+    , NewConfig
+    , draw
+    , empty
+    , empty_
+    , getConfig
+    , insert
+    , optimize
+    , query
+    , setConfig
+    , toList
+    )
 
 import Broad exposing (Boundary)
 import Dict exposing (Dict)
@@ -144,9 +156,9 @@ insert boundary value (( table, config ) as grid) =
             ( ( boundary.xmin, boundary.ymin ), ( boundary.xmax, boundary.ymax ) )
 
         newTable =
-            List.foldr
+            List.foldl
                 (\cellX acc1 ->
-                    List.foldr
+                    List.foldl
                         (\cellY acc2 -> Dict.update ( cellX, cellY ) (setUpdater key value) acc2)
                         acc1
                         (List.range y11 y22)
@@ -219,9 +231,9 @@ remove k (( table, config ) as grid) =
             intersectsCellsBoundary (keyToBoundary k) grid
 
         newTable =
-            List.foldr
+            List.foldl
                 (\cellX acc1 ->
-                    List.foldr
+                    List.foldl
                         (\cellY ->
                             Dict.update ( cellX, cellY )
                                 (Maybe.map (Dict.remove k))
@@ -265,9 +277,9 @@ query boundary (( table, _ ) as grid) =
         ( ( x11, y11 ), ( x22, y22 ) ) =
             intersectsCellsBoundary boundary grid
     in
-    List.foldr
+    List.foldl
         (\cellX acc1 ->
-            List.foldr
+            List.foldl
                 (\cellY acc2 ->
                     Dict.get ( cellX, cellY ) table
                         |> Maybe.map (Dict.union acc2)
@@ -278,6 +290,16 @@ query boundary (( table, _ ) as grid) =
         )
         Dict.empty
         (List.range x11 x22)
+
+
+
+--queryFold : Boundary -> { x : Float, y : Float } -> Grid a -> Result a
+--queryFold { xmin, xmax, ymin, ymax } target ( _, config ) =
+--    let
+--        ( x22, y22 ) =
+--            getCell ( xmin, ymin ) config.cell
+--    in
+--    Dict.empty
 
 
 intersectsCellsBoundary : Boundary -> Grid a -> ( ( Int, Int ), ( Int, Int ) )

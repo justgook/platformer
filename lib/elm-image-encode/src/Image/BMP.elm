@@ -151,8 +151,7 @@ encodeImageData w { depth, order } pxs =
     in
     case depth of
         Bit24 ->
-            greedyGroupsOfWithStep delme [] w w pxs
-                |> Encode.sequence
+            Encode.sequence <| greedyGroupsOfWithStep delme [] w w pxs
 
 
 {-| Insipired by List.Extra

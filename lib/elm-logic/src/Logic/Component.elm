@@ -1,4 +1,4 @@
-module Logic.Component exposing (Set, Spec, empty)
+module Logic.Component exposing (Set, SingletonSpec, Spec, empty, get)
 
 import Array exposing (Array)
 
@@ -13,6 +13,17 @@ type alias Spec comp world =
     }
 
 
+type alias SingletonSpec comp world =
+    { get : world -> comp
+    , set : comp -> world -> world
+    }
+
+
 empty : Set comp
 empty =
     Array.empty
+
+
+get : Int -> Set comp -> Maybe comp
+get i =
+    Array.get i >> Maybe.withDefault Nothing

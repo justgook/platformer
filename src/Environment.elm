@@ -74,6 +74,6 @@ style env =
 --         |> Decode.andThen
 --             (dirFromKeyCode
 --                 >> parseControls pressed controls
---                 >> Maybe.map (Logic.Control >> Slime.Engine.Msg >> Game.Logic >> Message.Game >> Decode.succeed)
+--                 >> Maybe.map (Logic.Control >> Slime.Engine.Msg >> Develop.Logic >> Message.Develop >> Decode.succeed)
 --                 >> Maybe.withDefault (Decode.fail "No needed update")
 --             )

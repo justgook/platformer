@@ -2,29 +2,29 @@ module World.Component exposing
     ( animations
     , dimensions
     , direction
-    , objects
     , positions
+    , sprites
     )
 
+import AltMath.Vector2 exposing (Vec2, vec2)
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
-import Math.Vector2 exposing (Vec2, vec2)
 import World.Component.Animation
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
-import World.Component.Direction
-import World.Component.Object
+import World.Component.Input
+import World.Component.Sprite
 
 
 type alias Direction =
-    World.Component.Direction.Direction
+    World.Component.Input.Direction
 
 
 direction =
-    World.Component.Direction.direction
+    World.Component.Input.direction
 
 
-objects =
-    World.Component.Object.objects
+sprites =
+    World.Component.Sprite.sprites
 
 
 animations =

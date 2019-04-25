@@ -1,9 +1,6 @@
 module Broad.QuadTree exposing (Node, draw, empty, insert, query)
 
 import Broad exposing (Boundary)
-import Math.Vector2 exposing (vec2)
-import Math.Vector3 exposing (vec3)
-import Math.Vector4 exposing (Vec4, vec4)
 import Set exposing (Set)
 
 

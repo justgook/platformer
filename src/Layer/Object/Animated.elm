@@ -11,6 +11,7 @@ import WebGL.Texture exposing (Texture)
 type alias Model =
     { x : Float
     , y : Float
+    , start : Float
     , width : Float
     , height : Float
     , tileSet : Texture
@@ -28,6 +29,7 @@ render (Layer common individual) =
     , width = individual.width
     , x = individual.x
     , y = individual.y
+    , start = individual.start
     , tileSet = individual.tileSet
     , tileSetSize = individual.tileSetSize
     , tileSize = individual.tileSize
@@ -66,8 +68,9 @@ fragmentShader =
         uniform sampler2D animLUT;
         uniform int animLength;
         uniform int time;
+        uniform float start;
         float animLength_ = float(animLength);
-        float time_ = float(time);
+        float time_ = float(time) - start;
 
         float color2float(vec4 c) {
             return c.z * 255.0
@@ -84,10 +87,9 @@ fragmentShader =
         void main () {
             float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
             float tileIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 )));
-            vec2 point = vcoord + (viewportOffset / tileSize) * scrollRatio;
+            vec2 point = vcoord; //+ (viewportOffset / tileSize) * scrollRatio;
             vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
-
+            vec2 tile = vec2(modI((tileIndex), grid.x), int(tileIndex) / int(grid.x));
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
             vec2 fragmentOffsetPx = floor((point) * tileSize);

@@ -1,6 +1,7 @@
 module World.Component.Animation exposing (Animation, Animations, animations)
 
 import Dict exposing (Dict)
+import Direction as DirectionHelper exposing (Direction(..))
 import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
@@ -15,11 +16,10 @@ import Tiled.Tileset
 import Tiled.Util exposing (animationFraming)
 import WebGL.Texture exposing (Texture)
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
-import World.DirectionHelper as DirectionHelper exposing (Direction(..))
 
 
 type alias Animations =
-    Dict ( String, Int ) Animation
+    ( ( String, Int ), Dict ( String, Int ) Animation )
 
 
 type alias Animation =
@@ -46,7 +46,7 @@ animations =
         { defaultRead
             | objectTile =
                 Async
-                    (\{ x, y, width, height, properties, gid, fh, fv, getTilesetByGid } ->
+                    (\{ properties, gid, getTilesetByGid } ->
                         getTilesetByGid gid
                             >> ResourceTask.andThen
                                 (\t_ ->
@@ -72,8 +72,8 @@ type What
 fillAnimation t getTilesetByGid acc all =
     case Dict.toList all of
         ( k, v ) :: _ ->
-            case ( Parser.run parseKey k, v ) of
-                ( Ok ( _, NoDirection, _ ), _ ) ->
+            case ( Parser.run parseName k, v ) of
+                ( Ok ( _, Neither, _ ), _ ) ->
                     fillAnimation t getTilesetByGid acc (Dict.remove k all)
 
                 ( Ok ( name, dir, Id ), PropInt tileIndex ) ->
@@ -115,7 +115,7 @@ fillAnimation t getTilesetByGid acc all =
                                             rest
                             )
 
-                ( Ok ( name, dir, Tileset ), PropInt tileIndex ) ->
+                ( Ok ( _, _, Tileset ), PropInt _ ) ->
                     ResourceTask.fail (Error 6004 "Animation from other tile set not implemented yet")
 
                 _ ->
@@ -126,7 +126,7 @@ fillAnimation t getTilesetByGid acc all =
                 ResourceTask.succeed identity
 
             else
-                ResourceTask.succeed (Entity.with ( spec, acc ))
+                ResourceTask.succeed (Entity.with ( spec, ( ( "none", 3 ), acc ) ))
 
 
 dictGetFirst : List comparable -> Dict comparable v -> Maybe ( comparable, v )
@@ -144,7 +144,7 @@ dictGetFirst keys dict =
             Nothing
 
 
-parseKey =
+parseName =
     let
         --anim.(name).(direction).(id|tileset)
         var =
