@@ -24,8 +24,8 @@ follow spec getPos ( common, ecs ) =
                 , y = target.y - cam.pixelsPerUnit / 2
                 }
 
-        _ =
-            Debug.log "viewportOffset" viewportOffset
+        --        _ =
+        --            Debug.log "viewportOffset" viewportOffset
     in
     ( common, spec.set { cam | viewportOffset = viewportOffset } ecs )
 

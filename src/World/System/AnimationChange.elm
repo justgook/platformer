@@ -53,11 +53,11 @@ sideScroll physicsSpec objSpec animSpec ( common, ecs ) =
                     else
                         case ( obj_, Dict.get key anim ) of
                             ( Animated obj, Just a ) ->
-                                let
-                                    _ =
-                                        ( Physic.Narrow.AABB.getPosition body, ( current, key, contact.y ) )
-                                            |> Debug.log "AnimationChange"
-                                in
+                                --                                let
+                                --                                    _ =
+                                --                                        ( Physic.Narrow.AABB.getPosition body, ( current, key, contact.y ) )
+                                --                                            |> Debug.log "AnimationChange"
+                                --                                in
                                 acc
                                     |> setObj
                                         (Animated

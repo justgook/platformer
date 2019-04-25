@@ -196,10 +196,10 @@ response body1 body2 =
     in
     if md.max.x == 0 then
         if md.max.y == 0 then
-            let
-                _ =
-                    Debug.log "XorY" "aaa"
-            in
+            --            let
+            --                _ =
+            --                    Debug.log "XorY" "aaa"
+            --            in
             ( XorY 0 0, Direction.northEast )
 
         else if md.min.y == 0 then
@@ -240,17 +240,16 @@ response body1 body2 =
 
     else if md.min.x <= 0 && md.max.x >= 0 && md.min.y <= 0 && md.max.y >= 0 then
         --Do they already collide?
-        let
-            _ =
-                Debug.log "should never overlap Separate AS" md
-        in
+        --        let
+        --            _ =
+        --                Debug.log "should never overlap Separate AS" md
+        --        in
         ( XandY 0 0, Direction.neither )
 
     else
         let
-            _ =
-                Debug.log "here" v1
-
+            --            _ =
+            --                Debug.log "here" v1
             rv =
                 --Relative velocity
                 Vec2.sub v1 v2
