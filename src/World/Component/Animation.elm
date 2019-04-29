@@ -1,4 +1,4 @@
-module World.Component.Animation exposing (Animation, Animations, animations)
+module World.Component.Animation exposing (Animation, AnimationDict, animations)
 
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
@@ -18,7 +18,7 @@ import WebGL.Texture exposing (Texture)
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 
 
-type alias Animations =
+type alias AnimationDict =
     ( ( String, Int ), Dict ( String, Int ) Animation )
 
 
@@ -38,7 +38,7 @@ spec =
     }
 
 
-animations : EcsSpec { a | animations : Logic.Component.Set Animations } Animations (Logic.Component.Set Animations)
+animations : EcsSpec { a | animations : Logic.Component.Set AnimationDict } AnimationDict (Logic.Component.Set AnimationDict)
 animations =
     { spec = spec
     , empty = Logic.Component.empty

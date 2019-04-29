@@ -140,7 +140,7 @@ fragmentShaderNoRepeat =
         void main () {
             //(2i + 1)/(2N) Pixel center
             vec2 pixel = (floor(vcoord * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
-            gl_FragColor = texture2D(image, mod(pixel, 1.0));
+            gl_FragColor = texture2D(image, pixel);
             gl_FragColor.a *= float(pixel.x <= 1.0) * float(pixel.y <= 1.0);
             gl_FragColor.rgb *= gl_FragColor.a;
         }

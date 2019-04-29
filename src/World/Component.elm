@@ -16,7 +16,7 @@ import World.Component.Sprite
 
 
 type alias Direction =
-    World.Component.Input.Direction
+    World.Component.Input.Component
 
 
 direction =

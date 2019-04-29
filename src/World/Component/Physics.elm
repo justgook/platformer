@@ -1,4 +1,4 @@
-module World.Component.Physics exposing (aabb, body, common_)
+module World.Component.Physics exposing (World, aabb, body, common_)
 
 --physics : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
 
@@ -12,6 +12,10 @@ import Tiled.Object exposing (Object(..))
 import Tiled.Util
 import World.Component.Common exposing (Read(..), commonDimensionArgs, defaultRead)
 import World.Component.Util exposing (extractObjectData)
+
+
+type alias World =
+    Physic.AABB.World Int
 
 
 body =

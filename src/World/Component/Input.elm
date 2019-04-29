@@ -1,4 +1,4 @@
-module World.Component.Input exposing (Direction, direction)
+module World.Component.Input exposing (Component, Direction, direction)
 
 import Dict exposing (Dict)
 import Logic.Component
@@ -9,7 +9,7 @@ import Tiled.Properties exposing (Property(..))
 import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 
 
-type alias Direction =
+type alias Component =
     { x : Float
     , y : Float
     , down : String
@@ -19,17 +19,24 @@ type alias Direction =
     }
 
 
+type alias Direction =
+    { comps : Logic.Component.Set Component
+    , registered : Dict String EntityID
+    , pressed : Set.Set String
+    }
+
+
 direction :
     EcsSpec
         { a
             | direction :
-                { comps : Logic.Component.Set Direction
+                { comps : Logic.Component.Set Component
                 , registered : Dict String EntityID
                 , pressed : Set.Set String
                 }
         }
-        Direction
-        { comps : Logic.Component.Set Direction
+        Component
+        { comps : Logic.Component.Set Component
         , registered : Dict String EntityID
         , pressed : Set.Set String
         }
