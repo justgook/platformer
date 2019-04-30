@@ -6,7 +6,7 @@ import Dict
 import Json.Decode as Decode
 import Logic.Entity as Entity exposing (EntityID)
 import Set exposing (Set)
-import World.Component.Util exposing (boolToFloat)
+import Tiled.Read.Util exposing (boolToFloat)
 
 
 portInput ( gamepadDown, gamepadUp ) port_ world =

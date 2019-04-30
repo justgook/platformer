@@ -1,16 +1,16 @@
-module World.Component.TileLayer exposing (tileLayer)
+module World.Component.Layer.TileLayer exposing (tileLayer)
 
 import Defaults exposing (default)
 import Dict exposing (Dict)
 import Error exposing (Error(..))
 import Image exposing (Order(..))
 import Image.BMP exposing (encodeWith)
-import Layer exposing (Layer)
 import Math.Vector2 exposing (vec2)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer exposing (TileData)
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
 import Tiled.Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
+import World.Component.Layer as Layer exposing (Layer)
 
 
 tileLayer : List Tileset -> TileData -> CacheTask -> ResourceTask ( List Layer, List Tileset )
@@ -149,7 +149,7 @@ tileAnimatedLayerBuilder layerData =
                                     ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
                                         >> ResourceTask.map
                                             (\animLUT ->
-                                                Layer.AbimatedTiles
+                                                Layer.AnimatedTiles
                                                     { lut = lut
                                                     , lutSize = vec2 (toFloat layerData.width) (toFloat layerData.height)
                                                     , tileSet = tileSetImage

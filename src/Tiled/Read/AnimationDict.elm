@@ -1,66 +1,43 @@
-module World.Component.Animation exposing (Animation, AnimationDict, animations)
+module Tiled.Read.AnimationDict exposing (read)
 
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
 import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
-import Logic.Component
 import Logic.Entity as Entity
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
 import ResourceTask
 import Set
 import Tiled.Properties exposing (Property(..))
+import Tiled.Read exposing (Read(..), defaultRead)
 import Tiled.Tileset
 import Tiled.Util exposing (animationFraming)
-import WebGL.Texture exposing (Texture)
-import World.Component.Common exposing (EcsSpec, Read(..), defaultRead)
 
 
-type alias AnimationDict =
-    ( ( String, Int ), Dict ( String, Int ) Animation )
+
+--animations : EcsSpec { a | animations : Logic.Component.Set AnimationDict } AnimationDict (Logic.Component.Set AnimationDict)
 
 
-type alias Animation =
-    { tileSet : Texture
-    , tileSetSize : Vec2
-    , tileSize : Vec2
-    , mirror : Vec2
-    , animLUT : Texture
-    , animLength : Int
-    }
+read spec =
+    { defaultRead
+        | objectTile =
+            Async
+                (\{ properties, gid, getTilesetByGid } ->
+                    getTilesetByGid gid
+                        >> ResourceTask.andThen
+                            (\t_ ->
+                                case t_ of
+                                    Tiled.Tileset.Embedded t ->
+                                        properties
+                                            |> Dict.filter (\a _ -> String.startsWith "anim" a)
+                                            |> fillAnimation spec t getTilesetByGid Dict.empty
 
-
-spec =
-    { get = .animations
-    , set = \comps world -> { world | animations = comps }
-    }
-
-
-animations : EcsSpec { a | animations : Logic.Component.Set AnimationDict } AnimationDict (Logic.Component.Set AnimationDict)
-animations =
-    { spec = spec
-    , empty = Logic.Component.empty
-    , read =
-        { defaultRead
-            | objectTile =
-                Async
-                    (\{ properties, gid, getTilesetByGid } ->
-                        getTilesetByGid gid
-                            >> ResourceTask.andThen
-                                (\t_ ->
-                                    case t_ of
-                                        Tiled.Tileset.Embedded t ->
-                                            properties
-                                                |> Dict.filter (\a _ -> String.startsWith "anim" a)
-                                                |> fillAnimation t getTilesetByGid Dict.empty
-
-                                        _ ->
-                                            ResourceTask.fail (Error 6003 "object tile readers works only with single image tilesets")
-                                )
-                    )
-        }
+                                    _ ->
+                                        ResourceTask.fail (Error 6003 "object tile readers works only with single image tilesets")
+                            )
+                )
     }
 
 
@@ -69,12 +46,12 @@ type What
     | Tileset
 
 
-fillAnimation t getTilesetByGid acc all =
+fillAnimation spec t getTilesetByGid acc all =
     case Dict.toList all of
         ( k, v ) :: _ ->
             case ( Parser.run parseName k, v ) of
                 ( Ok ( _, Neither, _ ), _ ) ->
-                    fillAnimation t getTilesetByGid acc (Dict.remove k all)
+                    fillAnimation spec t getTilesetByGid acc (Dict.remove k all)
 
                 ( Ok ( name, dir, Id ), PropInt tileIndex ) ->
                     animLutPlusImageTask t tileIndex
@@ -101,7 +78,7 @@ fillAnimation t getTilesetByGid acc all =
                                         animLutPlusImageTask t tileIndex2
                                             >> ResourceTask.andThen
                                                 (\info2 ->
-                                                    fillAnimation
+                                                    fillAnimation spec
                                                         t
                                                         getTilesetByGid
                                                         (Dict.insert ( name, DirectionHelper.toInt opposite ) info2 accWithCurrent)
@@ -109,7 +86,8 @@ fillAnimation t getTilesetByGid acc all =
                                                 )
 
                                     _ ->
-                                        fillAnimation t
+                                        fillAnimation spec
+                                            t
                                             getTilesetByGid
                                             (Dict.insert ( name, DirectionHelper.toInt opposite ) { info | mirror = DirectionHelper.oppositeMirror dir |> Vec2.fromRecord } accWithCurrent)
                                             rest
@@ -119,7 +97,7 @@ fillAnimation t getTilesetByGid acc all =
                     ResourceTask.fail (Error 6004 "Animation from other tile set not implemented yet")
 
                 _ ->
-                    fillAnimation t getTilesetByGid acc (Dict.remove k all)
+                    fillAnimation spec t getTilesetByGid acc (Dict.remove k all)
 
         _ ->
             if Dict.isEmpty acc then

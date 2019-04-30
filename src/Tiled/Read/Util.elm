@@ -1,11 +1,11 @@
-module World.Component.Util exposing (boolToFloat, extractObjectData, getTilesetByGid)
+module Tiled.Read.Util exposing (boolToFloat, extractObjectData, getTilesetByGid)
 
 import Dict
 import Error exposing (Error(..))
 import ResourceTask
+import Tiled.Read exposing (GetTileset)
 import Tiled.Tileset exposing (Tileset(..))
 import Tiled.Util exposing (tilesetById)
-import World.Component.Common exposing (GetTileset)
 
 
 boolToFloat : Bool -> Float

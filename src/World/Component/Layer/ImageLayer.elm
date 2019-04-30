@@ -1,13 +1,13 @@
-module World.Component.ImageLayer exposing (imageLayer)
+module World.Component.Layer.ImageLayer exposing (imageLayer)
 
 import Defaults exposing (default)
 import Dict
-import Layer exposing (Layer)
 import Math.Vector2 exposing (vec2)
 import ResourceTask
 import Tiled.Layer exposing (ImageData)
 import Tiled.Util
 import WebGL.Texture
+import World.Component.Layer as Layer exposing (Layer)
 
 
 imageLayer :

@@ -65,15 +65,3 @@ style env =
     , VirtualDom.style "width" (String.fromInt env.width ++ "px")
     , VirtualDom.style "height" (String.fromInt env.height ++ "px")
     ]
-
-
-
--- parseKey : Bool -> { a | y : Int, x : Int } -> Decoder Message
--- parseKey pressed controls =
---     Decode.field "keyCode" Decode.int
---         |> Decode.andThen
---             (dirFromKeyCode
---                 >> parseControls pressed controls
---                 >> Maybe.map (Logic.Control >> Slime.Engine.Msg >> Develop.Logic >> Message.Develop >> Decode.succeed)
---                 >> Maybe.withDefault (Decode.fail "No needed update")
---             )

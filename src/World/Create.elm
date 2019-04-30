@@ -3,13 +3,13 @@ module World.Create exposing (init)
 import Logic.GameFlow as Flow
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer
+import Tiled.Read exposing (combine, tileDataWith)
+import Tiled.Read.Util exposing (getTilesetByGid)
 import Tiled.Util exposing (objFix)
 import World exposing (World(..))
-import World.Component.Common exposing (combine, tileDataWith)
-import World.Component.ImageLayer exposing (imageLayer)
-import World.Component.ObjetLayer exposing (objectLayer)
-import World.Component.TileLayer exposing (tileLayer)
-import World.Component.Util exposing (getTilesetByGid)
+import World.Component.Layer.ImageLayer exposing (imageLayer)
+import World.Component.Layer.ObjetLayer exposing (objectLayer)
+import World.Component.Layer.TileLayer exposing (tileLayer)
 
 
 
@@ -77,8 +77,7 @@ init emptyECS readers level start =
     ResourceTask.map
         (\{ layers, ecs } ->
             World
-                { layers = layers |> List.reverse
-                , frame = 0
+                { frame = 0
                 , runtime_ = 0
                 , flow = Flow.Running
 
@@ -90,6 +89,15 @@ init emptyECS readers level start =
                     , widthRatio = 0
                     }
                 }
-                ecs
+                { ecs
+                    | layers =
+                        layers
+                            |> List.reverse
+                }
         )
         layersTask
+
+
+
+--<iframe src="https://ghbtns.com/github-btn.html?user=justgook&repo=platformer&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+--<iframe src="https://ghbtns.com/github-btn.html?user=justgook&repo=platformer&type=star&count=true" frameborder="0" scrolling="0" width="170px" height="20px"></iframe>

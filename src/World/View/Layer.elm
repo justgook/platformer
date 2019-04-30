@@ -1,25 +1,13 @@
-module Layer exposing (Layer(..), view)
+module World.View.Layer exposing (view)
 
-import Defaults exposing (default)
 import Layer.Common as Common
 import Layer.Image
 import Layer.Tiles
 import Layer.Tiles.Animated
-import Logic.Component
-import WebGL
+import World.Component.Layer exposing (Layer(..))
 
 
-type Layer
-    = Tiles (Common.Individual Layer.Tiles.Model)
-    | AbimatedTiles (Common.Individual Layer.Tiles.Animated.Model)
-    | ImageX (Common.Individual Layer.Image.Model)
-    | ImageY (Common.Individual Layer.Image.Model)
-    | ImageNo (Common.Individual Layer.Image.Model)
-    | Image (Common.Individual Layer.Image.Model)
-    | Object (Logic.Component.Set ())
-
-
-view objRender ({ env, layers, frame } as world) ({ camera } as ecs) =
+view objRender ({ env, frame } as world) ({ camera, layers } as ecs) =
     let
         common =
             { pixelsPerUnit = camera.pixelsPerUnit
@@ -35,7 +23,7 @@ view objRender ({ env, layers, frame } as world) ({ camera } as ecs) =
                     Tiles info ->
                         [ Common.Layer common info |> Layer.Tiles.render ]
 
-                    AbimatedTiles info ->
+                    AnimatedTiles info ->
                         [ Common.Layer common info |> Layer.Tiles.Animated.render ]
 
                     Image info ->

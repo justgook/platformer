@@ -9,9 +9,9 @@ import Physic.Narrow.AABB as AABB exposing (AABB)
 import Physic.Narrow.Body as Body exposing (Body)
 import ResourceTask
 import Tiled.Object exposing (Object(..))
+import Tiled.Read exposing (Read(..), commonDimensionArgs, defaultRead)
+import Tiled.Read.Util exposing (extractObjectData)
 import Tiled.Util
-import World.Component.Common exposing (Read(..), commonDimensionArgs, defaultRead)
-import World.Component.Util exposing (extractObjectData)
 
 
 type alias World =

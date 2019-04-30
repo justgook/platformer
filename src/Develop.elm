@@ -1,12 +1,13 @@
 port module Develop exposing (World, document)
 
+--import World.Component.Layer as Layer exposing (Layer)
+
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Defaults exposing (default)
 import Environment exposing (Environment)
 import Error exposing (Error(..))
 import Json.Decode as Decode
-import Layer exposing (Layer)
 import Logic.GameFlow as Flow
 import ResourceTask exposing (ResourceTask)
 import WebGL
@@ -24,17 +25,15 @@ type alias Model world =
     }
 
 
-type Message world defineMe
+type Message world
     = Environment Environment.Message
     | Frame Float
-    | Subscription
-        ( Flow.Model
-            { env : Environment
-            , layers : List Layer
-            }
-        , world
-        )
-    | Resource (Result Error defineMe)
+    | Subscription ( Flow.Model { env : Environment }, world )
+    | Resource (Result Error (World.World world))
+
+
+
+--    | Event (world -> world)
 
 
 port start : () -> Cmd msg
@@ -102,7 +101,6 @@ update system msg model =
             ( { model | tmpEnv = Environment.update info model.tmpEnv }, Cmd.none )
 
         ( Resource (Ok (World.World common ecs)), _ ) ->
-            --            ( { model | resource = Ok resource }, start () )
             ( ( { common | env = model.tmpEnv }, ecs ) |> wrap model, start () )
 
         ( Resource resource, _ ) ->
@@ -120,7 +118,8 @@ view_ render model =
     case model.resource of
         Ok (World.World common ecs) ->
             { title = "Success"
-            , body = render (Environment.style common.env) common ecs
+            , body =
+                render (Environment.style common.env) common ecs
             }
 
         Err (Error 0 t) ->

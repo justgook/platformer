@@ -1,15 +1,15 @@
-module World.Component.ObjetLayer exposing (objectLayer, validateAndUpdate)
+module World.Component.Layer.ObjetLayer exposing (objectLayer, validateAndUpdate)
 
-import Layer exposing (Layer)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Object
+import Tiled.Read exposing (GetTileset, Read(..), Reader, combine, commonDimensionArgs, commonDimensionPolyPointsArgs, defaultRead, tileArgs)
+import Tiled.Read.Util exposing (getTilesetByGid)
 import Tiled.Tileset exposing (Tileset)
-import World.Component.Common exposing (GetTileset, Read(..), Reader, combine, commonDimensionArgs, commonDimensionPolyPointsArgs, tileArgs)
-import World.Component.Util exposing (getTilesetByGid)
+import World.Component.Layer as Layer exposing (Layer)
 
 
 objectLayer :

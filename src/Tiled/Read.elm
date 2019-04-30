@@ -1,9 +1,7 @@
-module World.Component.Common exposing
-    ( EcsSpec
-    , GetTileset
+module Tiled.Read exposing
+    ( GetTileset
     , Read(..)
     , Reader
-    , SingletonEcsSpec
     , combine
     , commonDimensionArgs
     , commonDimensionPolyPointsArgs
@@ -12,8 +10,6 @@ module World.Component.Common exposing
     , tileDataWith
     )
 
-import Logic.Component
-import Logic.Component.Singleton
 import Logic.Entity exposing (EntityID)
 import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
@@ -22,20 +18,6 @@ import Tiled.Level
 import Tiled.Object exposing (Common, Dimension, Gid, PolyPoints)
 import Tiled.Properties
 import Tiled.Tileset exposing (Tileset)
-
-
-type alias EcsSpec esc comp empty =
-    { spec : Logic.Component.Spec comp esc
-    , read : Reader esc
-    , empty : empty
-    }
-
-
-type alias SingletonEcsSpec comp esc =
-    { spec : Logic.Component.Singleton.Spec comp esc
-    , read : Reader esc
-    , empty : comp
-    }
 
 
 type alias Reader world =

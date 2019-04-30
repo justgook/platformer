@@ -340,7 +340,7 @@ getMin ( c1, v1 ) ( c2, v2 ) =
 getRayIntersectionFractionOfFirstRay : Vec2 -> Vec2 -> Vec2 -> Vec2 -> Maybe Float
 getRayIntersectionFractionOfFirstRay originA endA originB endB =
     let
-        crossProduct a b =
+        perpDotProduct a b =
             a.x * b.y - a.y * b.x
 
         r =
@@ -350,10 +350,10 @@ getRayIntersectionFractionOfFirstRay originA endA originB endB =
             Vec2.sub endB originB
 
         numerator =
-            crossProduct (Vec2.sub originB originA) r
+            perpDotProduct (Vec2.sub originB originA) r
 
         denominator =
-            crossProduct r s
+            perpDotProduct r s
     in
     if numerator == 0 && denominator == 0 then
         -- the lines are co-linear
@@ -371,7 +371,7 @@ getRayIntersectionFractionOfFirstRay originA endA originB endB =
                 numerator / denominator
 
             t =
-                (Vec2.sub originB originA |> crossProduct s) / denominator
+                (Vec2.sub originB originA |> perpDotProduct s) / denominator
         in
         if (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1) then
             Just t

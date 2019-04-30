@@ -1,9 +1,6 @@
 module World.System.Camera exposing (autoScroll, follow, followX)
 
-import Logic.Component.Singleton
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import World exposing (WorldTuple)
-import World.Component.Camera exposing (Camera)
 
 
 
@@ -41,7 +38,10 @@ followX spec getPos ( common, ecs ) =
     ( common, spec.set { cam | viewportOffset = Vec2.setX (target.x - cam.pixelsPerUnit / 2 * common.env.widthRatio) cam.viewportOffset } ecs )
 
 
-autoScroll : Logic.Component.Singleton.Spec Camera world -> Vec2 -> Vec2 -> WorldTuple world -> WorldTuple world
+
+--autoScroll : Logic.Component.Singleton.Spec Camera world -> Vec2 -> Vec2 -> WorldTuple world -> WorldTuple world
+
+
 autoScroll spec speed rand ( common, ecs ) =
     let
         camera =

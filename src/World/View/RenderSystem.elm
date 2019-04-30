@@ -1,4 +1,4 @@
-module World.RenderSystem exposing (debugPhysics, debugPhysicsAABB, viewSprite)
+module World.View.RenderSystem exposing (debugPhysics, debugPhysicsAABB, viewSprite)
 
 import AltMath.Vector2 as AVec2
 import Layer.Common as Common
@@ -13,8 +13,7 @@ import Math.Vector4 exposing (vec4)
 import Physic
 import Physic.AABB
 import Physic.Narrow.AABB
-import Physic.Narrow.Body exposing (Body(..), debuInfo)
-import World.Component
+import Physic.Narrow.Body exposing (Body(..))
 import World.Component.Sprite as ObjectComponent
 
 
@@ -83,11 +82,8 @@ fromPhysics common =
     }
 
 
-viewSprite posComps getPosition common ( ecs, inLayer ) =
-    System.foldl3 (render getPosition common)
-        inLayer
-        (World.Component.sprites.spec.get ecs)
-        (posComps ecs)
+viewSprite positions sprites getPosition common ( ecs, inLayer ) =
+    System.foldl3 (render getPosition common) inLayer sprites positions
 
 
 render getPosition common _ obj body acc =
