@@ -2,66 +2,122 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
+    <meta charset="utf-8" />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
 </head>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    overflow: hidden;
-    height: 100%;
-  }
-
-  body {
-    min-height: 100%;
-    background: #000;
-  }
-
-
-  body.loading::before {
-    content: " ";
-    display: block;
-    margin: 1px;
-    border-radius: 50%;
-    border: 5px solid #fff;
-    border-color: #fff transparent #fff transparent;
-    animation: lds-dual-ring 1.2s linear 0s infinite;
-    display: inline-block;
-    width: 64px;
-    height: 64px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-  }
-
-  @keyframes lds-dual-ring {
-    0% {
-      transform: translate(-50%, -50%) rotate(0deg);
+    * {
+        margin: 0;
+        padding: 0;
     }
 
-    100% {
-      transform: translate(-50%, -50%) rotate(360deg);
+    html {
+        overflow: hidden;
+        height: 100%;
     }
-  }
+
+    body {
+        min-height: 100%;
+        background: #000;
+    }
+
+
+    body.loading::before {
+        content: " ";
+        display: block;
+        margin: 1px;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        border-color: #fff transparent #fff transparent;
+        animation: lds-dual-ring 1.2s linear 0s infinite;
+        display: inline-block;
+        width: 64px;
+        height: 64px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+    }
+
+    @keyframes lds-dual-ring {
+        0% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        100% {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
 </style>
 
 <body class="loading">
 
-  <!-- https://benpaulhanna.com/building-an-elm-project-with-parcel.html -->
-  <script>
+
+<script>
+
+    function prevent(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    document.body.addEventListener("gesturechange", prevent);
+    document.body.addEventListener("gesturestart", prevent);
+    document.body.addEventListener("gestureend", prevent);
+
+    // var dynamic = nipplejs.create({
+    //     zone: document.body,
+    //     color: 'blue'
+    // });
+    // dynamic.on("dir", (a, b) => {
+    //         console.log(b.direction);
+    //         if (b.direction) {
+    //             if (b.direction.angle === "up") {
+    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowUp' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
+    //             } else if (b.direction.angle === "down") {
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowDown' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
+    //             } else if (b.direction.angle === "left") {
+    //                 console.log("left")
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowLeft' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
+    //             } else if (b.direction.angle === "right") {
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
+    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowRight' }));
+    //             }
+    //         }
+    //
+    //     });
+    // dynamic.on("end", (a, b) => {
+    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
+    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
+    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
+    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
+    //     }
+    // );
+
+</script>
+
+
+<!-- https://benpaulhanna.com/building-an-elm-project-with-parcel.html -->
+<script>
     (function () {
-      var redirect = sessionStorage.redirect;
-      delete sessionStorage.redirect;
-      if (redirect && redirect != location.href) {
-        history.replaceState(null, null, redirect);
-      }
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+            history.replaceState(null, null, redirect);
+        }
     })();
-  </script>
-  <script src="./bundle.js"></script>
-  <script>
+</script>
+<script src="./bundle.js"></script>
+<script>
     // window.addEventListener("gamepadconnected", function(e) {
     //   console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
     //           e.gamepad.index, e.gamepad.id,
@@ -70,22 +126,20 @@
 
     console.time("loading");
     var app = Elm.Main.init(
-      {
-        flags: {
-          devicePixelRatio: window.devicePixelRatio || 1,
-          levelUrl: "./assets/demo.json",
-          seed: Math.floor(Math.random() * 0xFFFFFFFF)
+        {
+            flags: {
+                devicePixelRatio: window.devicePixelRatio || 1,
+                levelUrl: "./assets/demo.json",
+                seed: Math.floor(Math.random() * 0xFFFFFFFF)
+            }
         }
-      }
     );
 
     app.ports.start.subscribe(function (data) {
-      console.timeEnd("loading");
-      document.body.className = "loaded";
-      // setTimeout(()=>app.ports.activeUsers.send("hello"), 0);
-
+        console.timeEnd("loading");
+        document.body.className = "loaded";
     });
-  </script>
+</script>
 </body>
 
 </html>
