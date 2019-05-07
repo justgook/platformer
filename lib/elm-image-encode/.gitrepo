@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:justgook/elm-image-encode.git
+	branch = master
+	commit = 8c1ca9dbb95b3d9c0aa4c7b9f13a89e582439ef5
+	parent = e5e91bd92a06d664c50e0dc6e75f03e1d19408e5
+	method = merge
+	cmdver = 0.4.0
