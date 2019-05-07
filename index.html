@@ -2,52 +2,60 @@
 <html lang="en">
 
 <head>
+    <title>Game</title>
     <meta charset="utf-8" />
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            overflow: hidden;
+            height: 100%;
+        }
+
+        body {
+            min-height: 100%;
+            background: #000;
+        }
+
+
+        body.loading::before {
+            content: " ";
+            display: block;
+            margin: 1px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            border-color: #fff transparent #fff transparent;
+            animation: lds-dual-ring 1.2s linear 0s infinite;
+            display: inline-block;
+            width: 64px;
+            height: 64px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+
+        @keyframes lds-dual-ring {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+        canvas {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
 </head>
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-    }
 
-    html {
-        overflow: hidden;
-        height: 100%;
-    }
-
-    body {
-        min-height: 100%;
-        background: #000;
-    }
-
-
-    body.loading::before {
-        content: " ";
-        display: block;
-        margin: 1px;
-        border-radius: 50%;
-        border: 5px solid #fff;
-        border-color: #fff transparent #fff transparent;
-        animation: lds-dual-ring 1.2s linear 0s infinite;
-        display: inline-block;
-        width: 64px;
-        height: 64px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-    }
-
-    @keyframes lds-dual-ring {
-        0% {
-            transform: translate(-50%, -50%) rotate(0deg);
-        }
-
-        100% {
-            transform: translate(-50%, -50%) rotate(360deg);
-        }
-    }
-</style>
 
 <body class="loading">
 
@@ -128,7 +136,8 @@
     var app = Elm.Main.init(
         {
             flags: {
-                devicePixelRatio: window.devicePixelRatio || 1,
+                devicePixelRatio: 0.1012658228,
+                // devicePixelRatio: window.devicePixelRatio || 1,
                 levelUrl: "./assets/demo.json",
                 seed: Math.floor(Math.random() * 0xFFFFFFFF)
             }
