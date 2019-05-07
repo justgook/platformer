@@ -1,24 +1,12 @@
 module Logic.Tiled.Task exposing (load)
 
-import Error exposing (Error)
-import Logic.Asset.Layer
 import Logic.Tiled.Read.Layer.ImageLayer exposing (imageLayer)
 import Logic.Tiled.Read.Layer.ObjetLayer exposing (objectLayer)
 import Logic.Tiled.Read.Layer.TileLayer exposing (tileLayer)
 import Logic.Tiled.Reader exposing (Reader, combine, tileDataWith)
 import Logic.Tiled.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Tiled.Util exposing (getTilesetByGid, objFix)
-import Task exposing (Task)
 import Tiled.Layer
-
-
-
---load :
---    String
---    -> { world | layers : List Logic.Asset.Layer.Layer }
---    -> List (Reader { world | layers : List Logic.Asset.Layer.Layer })
---    --Replace to Task Error world
---    -> Task Error { world | layers : List Logic.Asset.Layer.Layer }
 
 
 load levelUrl empty readers =

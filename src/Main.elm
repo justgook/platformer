@@ -41,7 +41,7 @@ read =
 
 
 type alias OwnWorld =
-    { camera : Logic.Asset.Camera.Follow
+    { camera : Logic.Asset.Camera.WithId
     , layers : List Logic.Asset.Layer.Layer
     , sprites : Logic.Component.Set Logic.Asset.Sprite.Sprite
     , physics : AABB.World Int

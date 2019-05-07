@@ -1,4 +1,4 @@
-port module Logic.Launcher exposing (Launcher, World, document)
+port module Logic.Launcher exposing (Launcher, World, document, worker)
 
 --import World.Component.Layer as Layer exposing (Layer)
 
@@ -56,6 +56,20 @@ document { init, update, view, subscriptions } =
         }
 
 
+worker :
+    { init : Json.Value -> Task.Task Error.Error (World world)
+    , subscriptions : World world -> Sub (World world)
+    , update : World world -> World world
+    }
+    -> Launcher world
+worker { init, update, subscriptions } =
+    Platform.worker
+        { init = init_ init
+        , update = update_ update
+        , subscriptions = subscriptions_ subscriptions
+        }
+
+
 init_ :
     (Json.Value -> Task.Task Error.Error (World world))
     -> Json.Value
@@ -89,21 +103,20 @@ subscriptions_ :
     (World world1 -> Sub (World world))
     -> Model world1
     -> Sub (Message world)
-subscriptions_ subscriptions =
-    \model_ ->
-        case model_ of
-            Succeed world ->
-                [ Sub.map Environment Environment.subscriptions
-                , Browser.onAnimationFrameDelta Frame
-                , subscriptions world |> Sub.map Subscription
-                ]
-                    |> Sub.batch
+subscriptions_ subscriptions model_ =
+    case model_ of
+        Succeed world ->
+            [ Sub.map Environment Environment.subscriptions
+            , Browser.onAnimationFrameDelta Frame
+            , subscriptions world |> Sub.map Subscription
+            ]
+                |> Sub.batch
 
-            Loading _ ->
-                Sub.map Environment Environment.subscriptions
+        Loading _ ->
+            Sub.map Environment Environment.subscriptions
 
-            Fail _ ->
-                Sub.none
+        Fail _ ->
+            Sub.none
 
 
 update_ :
@@ -136,7 +149,7 @@ update_ update msg model =
             ( Succeed { world | env = tmpEnv }, start () )
 
         ( Resource (Succeed world), Succeed _ ) ->
-            ( Succeed world, start () )
+            ( Succeed world, Cmd.none )
 
         _ ->
             ( model, Cmd.none )

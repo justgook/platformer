@@ -30,9 +30,7 @@ type Message
 
 subscriptions : Sub Message
 subscriptions =
-    Sub.batch
-        [ Events.onResize Resize
-        ]
+    Events.onResize Resize
 
 
 update : Message -> Environment -> Environment
@@ -62,8 +60,7 @@ init flags =
 
 requestWindowSize : Cmd Message
 requestWindowSize =
-    Browser.getViewport
-        |> Task.perform (\{ scene } -> Resize (round scene.width) (round scene.height))
+    Task.perform (\{ scene } -> Resize (round scene.width) (round scene.height)) Browser.getViewport
 
 
 style : Environment -> List (VirtualDom.Attribute msg)

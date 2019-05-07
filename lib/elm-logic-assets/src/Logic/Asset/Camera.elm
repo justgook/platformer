@@ -1,4 +1,4 @@
-module Logic.Asset.Camera exposing (Any, Camera, Follow, empty, emptyWithId, spec)
+module Logic.Asset.Camera exposing (Any, Camera, WithId, empty, emptyWithId, spec)
 
 import Defaults exposing (default)
 import Math.Vector2 as Vec2 exposing (Vec2)
@@ -15,7 +15,7 @@ type alias Camera =
     Any {}
 
 
-type alias Follow =
+type alias WithId =
     Any { id : Int }
 
 

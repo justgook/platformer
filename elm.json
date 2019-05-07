@@ -4,7 +4,9 @@
         "src",
         "lib/elm-tiled/src",
         "lib/elm-image-encode/src",
+        "lib/elm-alt-math/src",
         "lib/elm-logic/src",
+        "lib/elm-logic-assets/src",
         "lib/collision/src",
         "lib/direction/src",
         "lib/elm-nipples/src"
