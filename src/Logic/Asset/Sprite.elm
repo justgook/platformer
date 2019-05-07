@@ -1,4 +1,4 @@
-module World.Component.Sprite exposing (Sprite(..), empty, spec)
+module Logic.Asset.Sprite exposing (Sprite(..), empty, spec)
 
 import Layer.Common as Common
 import Layer.Object.Animated

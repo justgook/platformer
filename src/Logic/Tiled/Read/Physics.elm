@@ -1,146 +1,116 @@
-module World.Component.Physics exposing (World, aabb, body, common_)
+module Logic.Tiled.Read.Physics exposing (read)
 
 --physics : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
 
 import Dict
+import Logic.Tiled.Reader exposing (Read(..), defaultRead)
+import Logic.Tiled.ResourceTask as ResourceTask
+import Logic.Tiled.Util exposing (extractObjectData)
 import Physic
 import Physic.AABB
 import Physic.Narrow.AABB as AABB exposing (AABB)
 import Physic.Narrow.Body as Body exposing (Body)
-import ResourceTask
 import Tiled.Object exposing (Object(..))
-import Tiled.Read exposing (Read(..), commonDimensionArgs, defaultRead)
-import Tiled.Read.Util exposing (extractObjectData)
-import Tiled.Util
 
 
-type alias World =
-    Physic.AABB.World Int
+
+--common_ Physic.AABB.empty Physic.AABB.clear updateConfig_ createEnvAABB createDynamicAABB AABB.withIndex Physic.AABB.addBody spec
+--common_ Physic.AABB.empty Physic.AABB.clear updateConfig_ createEnvAABB createDynamicAABB AABB.withIndex Physic.AABB.addBody spec
 
 
-body =
+read spec =
     let
-        spec =
-            { get = .physics
-            , set = \comps world -> { world | physics = comps }
-            }
-    in
-    bodyPhysicsWith spec
-
-
-bodyPhysicsWith spec =
-    let
-        updateConfig_ f info =
-            Physic.setConfig (f (Physic.getConfig info)) info
-
-        --            vec2 0 -1
-    in
-    common_ Physic.empty Physic.clear updateConfig_ createEnvBody createDynamicBody Body.withIndex Physic.addBody spec
-
-
-aabb =
-    let
-        spec =
-            { get = .physics
-            , set = \comps world -> { world | physics = comps }
-            }
-    in
-    aabbPhysicsWith spec
-
-
-aabbPhysicsWith spec =
-    let
-        updateConfig_ f info =
+        updateConfig f info =
             Physic.AABB.setConfig (f (Physic.AABB.getConfig info)) info
+
+        clear =
+            Physic.AABB.clear
+
+        staticBody =
+            createEnvAABB
+
+        indexedBody =
+            createDynamicAABB
+
+        setIndex =
+            AABB.withIndex
+
+        addBody =
+            Physic.AABB.addBody
     in
-    common_ Physic.AABB.empty Physic.AABB.clear updateConfig_ createEnvAABB createDynamicAABB AABB.withIndex Physic.AABB.addBody spec
+    { defaultRead
+        | level =
+            Sync
+                (\level ( entityID, world ) ->
+                    let
+                        { tileheight, tilewidth, width, height } =
+                            Logic.Tiled.Util.common level
 
+                        boundary =
+                            { xmin = 0
+                            , ymin = 0
+                            , xmax = toFloat (width * tilewidth)
+                            , ymax = toFloat (height * tileheight)
+                            }
 
+                        info =
+                            spec.get world
 
---
---createEnvAABB
---createDynamicAABB
---AABB.withIndex Physic.AABB.addBody spec
-
-
-common_ empty_ clear updateConfig staticBody indexedBody setIndex addBody spec =
-    { spec = spec
-    , empty = empty_
-    , read =
-        { defaultRead
-            | level =
-                Sync
-                    (\level ( entityID, world ) ->
-                        let
-                            { tileheight, tilewidth, width, height } =
-                                Tiled.Util.common level
-
-                            boundary =
-                                { xmin = 0
-                                , ymin = 0
-                                , xmax = toFloat (width * tilewidth)
-                                , ymax = toFloat (height * tileheight)
-                                }
-
-                            info =
-                                spec.get world
-
-                            withNewConfig =
-                                updateConfig
-                                    (\config ->
-                                        { config
-                                            | grid =
-                                                { boundary = boundary
-                                                , cell =
-                                                    { width = toFloat tilewidth
-                                                    , height = toFloat tileheight
-                                                    }
+                        withNewConfig =
+                            updateConfig
+                                (\config ->
+                                    { config
+                                        | grid =
+                                            { boundary = boundary
+                                            , cell =
+                                                { width = toFloat tilewidth
+                                                , height = toFloat tileheight
                                                 }
-                                        }
-                                    )
-                                    info
-                        in
-                        ( entityID, spec.set withNewConfig world )
-                    )
-            , layerTile =
-                Async
-                    (\{ data, getTilesetByGid } ->
-                        recursionSpawn staticBody getTilesetByGid data ( 0, Dict.empty, identity )
-                            >> ResourceTask.map
-                                (\spawn ( mId, world ) ->
-                                    let
-                                        result =
-                                            spawn (spec.get world)
-                                                |> clear
+                                            }
+                                    }
+                                )
+                                info
+                    in
+                    ( entityID, spec.set withNewConfig world )
+                )
+        , layerTile =
+            Async
+                (\{ data, getTilesetByGid } ->
+                    recursionSpawn staticBody getTilesetByGid data ( 0, Dict.empty, identity )
+                        >> ResourceTask.map
+                            (\spawn ( mId, world ) ->
+                                let
+                                    result =
+                                        spawn (spec.get world)
+                                            |> clear
 
-                                        newWorld =
-                                            spec.set result world
-                                    in
-                                    ( mId, newWorld )
-                                )
-                    )
-            , objectTile =
-                Async
-                    (\({ gid, getTilesetByGid } as info) ->
-                        getTilesetByGid gid
-                            >> ResourceTask.map
-                                (\t_ ( mId, world ) ->
-                                    extractObjectData gid t_
-                                        |> Maybe.map .objects
-                                        |> Maybe.andThen List.head
-                                        |> Maybe.andThen (indexedBody info)
-                                        |> Maybe.map
-                                            (\body_ ->
-                                                let
-                                                    result =
-                                                        addBody (setIndex mId body_) (spec.get world)
-                                                in
-                                                ( mId, spec.set result world )
-                                            )
-                                        |> Maybe.withDefault ( mId, world )
-                                )
-                    )
-        }
+                                    newWorld =
+                                        spec.set result world
+                                in
+                                ( mId, newWorld )
+                            )
+                )
+        , objectTile =
+            Async
+                (\({ gid, getTilesetByGid } as info) ->
+                    getTilesetByGid gid
+                        >> ResourceTask.map
+                            (\t_ ( mId, world ) ->
+                                extractObjectData gid t_
+                                    |> Maybe.map .objects
+                                    |> Maybe.andThen List.head
+                                    |> Maybe.andThen (indexedBody info)
+                                    |> Maybe.map
+                                        (\body_ ->
+                                            let
+                                                result =
+                                                    addBody (setIndex mId body_) (spec.get world)
+                                            in
+                                            ( mId, spec.set result world )
+                                        )
+                                    |> Maybe.withDefault ( mId, world )
+                            )
+                )
     }
 
 
@@ -221,27 +191,27 @@ createEnvBody_ obj offSetX offSetY =
         Point { x, y } ->
             Body.rect (offSetX + x) (offSetY + y) 0 0
 
-        Rectangle { x, y } { width, height } ->
+        Rectangle { x, y, width, height } ->
             Body.rect (getX x width) (getY y height) width height
 
-        Ellipse { x, y } { width, height } ->
+        Ellipse { x, y, width, height } ->
             Body.ellipse (getX x width) (getY y height) width height
 
-        Polygon { x, y } { width, height } polyPoints ->
+        Polygon { x, y, width, height } ->
             Body.rect (getX x width) (getY y height) width height
 
-        PolyLine { x, y } { width, height } polyPoints ->
+        PolyLine { x, y, width, height } ->
             Body.rect (getX x width) (getY y height) width height
 
-        Tile { x, y } { width, height } gid ->
+        Tile { x, y, width, height } ->
             Body.rect (getX x width) (getY y height) width height
 
 
 createDynamicBody : { a | height : Float, width : Float, x : Float, y : Float } -> Tiled.Object.Object -> Maybe (Body comparable)
 createDynamicBody { x, y, height, width } o =
     case o of
-        Tiled.Object.Ellipse common dimension ->
-            commonDimensionArgs common dimension
+        Tiled.Object.Ellipse data ->
+            data
                 |> (\o_ ->
                         Body.ellipse
                             (x - width / 2 + o_.width / 2 + o_.x)
@@ -251,8 +221,8 @@ createDynamicBody { x, y, height, width } o =
                    )
                 |> Just
 
-        Tiled.Object.Rectangle common dimension ->
-            commonDimensionArgs common dimension
+        Tiled.Object.Rectangle data ->
+            data
                 |> (\o_ ->
                         Body.rect
                             (x - width / 2 + o_.width / 2 + o_.x)
@@ -260,7 +230,7 @@ createDynamicBody { x, y, height, width } o =
                             o_.width
                             o_.height
                    )
-                |> Body.rotate (degrees common.rotation)
+                |> Body.rotate (degrees data.rotation)
                 |> Just
 
         _ ->
@@ -310,27 +280,27 @@ createEnvAABB_ obj offSetX offSetY =
         Point { x, y } ->
             AABB.rect (offSetX + x) (offSetY + y) 0 0
 
-        Rectangle { x, y } { width, height } ->
+        Rectangle { x, y, width, height } ->
             AABB.rect (getX x width) (getY y height) width height
 
-        Ellipse { x, y } { width, height } ->
+        Ellipse { x, y, width, height } ->
             AABB.rect (getX x width) (getY y height) width height
 
-        Polygon { x, y } { width, height } polyPoints ->
+        Polygon { x, y, width, height } ->
             AABB.rect (getX x width) (getY y height) width height
 
-        PolyLine { x, y } { width, height } polyPoints ->
+        PolyLine { x, y, width, height } ->
             AABB.rect (getX x width) (getY y height) width height
 
-        Tile { x, y } { width, height } gid ->
+        Tile { x, y, width, height } ->
             AABB.rect (getX x width) (getY y height) width height
 
 
 createDynamicAABB : { a | height : Float, width : Float, x : Float, y : Float } -> Tiled.Object.Object -> Maybe (AABB comparable)
 createDynamicAABB { x, y, height, width } o =
     case o of
-        Tiled.Object.Ellipse common dimension ->
-            commonDimensionArgs common dimension
+        Tiled.Object.Ellipse data ->
+            data
                 |> (\o_ ->
                         AABB.rect
                             (x - width / 2 + o_.width / 2 + o_.x)
@@ -340,8 +310,8 @@ createDynamicAABB { x, y, height, width } o =
                    )
                 |> Just
 
-        Tiled.Object.Rectangle common dimension ->
-            commonDimensionArgs common dimension
+        Tiled.Object.Rectangle data ->
+            data
                 |> (\o_ ->
                         AABB.rect
                             (x - width / 2 + o_.width / 2 + o_.x)

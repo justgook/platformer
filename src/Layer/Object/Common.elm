@@ -52,7 +52,7 @@ vertexShader =
 		 			        -1,-1, 0, 1);
         void main () {
             vcoord = position;
-            vec2 fullScreen = vec2(position.x * widthRatio, position.y);
+//            vec2 fullScreen = vec2(position.x * widthRatio, position.y);
             vec2 sized = vec2(position * vec2(width * px, height * px));
             mat4 move = translate(
                 (x - viewportOffset.x * scrollRatio.x - width / 2.) * px,
@@ -125,7 +125,7 @@ vertexShaderWithRotation =
 
         void main () {
            vcoord = position;
-           vec2 fullScreen = vec2(position.x * widthRatio, position.y);
+//           vec2 fullScreen = vec2(position.x * widthRatio, position.y);
            vec2 sized = vec2(position * vec2(width * px, height * px));
            mat4 move = translate(
                (x - viewportOffset.x * scrollRatio.x - width / 2.) * px,
@@ -187,7 +187,7 @@ vertexShaderHalfDimension =
 		 			        -1,-1, 0, 1);
         void main () {
             vcoord = position;
-            vec2 fullScreen = vec2(position.x * widthRatio, position.y);
+//            vec2 fullScreen = vec2(position.x * widthRatio, position.y);
             vec2 sized = vec2(position * vec2(width * 2. * px, height * 2. * px));
             mat4 move = translate(
                 (x - viewportOffset.x * scrollRatio.x - width) * px,

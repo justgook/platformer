@@ -1,11 +1,13 @@
 module Tiled.Object exposing
     ( Object(..), decode, encode
+    , CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints
     , Common, Dimension, Gid, PolyPoints
     )
 
 {-|
 
 @docs Object, decode, encode
+@docs CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints
 @docs Common, Dimension, Gid, PolyPoints
 
 -}
@@ -20,32 +22,44 @@ import Tiled.Properties as Properties exposing (Properties)
 
 {-| -}
 type Object
-    = Point Common
-    | Rectangle Common Dimension
-    | Ellipse Common Dimension
-    | Polygon Common Dimension PolyPoints
-    | PolyLine Common Dimension PolyPoints
-    | Tile Common Dimension Gid
+    = Point (Common {})
+    | Rectangle CommonDimension
+    | Ellipse CommonDimension
+    | Polygon CommonDimensionPolyPoints
+    | PolyLine CommonDimensionPolyPoints
+    | Tile CommonDimensionGid
+
+
+
+--type OldObject
+--    = Point Common
+--    | Rectangle Common Dimension
+--    | Ellipse Common Dimension
+--    | Polygon Common Dimension PolyPoints
+--    | PolyLine Common Dimension PolyPoints
+--    | Tile Common Dimension Gid
 
 
 {-| Do i really need ID here?
 -}
-type alias Common =
-    { id : Int
-    , name : String
-    , kind : String
-    , visible : Bool
-    , x : Float
-    , y : Float
-    , rotation : Float
-    , properties : Properties
+type alias Common a =
+    { a
+        | id : Int
+        , name : String
+        , kind : String
+        , visible : Bool
+        , x : Float
+        , y : Float
+        , rotation : Float
+        , properties : Properties
     }
 
 
 {-| -}
-type alias Dimension =
-    { width : Float
-    , height : Float
+type alias Dimension a =
+    { a
+        | width : Float
+        , height : Float
     }
 
 
@@ -57,6 +71,65 @@ type alias Gid =
 {-| -}
 type alias PolyPoints =
     List { x : Float, y : Float }
+
+
+type alias CommonDimension =
+    Common (Dimension {})
+
+
+type alias CommonDimensionGid =
+    Common (Dimension { gid : Gid })
+
+
+type alias CommonDimensionPolyPoints =
+    Common (Dimension { points : List { x : Float, y : Float } })
+
+
+commonDimension : Common a -> Dimension a -> CommonDimension
+commonDimension a b =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    }
+
+
+commonDimensionArgsGid : Common a -> Dimension a -> Gid -> CommonDimensionGid
+commonDimensionArgsGid a b c =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    , gid = c
+    }
+
+
+commonDimensionPolyPoints : Common a -> Dimension a -> PolyPoints -> CommonDimensionPolyPoints
+commonDimensionPolyPoints a b c =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , width = b.width
+    , height = b.height
+    , points = c
+    }
 
 
 encodeProps data =
@@ -71,7 +144,7 @@ encodeProps data =
 encode : Object -> Encode.Value
 encode obj =
     let
-        base data =
+        common data =
             [ ( "id", Encode.int data.id )
             , ( "name", Encode.string data.name )
             , ( "type", Encode.string data.kind )
@@ -96,43 +169,43 @@ encode obj =
     case obj of
         Point data ->
             data
-                |> base
+                |> common
                 |> (++) [ ( "width", Encode.float 0 ), ( "height", Encode.float 0 ), ( "point", Encode.bool True ) ]
                 |> Encode.object
 
-        Rectangle data size ->
+        Rectangle data ->
             data
-                |> base
-                |> (++) (dimension size)
+                |> common
+                |> (++) (dimension data)
                 |> List.sortBy Tuple.first
                 |> Encode.object
 
-        Ellipse data size ->
+        Ellipse data ->
             data
-                |> base
-                |> (++) (dimension size)
+                |> common
+                |> (++) (dimension data)
                 |> (::) ( "ellipse", Encode.bool True )
                 |> Encode.object
 
-        Polygon data size points ->
+        Polygon data ->
             data
-                |> base
-                |> (++) (dimension size)
-                |> (::) ( "polygon", Encode.list encodePolyPoint points )
+                |> common
+                |> (++) (dimension data)
+                |> (::) ( "polygon", Encode.list encodePolyPoint data.points )
                 |> Encode.object
 
-        PolyLine data size points ->
+        PolyLine data ->
             data
-                |> base
-                |> (++) (dimension size)
-                |> (::) ( "polyline", Encode.list encodePolyPoint points )
+                |> common
+                |> (++) (dimension data)
+                |> (::) ( "polyline", Encode.list encodePolyPoint data.points )
                 |> Encode.object
 
-        Tile data size gid ->
+        Tile data ->
             data
-                |> base
-                |> (++) (dimension size)
-                |> (::) ( "gid", Encode.int gid )
+                |> common
+                |> (++) (dimension data)
+                |> (::) ( "gid", Encode.int data.gid )
                 |> Encode.object
 
 
@@ -144,28 +217,33 @@ decode =
             Decode.map Point decodeCommon
                 |> when (Decode.field "point" Decode.bool) ((==) True)
 
-        elipse =
-            Decode.map2 Ellipse decodeCommon decodeDimension
+        ellipse =
+            Decode.map2 commonDimension decodeCommon decodeDimension
+                |> Decode.map Ellipse
                 |> when (Decode.field "ellipse" Decode.bool) ((==) True)
 
         polygon =
             Decode.field "polygon" decodePolyPoints
-                |> Decode.map3 Polygon decodeCommon decodeDimension
+                |> Decode.map3 commonDimensionPolyPoints decodeCommon decodeDimension
+                |> Decode.map Polygon
 
         polyline =
             Decode.field "polyline" decodePolyPoints
-                |> Decode.map3 PolyLine decodeCommon decodeDimension
+                |> Decode.map3 commonDimensionPolyPoints decodeCommon decodeDimension
+                |> Decode.map PolyLine
 
         tile =
-            Decode.map3 Tile decodeCommon decodeDimension decodeGid
+            Decode.map3 commonDimensionArgsGid decodeCommon decodeDimension decodeGid
+                |> Decode.map Tile
                 |> when (Decode.field "gid" Decode.int) ((<) 0)
 
         rectangle =
-            Decode.map2 Rectangle decodeCommon decodeDimension
+            Decode.map2 commonDimension decodeCommon decodeDimension
+                |> Decode.map Rectangle
     in
     Decode.oneOf
         [ point
-        , elipse
+        , ellipse
         , tile
         , polygon
         , polyline
@@ -173,9 +251,21 @@ decode =
         ]
 
 
-decodeCommon : Decoder Common
+decodeCommon : Decoder (Common {})
 decodeCommon =
-    Decode.succeed Common
+    let
+        common id name kind visible x y rotation properties =
+            { id = id
+            , name = name
+            , kind = kind
+            , visible = visible
+            , x = x
+            , y = y
+            , rotation = rotation
+            , properties = properties
+            }
+    in
+    Decode.succeed common
         |> required "id" Decode.int
         |> required "name" Decode.string
         |> required "type" Decode.string
@@ -186,9 +276,15 @@ decodeCommon =
         |> optional "properties" Properties.decode Dict.empty
 
 
-decodeDimension : Decoder Dimension
+decodeDimension : Decoder (Dimension {})
 decodeDimension =
-    Decode.succeed Dimension
+    let
+        dimension width height =
+            { width = width
+            , height = height
+            }
+    in
+    Decode.succeed dimension
         |> required "width" Decode.float
         |> required "height" Decode.float
 

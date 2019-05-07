@@ -1,17 +1,25 @@
-module Tiled.Read.Sprite exposing (read)
+module Logic.Tiled.Read.Sprite exposing (read)
 
 import Defaults exposing (default)
 import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
+import Logic.Asset.Sprite exposing (Sprite(..))
 import Logic.Entity as Entity
+import Logic.Tiled.Reader exposing (Read(..), defaultRead)
+import Logic.Tiled.ResourceTask as ResourceTask
+import Logic.Tiled.Util exposing (animationFraming, hexColor2Vec3)
 import Math.Vector2 exposing (vec2)
-import ResourceTask
-import Tiled.Read exposing (Read(..), defaultRead)
-import Tiled.Read.Util exposing (boolToFloat)
 import Tiled.Tileset
-import Tiled.Util exposing (animationFraming, hexColor2Vec3)
-import World.Component.Sprite exposing (Sprite(..))
+
+
+boolToFloat : Bool -> Float
+boolToFloat bool =
+    if bool then
+        1
+
+    else
+        0
 
 
 read spec =
@@ -29,7 +37,7 @@ read spec =
                                             tileIndex =
                                                 gid - t.firstgid
                                         in
-                                        case Tiled.Util.animation t tileIndex of
+                                        case Logic.Tiled.Util.animation t tileIndex of
                                             Just anim ->
                                                 ResourceTask.getTexture t.image
                                                     >> ResourceTask.andThen

@@ -1,16 +1,15 @@
-port module Develop exposing (World, document)
+port module Game exposing (World, document)
 
 --import World.Component.Layer as Layer exposing (Layer)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
-import Defaults exposing (default)
 import Environment exposing (Environment)
 import Error exposing (Error(..))
 import Json.Decode as Decode
 import Logic.GameFlow as Flow
-import ResourceTask exposing (ResourceTask)
-import WebGL
+import Logic.Tiled.ResourceTask as ResourceTask exposing (ResourceTask)
+import Task
 import World
 import World.Create
 
@@ -30,6 +29,13 @@ type Message world
     | Frame Float
     | Subscription ( Flow.Model { env : Environment }, world )
     | Resource (Result Error (World.World world))
+    | NewModel (Resource__ world)
+
+
+type Resource__ world
+    = Loading Environment
+    | Succeed world
+    | Fail Error
 
 
 
@@ -39,11 +45,11 @@ type Message world
 port start : () -> Cmd msg
 
 
-document { world, system, read, view, subscriptions } =
+document { init, world, update, read, view, subscriptions } =
     Browser.document
-        { init = init_ world read
+        { init = init_ init world read
         , view = view_ view
-        , update = update system
+        , update = update_ update
         , subscriptions =
             \model_ ->
                 case model_.resource of
@@ -59,7 +65,7 @@ document { world, system, read, view, subscriptions } =
         }
 
 
-init_ empty readers flags =
+init_ init empty readers flags =
     let
         ( env, envMsg ) =
             Environment.init flags
@@ -73,6 +79,18 @@ init_ empty readers flags =
             ResourceTask.init
                 |> ResourceTask.getLevel levelUrl
                 |> ResourceTask.andThen (World.Create.init empty readers)
+
+        initTask =
+            init flags
+                |> Task.attempt
+                    (\r ->
+                        case r of
+                            Ok a ->
+                                NewModel (Succeed a)
+
+                            Err e ->
+                                NewModel (Fail e)
+                    )
     in
     ( { tmpEnv = env
       , resource = Err (Error 0 "Loading...")
@@ -80,18 +98,19 @@ init_ empty readers flags =
     , Cmd.batch
         [ envMsg |> Cmd.map Environment
         , ResourceTask.attempt Resource resourceTask
+        , initTask
         ]
     )
 
 
-update system msg model =
+update_ system msg model =
     case ( msg, model.resource ) of
         ( Frame delta, Ok (World.World world ecs) ) ->
             ( Flow.updateWith system delta ( world, ecs ) |> wrap model
             , Cmd.none
             )
 
-        ( Subscription custom, Ok (World.World world ecs) ) ->
+        ( Subscription custom, Ok (World.World _ _) ) ->
             ( custom |> wrap model, Cmd.none )
 
         ( Environment info, Ok (World.World common ecs) ) ->
@@ -123,11 +142,7 @@ view_ render model =
             }
 
         Err (Error 0 t) ->
-            { title = t
-            , body =
-                [ WebGL.toHtmlWith default.webGLOption (Environment.style model.tmpEnv) []
-                ]
-            }
+            { title = t, body = [] }
 
         Err (Error code e) ->
             { title = "Failure:" ++ String.fromInt code

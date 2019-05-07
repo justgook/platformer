@@ -1,4 +1,4 @@
-module World.Component.AnimationDict exposing (Animation, AnimationDict, empty, spec)
+module Logic.Asset.AnimationDict exposing (Animation, AnimationDict, empty, spec)
 
 import Dict exposing (Dict)
 import Logic.Component

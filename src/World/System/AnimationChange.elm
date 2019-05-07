@@ -2,11 +2,11 @@ module World.System.AnimationChange exposing (sideScroll)
 
 import Dict
 import Direction as Dir
+import Logic.Asset.Sprite exposing (Sprite(..))
 import Logic.Entity
 import Logic.System as System
 import Physic.AABB
 import Physic.Narrow.AABB
-import World.Component.Sprite exposing (Sprite(..))
 
 
 sideScroll physicsSpec objSpec animSpec ( common, ecs ) =

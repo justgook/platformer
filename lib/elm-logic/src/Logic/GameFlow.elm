@@ -62,9 +62,47 @@ updateWith systems delta (( world, _ ) as model) =
 
 
 update : (Model a -> Model a) -> Float -> Model a -> Model a
-update systems delta model =
-    updateWith (Tuple.mapFirst systems) delta ( model, () )
-        |> Tuple.first
+update =
+    --    updateWith (Tuple.mapFirst systems) delta ( model, () )
+    --        |> Tuple.first
+    update_
+
+
+update_ : (Model a -> Model a) -> Float -> Model a -> Model a
+update_ systems delta model =
+    let
+        ( worldWithUpdatedRuntime, countOfFrames ) =
+            case model.flow of
+                Running ->
+                    updateRuntime_ model delta default.fps
+
+                Pause ->
+                    updateRuntime_ model delta 0
+
+                SlowMotion current ->
+                    let
+                        ( newWorld, countOfFrames_ ) =
+                            updateRuntime_ model delta (toFloat current.fps)
+
+                        framesLeft =
+                            current.frames - countOfFrames_
+
+                        ( flow, runtime ) =
+                            if framesLeft < 0 then
+                                ( Running, newWorld.frame |> resetRuntime default.fps )
+
+                            else
+                                ( SlowMotion { current | frames = framesLeft }, newWorld.runtime_ )
+                    in
+                    ( { newWorld | flow = flow, runtime_ = runtime }, countOfFrames_ )
+    in
+    worldWithUpdatedRuntime
+        |> (if countOfFrames > 0 then
+                worldUpdate_ systems countOfFrames
+
+            else
+                identity
+           )
 
 
 resetRuntime : Float -> Int -> Float
@@ -93,6 +131,27 @@ updateRuntime ( world, world2 ) delta fps =
     ( ( { world | runtime_ = newRuntime }, world2 ), countOfFrames )
 
 
+updateRuntime_ : Model a -> Float -> Float -> ( Model a, Int )
+updateRuntime_ model delta fps =
+    let
+        thresholdTime =
+            1 / fps * 12
+
+        deltaSec =
+            delta / 1000
+
+        newRuntime =
+            -- max 12 game frame per one animationFrame event
+            model.runtime_ + min deltaSec thresholdTime
+
+        countOfFrames =
+            (newRuntime * fps - toFloat model.frame)
+                |> min (fps * thresholdTime)
+                |> round
+    in
+    ( { model | runtime_ = newRuntime }, countOfFrames )
+
+
 worldUpdate : (ExtendedModel a b -> ExtendedModel a b) -> Int -> ExtendedModel a b -> ExtendedModel a b
 worldUpdate system framesLeft (( world, world2 ) as model) =
     if framesLeft < 1 then
@@ -104,3 +163,16 @@ worldUpdate system framesLeft (( world, world2 ) as model) =
                 system model
         in
         worldUpdate system (framesLeft - 1) ( { newWorld | frame = newWorld.frame + 1 }, newWorld2 )
+
+
+worldUpdate_ : (Model a -> Model a) -> Int -> Model a -> Model a
+worldUpdate_ system framesLeft model =
+    if framesLeft < 1 then
+        model
+
+    else
+        let
+            newModel =
+                system model
+        in
+        worldUpdate_ system (framesLeft - 1) { newModel | frame = newModel.frame + 1 }

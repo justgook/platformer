@@ -6,7 +6,6 @@ import Dict
 import Json.Decode as Decode
 import Logic.Entity as Entity exposing (EntityID)
 import Set exposing (Set)
-import Tiled.Read.Util exposing (boolToFloat)
 
 
 portInput ( gamepadDown, gamepadUp ) port_ world =
@@ -113,3 +112,12 @@ arrows { up, right, down, left } keys =
 keyToInt : comparable -> Set comparable -> Float
 keyToInt key =
     Set.member key >> boolToFloat
+
+
+boolToFloat : Bool -> Float
+boolToFloat bool =
+    if bool then
+        1
+
+    else
+        0

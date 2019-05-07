@@ -1,32 +1,30 @@
-module Tiled.Read exposing
+module Logic.Tiled.Reader exposing
     ( GetTileset
     , Read(..)
     , Reader
     , combine
-    , commonDimensionArgs
-    , commonDimensionPolyPointsArgs
     , defaultRead
     , tileArgs
     , tileDataWith
     )
 
 import Logic.Entity exposing (EntityID)
-import ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Tiled.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
 import Tiled.Layer
 import Tiled.Level
-import Tiled.Object exposing (Common, Dimension, Gid, PolyPoints)
+import Tiled.Object exposing (Common, CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints, Dimension, Gid, PolyPoints)
 import Tiled.Properties
 import Tiled.Tileset exposing (Tileset)
 
 
 type alias Reader world =
     { objectTile : Read world TileArg
-    , objectPoint : Read world Common
-    , objectRectangle : Read world CommonDimensionArg
-    , objectEllipse : Read world CommonDimensionArg
-    , objectPolygon : Read world CommonDimensionPolyPointsArg
-    , objectPolyLine : Read world CommonDimensionPolyPointsArg
+    , objectPoint : Read world (Common {})
+    , objectRectangle : Read world CommonDimension
+    , objectEllipse : Read world CommonDimension
+    , objectPolygon : Read world CommonDimensionPolyPoints
+    , objectPolyLine : Read world CommonDimensionPolyPoints
     , layerTile : Read world TileDataWith
     , layerImage : Read world Tiled.Layer.ImageData
     , level : Read world Tiled.Level.Level
@@ -84,35 +82,6 @@ type alias TileArg =
     }
 
 
-type alias CommonDimensionArg =
-    { height : Float
-    , id : Int
-    , kind : String
-    , name : String
-    , properties : Tiled.Properties.Properties
-    , rotation : Float
-    , visible : Bool
-    , width : Float
-    , x : Float
-    , y : Float
-    }
-
-
-type alias CommonDimensionPolyPointsArg =
-    { height : Float
-    , id : Int
-    , kind : String
-    , name : String
-    , properties : Tiled.Properties.Properties
-    , rotation : Float
-    , visible : Bool
-    , width : Float
-    , x : Float
-    , y : Float
-    , points : List { x : Float, y : Float }
-    }
-
-
 type alias TileDataWith =
     { getTilesetByGid : GetTileset
     , id : Int
@@ -144,8 +113,8 @@ tileDataWith getTilesetByGid tileData =
     }
 
 
-commonDimensionArgs : Common -> Dimension -> CommonDimensionArg
-commonDimensionArgs a b =
+tileArgs : CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
+tileArgs a c d =
     { id = a.id
     , name = a.name
     , kind = a.kind
@@ -154,39 +123,8 @@ commonDimensionArgs a b =
     , y = a.y
     , rotation = a.rotation
     , properties = a.properties
-    , width = b.width
-    , height = b.height
-    }
-
-
-commonDimensionPolyPointsArgs : Common -> Dimension -> PolyPoints -> CommonDimensionPolyPointsArg
-commonDimensionPolyPointsArgs a b c =
-    { id = a.id
-    , name = a.name
-    , kind = a.kind
-    , visible = a.visible
-    , x = a.x
-    , y = a.y
-    , rotation = a.rotation
-    , properties = a.properties
-    , width = b.width
-    , height = b.height
-    , points = c
-    }
-
-
-tileArgs : Common -> Dimension -> GidInfo -> GetTileset -> TileArg
-tileArgs a b c d =
-    { id = a.id
-    , name = a.name
-    , kind = a.kind
-    , visible = a.visible
-    , x = a.x
-    , y = a.y
-    , rotation = a.rotation
-    , properties = a.properties
-    , width = b.width
-    , height = b.height
+    , width = a.width
+    , height = a.height
     , getTilesetByGid = d
     , gid = c.gid
     , fh = c.fh

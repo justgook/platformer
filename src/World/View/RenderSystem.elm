@@ -6,6 +6,7 @@ import Layer.Object.Animated
 import Layer.Object.Ellipse
 import Layer.Object.Rectangle
 import Layer.Object.Tile
+import Logic.Asset.Sprite as ObjectComponent
 import Logic.System as System exposing (System)
 import Math.Vector2 as Vec2 exposing (vec2)
 import Math.Vector3 exposing (vec3)
@@ -14,7 +15,6 @@ import Physic
 import Physic.AABB
 import Physic.Narrow.AABB
 import Physic.Narrow.Body exposing (Body(..))
-import World.Component.Sprite as ObjectComponent
 
 
 debugPhysics common ( ecs, inLayer ) acc =

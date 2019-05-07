@@ -64,7 +64,7 @@ fragmentShader =
         float time_ = float(time);
 
         vec2 tilesPerUnit = pixelsPerUnit / tileSize;
-        //float px = 1.0 / pixelsPerUnit;
+        float px = 1.0 / pixelsPerUnit;
 
         float color2float(vec4 c) {
             return c.z * 255.0
@@ -101,6 +101,7 @@ fragmentShader =
 
             gl_FragColor.a *= float(tileIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
 
+//            gl_FragColor.rgb = vec3(1.,0., mod(floor(vcoord / px + 0.5), 2.));
             gl_FragColor.rgb *= gl_FragColor.a;
 
         }

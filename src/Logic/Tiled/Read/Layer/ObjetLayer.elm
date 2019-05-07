@@ -1,15 +1,15 @@
-module World.Component.Layer.ObjetLayer exposing (objectLayer, validateAndUpdate)
+module Logic.Tiled.Read.Layer.ObjetLayer exposing (objectLayer, validateAndUpdate)
 
+import Logic.Asset.Layer as Layer exposing (Layer)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
-import ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Tiled.Reader exposing (GetTileset, Read(..), Reader, combine, defaultRead, tileArgs)
+import Logic.Tiled.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Tiled.Util exposing (getTilesetByGid)
 import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Object
-import Tiled.Read exposing (GetTileset, Read(..), Reader, combine, commonDimensionArgs, commonDimensionPolyPointsArgs, defaultRead, tileArgs)
-import Tiled.Read.Util exposing (getTilesetByGid)
 import Tiled.Tileset exposing (Tileset)
-import World.Component.Layer as Layer exposing (Layer)
 
 
 objectLayer :
@@ -57,32 +57,32 @@ objectLayer fix readers info_ objectData start =
                     Tiled.Object.Point common ->
                         readFor .objectPoint common |> ResourceTask.andThen
 
-                    Tiled.Object.Rectangle common dimension ->
-                        commonDimensionArgs common dimension
+                    Tiled.Object.Rectangle info ->
+                        info
                             |> readFor .objectRectangle
                             |> ResourceTask.andThen
 
-                    Tiled.Object.Ellipse common dimension ->
-                        commonDimensionArgs common dimension
+                    Tiled.Object.Ellipse info ->
+                        info
                             |> readFor .objectEllipse
                             |> ResourceTask.andThen
 
-                    Tiled.Object.Polygon common dimension polyPoints ->
-                        commonDimensionPolyPointsArgs common dimension polyPoints
+                    Tiled.Object.Polygon info ->
+                        info
                             |> readFor .objectPolygon
                             |> ResourceTask.andThen
 
-                    Tiled.Object.PolyLine common dimension polyPoints ->
-                        commonDimensionPolyPointsArgs common dimension polyPoints
+                    Tiled.Object.PolyLine info ->
+                        info
                             |> readFor .objectPolyLine
                             |> ResourceTask.andThen
 
-                    Tiled.Object.Tile common dimension gid ->
+                    Tiled.Object.Tile data ->
                         ResourceTask.andThen
                             (\( layerECS, info ) ->
                                 let
                                     args =
-                                        tileArgs common dimension (gidInfo gid) (getTilesetByGid info.tilesets)
+                                        tileArgs data (gidInfo data.gid) (getTilesetByGid info.tilesets)
                                 in
                                 readFor .objectTile args ( layerECS, info )
                             )

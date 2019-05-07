@@ -1,4 +1,4 @@
-module Tiled.Read.AnimationDict exposing (read)
+module Logic.Tiled.Read.AnimationDict exposing (read)
 
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
@@ -6,14 +6,14 @@ import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
 import Logic.Entity as Entity
+import Logic.Tiled.Reader exposing (Read(..), defaultRead)
+import Logic.Tiled.ResourceTask as ResourceTask
+import Logic.Tiled.Util exposing (animationFraming)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
-import ResourceTask
 import Set
 import Tiled.Properties exposing (Property(..))
-import Tiled.Read exposing (Read(..), defaultRead)
 import Tiled.Tileset
-import Tiled.Util exposing (animationFraming)
 
 
 
@@ -150,7 +150,7 @@ animLutPlusImageTask t tileIndex =
     ResourceTask.getTexture t.image
         >> ResourceTask.andThen
             (\tileSetImage ->
-                case Tiled.Util.animation t tileIndex of
+                case Logic.Tiled.Util.animation t tileIndex of
                     Just anim ->
                         let
                             animLutData =

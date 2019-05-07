@@ -1,4 +1,4 @@
-module World.Component.Layer exposing (Layer(..), empty)
+module Logic.Asset.Layer exposing (Layer(..), empty)
 
 import Layer.Common as Common
 import Layer.Image

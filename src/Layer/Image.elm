@@ -3,10 +3,7 @@ module Layer.Image exposing (Model, render, renderNo, renderX, renderY)
 import Defaults exposing (default)
 import Layer.Common exposing (Layer(..), Uniform, mesh, vertexShader)
 import Math.Vector2 exposing (Vec2)
-import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
-import WebGL.Settings as WebGL
-import WebGL.Settings.Blend as Blend
 import WebGL.Texture exposing (Texture)
 
 

@@ -3,7 +3,7 @@ module Tiled.Read.Example exposing (dimensions, positions)
 import AltMath.Vector2 exposing (Vec2, vec2)
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
-import Tiled.Read exposing (Read(..), Reader, defaultRead)
+import Logic.Tiled.Reader exposing (Read(..), Reader, defaultRead)
 
 
 positions : Logic.Component.Spec Vec2 world -> Reader world

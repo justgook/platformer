@@ -4,14 +4,28 @@ import Layer.Common as Common
 import Layer.Image
 import Layer.Tiles
 import Layer.Tiles.Animated
-import World.Component.Layer exposing (Layer(..))
+import Logic.Asset.Layer exposing (Layer(..))
+import Math.Vector2 as Vec2
 
 
 view objRender ({ env, frame } as world) ({ camera, layers } as ecs) =
     let
+        { x, y } =
+            camera.viewportOffset |> Vec2.toRecord
+
+        --, viewportOffset =
+        --                Vec2.fromRecord
+        --                    { x = (round (x * 64) |> toFloat) / 64
+        --                    , y = (round (y * 64) |> toFloat) / 64
+        --                    }
+        --https://www.h-schmidt.net/FloatConverter/IEEE754.html
         common =
             { pixelsPerUnit = camera.pixelsPerUnit
-            , viewportOffset = camera.viewportOffset
+            , viewportOffset =
+                Vec2.fromRecord
+                    { x = round x |> toFloat
+                    , y = round y |> toFloat
+                    }
             , widthRatio = env.widthRatio
             , time = frame
             }

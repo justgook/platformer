@@ -1,4 +1,4 @@
-module ResourceTask exposing
+module Logic.Tiled.ResourceTask exposing
     ( CacheTask
     , ResourceTask
     , Response
@@ -15,6 +15,7 @@ module ResourceTask exposing
     , map2
     , sequence
     , succeed
+    , toTask
     )
 
 import Defaults exposing (default)
@@ -51,6 +52,11 @@ type alias Cache =
 attempt : (Result Error a -> msg) -> ResourceTask a -> Cmd msg
 attempt f =
     Task.map Tuple.first >> Task.attempt f
+
+
+toTask : ResourceTask a -> Task Error a
+toTask =
+    Task.map Tuple.first
 
 
 attemptWithCach : (Result Error ( a, Cache ) -> msg) -> ResourceTask a -> Cmd msg

@@ -1,4 +1,4 @@
-module World.Component.Input exposing (Component, Direction, empty, spec)
+module Logic.Asset.Input exposing (Component, Direction, empty, spec)
 
 import Dict exposing (Dict)
 import Logic.Component

@@ -10,5 +10,8 @@
   "devDependencies": {
     "prepack": "0.2.54",
     "uglify-js": "3.5.3"
+  },
+  "dependencies": {
+    "nipplejs": "^0.8.1"
   }
 }

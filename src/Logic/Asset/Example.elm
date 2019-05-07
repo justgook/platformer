@@ -1,4 +1,4 @@
-module World.Component.Example exposing (dimensionSpec, positionSpec)
+module Logic.Asset.Example exposing (dimensionSpec, positionSpec)
 
 
 positionSpec =

@@ -1,16 +1,16 @@
-module World.Component.Layer.TileLayer exposing (tileLayer)
+module Logic.Tiled.Read.Layer.TileLayer exposing (tileLayer)
 
 import Defaults exposing (default)
 import Dict exposing (Dict)
 import Error exposing (Error(..))
 import Image exposing (Order(..))
 import Image.BMP exposing (encodeWith)
+import Logic.Asset.Layer as Layer exposing (Layer)
+import Logic.Tiled.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Tiled.Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
 import Math.Vector2 exposing (vec2)
-import ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled.Layer exposing (TileData)
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
-import Tiled.Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
-import World.Component.Layer as Layer exposing (Layer)
 
 
 tileLayer : List Tileset -> TileData -> CacheTask -> ResourceTask ( List Layer, List Tileset )
@@ -101,7 +101,7 @@ tileStaticLayerBuilder layerData =
         (\( tileset, data ) ->
             let
                 layerProps =
-                    Tiled.Util.properties layerData
+                    Logic.Tiled.Util.properties layerData
             in
             ResourceTask.getTexture tileset.image
                 >> ResourceTask.andThen
@@ -116,7 +116,7 @@ tileStaticLayerBuilder layerData =
                                         , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                         , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
                                         , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
-                                        , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                        , scrollRatio = Logic.Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                         }
                                 )
                     )
@@ -132,7 +132,7 @@ tileAnimatedLayerBuilder layerData =
         (\( ( tileset, anim ), data ) ->
             let
                 layerProps =
-                    Tiled.Util.properties layerData
+                    Logic.Tiled.Util.properties layerData
 
                 animLutData =
                     animationFraming anim
@@ -156,7 +156,7 @@ tileAnimatedLayerBuilder layerData =
                                                     , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                                     , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
                                                     , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
-                                                    , scrollRatio = Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
+                                                    , scrollRatio = Logic.Tiled.Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                                     , animLUT = animLUT
                                                     , animLength = animLength
                                                     }
@@ -190,7 +190,7 @@ fillTiles tileId info ({ cache, static, animated } as acc) =
             }
 
         Nothing ->
-            case Tiled.Util.animation info (tileId - info.firstgid) of
+            case Logic.Tiled.Util.animation info (tileId - info.firstgid) of
                 Just anim ->
                     { cache = 0 :: cache
                     , static = others 0 static

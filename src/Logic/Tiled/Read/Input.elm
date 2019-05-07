@@ -1,11 +1,11 @@
-module Tiled.Read.Input exposing (read)
+module Logic.Tiled.Read.Input exposing (read)
 
 import Dict exposing (Dict)
 import Logic.Entity as Entity exposing (EntityID)
+import Logic.Tiled.Reader exposing (Read(..), defaultRead)
 import Parser exposing ((|.), (|=))
 import Set
 import Tiled.Properties exposing (Property(..))
-import Tiled.Read exposing (Read(..), defaultRead)
 
 
 

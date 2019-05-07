@@ -1,24 +1,24 @@
-module Tiled.Read.Camera exposing (read, readId)
+module Logic.Tiled.Read.Camera exposing (read, readId)
 
 import Defaults exposing (default)
 import Dict
+import Logic.Asset.Camera as Camera
+import Logic.Tiled.Reader exposing (Read(..), defaultRead)
+import Logic.Tiled.Util exposing (levelProps)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
 import Set
-import Tiled.Read exposing (Read(..), defaultRead)
-import Tiled.Util exposing (levelProps)
-import World.Component.Camera as Component
 
 
 readId spec_ =
     let
         baseRead =
-            read_ Component.emptyWithId spec_
+            read_ Camera.emptyWithId spec_
     in
     { baseRead
         | objectTile =
             Sync
-                (\{ x, y, properties } ( entityID, world ) ->
+                (\{ properties } ( entityID, world ) ->
                     properties
                         |> Dict.filter (\a _ -> String.startsWith "camera" a)
                         |> Dict.keys
@@ -43,7 +43,7 @@ readId spec_ =
 
 
 read =
-    read_ Component.empty
+    read_ Camera.empty
 
 
 read_ empty_ spec_ =

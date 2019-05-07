@@ -1,12 +1,7 @@
-module World.Component.Camera exposing (Any, Camera, Follow, empty, emptyWithId, spec)
+module Logic.Asset.Camera exposing (Any, Camera, Follow, empty, emptyWithId, spec)
 
 import Defaults exposing (default)
-import Dict
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Parser exposing ((|.), (|=), Parser)
-import Set
-import Tiled.Read exposing (Read(..), defaultRead)
-import Tiled.Util exposing (levelProps)
+import Math.Vector2 as Vec2 exposing (Vec2)
 
 
 type alias Any a =

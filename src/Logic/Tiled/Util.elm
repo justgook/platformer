@@ -1,42 +1,61 @@
-module Tiled.Util exposing (animation, animationFraming, common, firstGid, hexColor2Vec3, levelProps, objFix, properties, scrollRatio, tilesetById, tilesets, updateTileset)
+module Logic.Tiled.Util exposing (animation, animationFraming, common, extractObjectData, firstGid, getTilesetByGid, hexColor2Vec3, levelProps, objFix, properties, scrollRatio, tilesetById, tilesets, updateTileset)
 
 import Defaults exposing (default)
 import Dict
+import Error exposing (Error(..))
+import Logic.Tiled.Reader exposing (GetTileset)
+import Logic.Tiled.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Object
 import Tiled.Properties exposing (Properties, Property(..))
-import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation)
+import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset(..))
+
+
+getTilesetByGid : List Tileset -> GetTileset
+getTilesetByGid tilesets_ gid =
+    case tilesetById tilesets_ gid of
+        Just (Tiled.Tileset.Source info) ->
+            ResourceTask.getTileset info.source info.firstgid
+
+        Just t ->
+            ResourceTask.succeed t
+
+        Nothing ->
+            ResourceTask.fail (Error 5001 ("Not found Tileset for GID:" ++ String.fromInt gid))
+
+
+extractObjectData gid t_ =
+    case t_ of
+        Embedded t ->
+            Dict.get (gid - t.firstgid) t.tiles
+                |> Maybe.andThen .objectgroup
+
+        _ ->
+            Nothing
 
 
 objFix levelHeight obj =
     case obj of
-        Tiled.Object.Point c ->
-            --Tiled.Object.Point common
+        Tiled.Object.Point _ ->
             obj
 
-        Tiled.Object.Rectangle c dimension ->
-            --Tiled.Object.Rectangle common dimension
+        Tiled.Object.Rectangle _ ->
             obj
 
-        Tiled.Object.Ellipse c dimension ->
-            --Tiled.Object.Ellipse common dimension
+        Tiled.Object.Ellipse _ ->
             obj
 
-        Tiled.Object.Polygon c dimension polyPoints ->
-            --Tiled.Object.Polygon common dimension polyPoints
+        Tiled.Object.Polygon _ ->
             obj
 
-        Tiled.Object.PolyLine c dimension polyPoints ->
-            --Tiled.Object.PolyLine common dimension polyPoints
+        Tiled.Object.PolyLine _ ->
             obj
 
-        Tiled.Object.Tile c dimension gid ->
+        Tiled.Object.Tile c ->
             Tiled.Object.Tile
-                { c | y = levelHeight - c.y + dimension.height / 2, x = c.x + dimension.width / 2 }
-                dimension
-                gid
+                { c | y = levelHeight - c.y + c.height / 2, x = c.x + c.width / 2 }
 
 
 common level =

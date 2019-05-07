@@ -1,14 +1,28 @@
-module World.Create exposing (init)
+module Logic.Tiled.Task exposing (load)
 
-import Logic.GameFlow as Flow
+import Error exposing (Error)
+import Logic.Asset.Layer
 import Logic.Tiled.Read.Layer.ImageLayer exposing (imageLayer)
 import Logic.Tiled.Read.Layer.ObjetLayer exposing (objectLayer)
 import Logic.Tiled.Read.Layer.TileLayer exposing (tileLayer)
-import Logic.Tiled.Reader exposing (combine, tileDataWith)
+import Logic.Tiled.Reader exposing (Reader, combine, tileDataWith)
 import Logic.Tiled.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Tiled.Util exposing (getTilesetByGid, objFix)
+import Task exposing (Task)
 import Tiled.Layer
-import World exposing (World(..))
+
+
+load :
+    String
+    -> { world | layers : List Logic.Asset.Layer.Layer }
+    -> List (Reader { world | layers : List Logic.Asset.Layer.Layer })
+    --Replace to Task Error world
+    -> Task Error { world | layers : List Logic.Asset.Layer.Layer }
+load levelUrl empty readers =
+    ResourceTask.init
+        |> ResourceTask.getLevel levelUrl
+        |> ResourceTask.andThen (init empty readers)
+        |> ResourceTask.toTask
 
 
 init emptyECS readers level start =
@@ -69,30 +83,4 @@ init emptyECS readers level start =
                         )
                     )
     in
-    ResourceTask.map
-        (\{ layers, ecs } ->
-            World
-                { frame = 0
-                , runtime_ = 0
-                , flow = Flow.Running
-
-                --                , flow = Flow.SlowMotion { frames = 1000, fps = 3 }
-                , env =
-                    { height = 0
-                    , width = 0
-                    , devicePixelRatio = 0
-                    , widthRatio = 0
-                    }
-                }
-                { ecs
-                    | layers =
-                        layers
-                            |> List.reverse
-                }
-        )
-        layersTask
-
-
-
---<iframe src="https://ghbtns.com/github-btn.html?user=justgook&repo=platformer&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
---<iframe src="https://ghbtns.com/github-btn.html?user=justgook&repo=platformer&type=star&count=true" frameborder="0" scrolling="0" width="170px" height="20px"></iframe>
+    ResourceTask.map (\{ layers, ecs } -> { ecs | layers = layers |> List.reverse }) layersTask
