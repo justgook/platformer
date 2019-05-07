@@ -1,0 +1,25 @@
+{
+  "type": "package",
+  "name": "justgook/elm-tiled",
+  "summary": "A library for building decoders for Tiled levels.",
+  "license": "BSD-3-Clause",
+  "version": "1.0.0",
+  "exposed-modules": [
+    "Tiled",
+    "Tiled.Level",
+    "Tiled.Layer",
+    "Tiled.Tileset",
+    "Tiled.Object",
+    "Tiled.Properties"
+  ],
+  "elm-version": "0.19.0 <= v < 0.20.0",
+  "dependencies": {
+    "NoRedInk/elm-json-decode-pipeline": "1.0.0 <= v < 2.0.0",
+    "elm/core": "1.0.0 <= v < 2.0.0",
+    "elm/json": "1.1.2 <= v < 2.0.0",
+    "elm-community/json-extra": "4.0.0 <= v < 5.0.0"
+  },
+  "test-dependencies": {
+    "elm-explorations/test": "1.2.1 <= v < 2.0.0"
+  }
+}
