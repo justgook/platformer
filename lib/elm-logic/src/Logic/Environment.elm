@@ -1,4 +1,4 @@
-module Environment exposing (Environment, Message, init, style, subscriptions, update)
+module Logic.Environment exposing (Environment, Message, empty, init, style, subscriptions, update)
 
 import Browser.Dom as Browser
 import Browser.Events as Events
@@ -15,12 +15,21 @@ type alias Environment =
     }
 
 
+empty : Environment
+empty =
+    { height = 0
+    , width = 0
+    , devicePixelRatio = 0
+    , widthRatio = 0
+    }
+
+
 type Message
     = Resize Int Int
 
 
-subscriptions : Environment -> Sub Message
-subscriptions model =
+subscriptions : Sub Message
+subscriptions =
     Sub.batch
         [ Events.onResize Resize
         ]

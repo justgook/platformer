@@ -8,7 +8,7 @@ import Logic.Asset.Layer exposing (Layer(..))
 import Math.Vector2 as Vec2
 
 
-view objRender ({ env, frame } as world) ({ camera, layers } as ecs) =
+view objRender ({ env, frame, camera, layers } as world) =
     let
         { x, y } =
             camera.viewportOffset |> Vec2.toRecord
@@ -53,5 +53,5 @@ view objRender ({ env, frame } as world) ({ camera, layers } as ecs) =
                         [ Common.Layer common info |> Layer.Image.renderNo ]
 
                     Object info ->
-                        objRender common ( ecs, info )
+                        objRender common ( world, info )
             )

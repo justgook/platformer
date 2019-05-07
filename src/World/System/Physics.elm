@@ -8,15 +8,15 @@ import Physic.AABB
 import Physic.Narrow.AABB as AABB
 
 
-body { get, set } ( common, ecs ) =
-    ( common, set (Physic.update 1 (get ecs)) ecs )
+body { get, set } ecs =
+    set (Physic.update 1 (get ecs)) ecs
 
 
-aabb { get, set } ( common, ecs ) =
-    ( common, set (Physic.AABB.simulate 1 (get ecs)) ecs )
+aabb { get, set } ecs =
+    set (Physic.AABB.simulate 1 (get ecs)) ecs
 
 
-applyInput force inputSpec physicsSpec ( common, ecs ) =
+applyInput force inputSpec physicsSpec ecs =
     let
         engine =
             physicsSpec.get ecs
@@ -49,9 +49,7 @@ applyInput force inputSpec physicsSpec ( common, ecs ) =
                 (bindSpecSecond inputSpec)
                 (bindCreate physicsComps ecs)
     in
-    ( common
-    , ecs |> physicsSpec.set { engine | indexed = updatedPhysicsComps |> Logic.Entity.toDict }
-    )
+    ecs |> physicsSpec.set { engine | indexed = updatedPhysicsComps |> Logic.Entity.toDict }
 
 
 bindSpecFirst =

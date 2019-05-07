@@ -1,8 +1,7 @@
-port module Main exposing (main)
+port module Main exposing (main, view)
 
 import AltMath.Vector2 exposing (vec2)
 import Defaults exposing (default)
-import Game exposing (World, document)
 import Json.Decode as Decode
 import Logic.Asset.AnimationDict
 import Logic.Asset.Camera
@@ -10,7 +9,11 @@ import Logic.Asset.Input
 import Logic.Asset.Layer
 import Logic.Asset.Physics
 import Logic.Asset.Sprite
+import Logic.Component
 import Logic.Entity
+import Logic.Environment as Environment exposing (Environment)
+import Logic.GameFlow as Flow
+import Logic.Launcher as Launcher exposing (Launcher, document)
 import Logic.Tiled.Read.AnimationDict
 import Logic.Tiled.Read.Camera
 import Logic.Tiled.Read.Input
@@ -28,11 +31,29 @@ import World.View.Layer
 import World.View.RenderSystem
 
 
+read =
+    [ Logic.Tiled.Read.Sprite.read Logic.Asset.Sprite.spec
+    , Logic.Tiled.Read.AnimationDict.read Logic.Asset.AnimationDict.spec
+    , Logic.Tiled.Read.Input.read Logic.Asset.Input.spec
+    , Logic.Tiled.Read.Camera.readId Logic.Asset.Camera.spec
+    , aabb.read
+    ]
+
+
+type alias OwnWorld =
+    { camera : Logic.Asset.Camera.Follow
+    , layers : List Logic.Asset.Layer.Layer
+    , sprites : Logic.Component.Set Logic.Asset.Sprite.Sprite
+    , physics : AABB.World Int
+    , animations : Logic.Component.Set Logic.Asset.AnimationDict.AnimationDict
+    , direction : Logic.Asset.Input.Direction
+    }
+
+
+main : Launcher OwnWorld
 main =
     document
-        { world = world
-        , update = update
-        , read = read
+        { update = update
         , view = view
         , subscriptions = keyboard
         , init =
@@ -48,30 +69,13 @@ main =
 
 
 
---https://opengameart.org/content/terrain-transitions
+-- Not works with intellij elm plugin
+--view : List (VirtualDom.Attribute msg) -> Launcher.World OwnWorld -> List (VirtualDom.Node msg)
 
 
-aabb =
-    let
-        empty =
-            Logic.Asset.Physics.empty
-    in
-    { spec = Logic.Asset.Physics.spec
-    , view = World.View.RenderSystem.debugPhysicsAABB
-    , empty = { empty | gravity = { x = 0, y = -0.5 } }
-    , system = World.System.Physics.aabb Logic.Asset.Physics.spec
-    , read = Logic.Tiled.Read.Physics.read Logic.Asset.Physics.spec
-    , getPosition = AABB.getPosition
-    , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
-    }
-
-
-view style common ecs =
-    [ World.View.Layer.view objRender common ecs
+view style world_ =
+    [ World.View.Layer.view objRender world_
         |> WebGL.toHtmlWith default.webGLOption style
-
-    --    , Nipple.stylesheet
-    --    , Nipple.container style Nipple.dir
     ]
 
 
@@ -86,31 +90,42 @@ objRender common ( ecs, objLayer ) =
             ( ecs, objLayer )
 
 
-read =
-    [ Logic.Tiled.Read.Sprite.read Logic.Asset.Sprite.spec
-    , Logic.Tiled.Read.AnimationDict.read Logic.Asset.AnimationDict.spec
-    , Logic.Tiled.Read.Input.read Logic.Asset.Input.spec
-    , Logic.Tiled.Read.Camera.readId Logic.Asset.Camera.spec
-    , aabb.read
-    ]
-
-
+world : Launcher.World OwnWorld
 world =
-    { direction = Logic.Asset.Input.empty
+    { env = Environment.empty
+    , frame = 0
+    , runtime_ = 0
+    , flow = Flow.Running
+    , layers = Logic.Asset.Layer.empty
+    , camera = Logic.Asset.Camera.emptyWithId
     , sprites = Logic.Asset.Sprite.empty
     , animations = Logic.Asset.AnimationDict.empty
+    , direction = Logic.Asset.Input.empty
     , physics = aabb.empty
-    , camera = Logic.Asset.Camera.emptyWithId
-    , layers = Logic.Asset.Layer.empty
     }
 
 
 update world_ =
     world_
-        |> World.System.Physics.applyInput (vec2 1 8) Logic.Asset.Input.spec aabb.spec
+        |> World.System.Physics.applyInput (vec2 3 8) Logic.Asset.Input.spec aabb.spec
         |> aabb.system
         |> World.System.AnimationChange.sideScroll aabb.spec Logic.Asset.Sprite.spec Logic.Asset.AnimationDict.spec
         |> World.System.Camera.follow Logic.Asset.Camera.spec getPosById
+
+
+aabb =
+    let
+        empty =
+            Logic.Asset.Physics.empty
+    in
+    { spec = Logic.Asset.Physics.spec
+    , empty = { empty | gravity = { x = 0, y = -0.5 } }
+    , view = World.View.RenderSystem.debugPhysicsAABB
+    , system = World.System.Physics.aabb Logic.Asset.Physics.spec
+    , read = Logic.Tiled.Read.Physics.read Logic.Asset.Physics.spec
+    , getPosition = AABB.getPosition
+    , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
+    }
 
 
 getPosById id =

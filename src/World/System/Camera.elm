@@ -7,7 +7,7 @@ import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 --http://www.gamasutra.com/blogs/ItayKeren/20150511/243083/Scroll_Back_The_Theory_and_Practice_of_Cameras_in_SideScrollers.php
 
 
-follow spec getPos ( common, ecs ) =
+follow spec getPos ecs =
     let
         cam =
             spec.get ecs
@@ -17,14 +17,14 @@ follow spec getPos ( common, ecs ) =
 
         viewportOffset =
             Vec2.fromRecord
-                { x = target.x - cam.pixelsPerUnit / 2 * common.env.widthRatio
+                { x = target.x - cam.pixelsPerUnit / 2 * ecs.env.widthRatio
                 , y = target.y - cam.pixelsPerUnit / 2
                 }
 
         --        _ =
         --            Debug.log "viewportOffset" viewportOffset
     in
-    ( common, spec.set { cam | viewportOffset = viewportOffset } ecs )
+    spec.set { cam | viewportOffset = viewportOffset } ecs
 
 
 followX spec getPos ( common, ecs ) =

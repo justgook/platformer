@@ -9,7 +9,7 @@ import Physic.AABB
 import Physic.Narrow.AABB
 
 
-sideScroll physicsSpec objSpec animSpec ( common, ecs ) =
+sideScroll physicsSpec objSpec animSpec ecs =
     let
         engine =
             physicsSpec.get ecs
@@ -68,7 +68,7 @@ sideScroll physicsSpec objSpec animSpec ( common, ecs ) =
                                                 , mirror = a.mirror
                                                 , animLUT = a.animLUT
                                                 , animLength = a.animLength
-                                                , start = common.frame |> toFloat
+                                                , start = ecs.frame |> toFloat
                                             }
                                         )
                                     |> setAnim ( key, anim )
@@ -81,7 +81,7 @@ sideScroll physicsSpec objSpec animSpec ( common, ecs ) =
                 (delmeSpecSecond animSpec)
                 (delmeCreate physicsComps ecs)
     in
-    ( common, newEcs )
+    newEcs
 
 
 nonZero a b =

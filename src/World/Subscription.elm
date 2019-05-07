@@ -30,23 +30,23 @@ keyboard world =
         ]
 
 
-onKeyDown ( world1, { direction } as world2 ) =
+onKeyDown ({ direction } as world) =
     Decode.field "key" Decode.string
         |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.insert key direction.pressed
-                    |> updateKeys key ( world1, world2 )
+                    |> updateKeys key world
             )
 
 
-onKeyUp ( world1, { direction } as world2 ) =
+onKeyUp ({ direction } as world) =
     Decode.field "key" Decode.string
         |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.remove key direction.pressed
-                    |> updateKeys key ( world1, world2 )
+                    |> updateKeys key world
             )
 
 
@@ -59,8 +59,8 @@ isRegistered direction key =
         Decode.fail "not registered key"
 
 
-updateKeys keyChanged ( world1, { direction } as world2 ) pressed =
-    if world2.direction.pressed == pressed then
+updateKeys keyChanged ({ direction } as world) pressed =
+    if world.direction.pressed == pressed then
         Decode.fail "nothing chnaged"
 
     else
@@ -87,14 +87,12 @@ updateKeys keyChanged ( world1, { direction } as world2 ) pressed =
                 { direction | comps = newComps }
         in
         Decode.succeed
-            ( world1
-            , { world2
+            { world
                 | direction =
                     { updatedDirection
                         | pressed = pressed
                     }
-              }
-            )
+            }
 
 
 arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Float, y : Float }

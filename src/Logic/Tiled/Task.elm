@@ -12,12 +12,15 @@ import Task exposing (Task)
 import Tiled.Layer
 
 
-load :
-    String
-    -> { world | layers : List Logic.Asset.Layer.Layer }
-    -> List (Reader { world | layers : List Logic.Asset.Layer.Layer })
-    --Replace to Task Error world
-    -> Task Error { world | layers : List Logic.Asset.Layer.Layer }
+
+--load :
+--    String
+--    -> { world | layers : List Logic.Asset.Layer.Layer }
+--    -> List (Reader { world | layers : List Logic.Asset.Layer.Layer })
+--    --Replace to Task Error world
+--    -> Task Error { world | layers : List Logic.Asset.Layer.Layer }
+
+
 load levelUrl empty readers =
     ResourceTask.init
         |> ResourceTask.getLevel levelUrl
