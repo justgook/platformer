@@ -29,7 +29,7 @@ step maybeY target cam =
 tween y cam =
     let
         newY =
-            (cam.viewportOffset.y + y) / 2
+            (cam.viewportOffset.y * 3 + y) / 4
 
         distance =
             cam.viewportOffset.y - newY
