@@ -1,2 +1,3 @@
 bundle.js linguist-generated=true
 gh-pages/* linguist-detectable=false
+*.html linguist-vendored
