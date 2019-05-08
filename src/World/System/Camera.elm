@@ -1,6 +1,6 @@
 module World.System.Camera exposing (autoScroll, follow, followX)
 
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 
 
 

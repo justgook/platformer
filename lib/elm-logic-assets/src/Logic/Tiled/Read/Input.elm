@@ -8,25 +8,19 @@ import Set
 import Tiled.Properties exposing (Property(..))
 
 
-
---direction :
---    EcsSpec
---        { a
---            | direction :
---                { comps : Logic.Component.Set Component
---                , registered : Dict String EntityID
---                , pressed : Set.Set String
---                }
---        }
---        Component
---        { comps : Logic.Component.Set Component
---        , registered : Dict String EntityID
---        , pressed : Set.Set String
---        }
-
-
 read spec =
     let
+        compsSpec =
+            { get = spec.get >> .comps
+            , set =
+                \comps world ->
+                    let
+                        dir =
+                            spec.get world
+                    in
+                    spec.set { dir | comps = comps } world
+            }
+
         filterKeys props ( entityId, registered ) =
             let
                 emptyComp =
@@ -85,12 +79,15 @@ read spec =
             Sync
                 (\{ x, y, properties } ( entityId, world ) ->
                     let
-                        ( comp, registered ) =
-                            filterKeys properties ( entityId, world.direction.registered )
-
                         dir =
-                            world.direction
+                            spec.get world
+
+                        ( comp, registered ) =
+                            filterKeys properties ( entityId, dir.registered )
+
+                        newWorld =
+                            spec.set { dir | registered = registered } world
                     in
-                    Entity.with ( spec, comp ) ( entityId, { world | direction = { dir | registered = registered } } )
+                    Entity.with ( compsSpec, comp ) ( entityId, newWorld )
                 )
     }

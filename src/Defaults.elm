@@ -1,5 +1,6 @@
 module Defaults exposing (default)
 
+import AltMath.Vector2 as AVec2
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import WebGL exposing (Shader)
@@ -10,7 +11,7 @@ import WebGL.Texture as Texture exposing (Texture, linear, nearest, nonPowerOfTw
 
 default =
     { pixelsPerUnit = 160
-    , viewportOffset = vec2 0 0
+    , viewportOffset = AVec2.vec2 0 0
     , transparentcolor = vec3 0 0 0
     , scrollRatio = 1
     , webGLOption = webGLOption

@@ -1,11 +1,11 @@
 module Logic.Tiled.Read.Sprite exposing (read)
 
 import Defaults exposing (default)
-import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
 import Logic.Asset.Sprite exposing (Sprite(..))
 import Logic.Entity as Entity
+import Logic.Launcher exposing (Error(..))
 import Logic.Tiled.Reader exposing (Read(..), defaultRead)
 import Logic.Tiled.ResourceTask as ResourceTask
 import Logic.Tiled.Util exposing (animationFraming, hexColor2Vec3)

@@ -11,7 +11,7 @@ import Math.Vector2 as Vec2
 view objRender ({ env, frame, camera, layers } as world) =
     let
         { x, y } =
-            camera.viewportOffset |> Vec2.toRecord
+            camera.viewportOffset
 
         --, viewportOffset =
         --                Vec2.fromRecord

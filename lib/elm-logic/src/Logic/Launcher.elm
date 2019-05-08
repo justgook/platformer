@@ -1,31 +1,32 @@
-port module Logic.Launcher exposing (Launcher, World, document, worker)
+port module Logic.Launcher exposing (Error(..), Launcher, World, document, worker)
 
 --import World.Component.Layer as Layer exposing (Layer)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
-import Error exposing (Error(..))
 import Json.Decode as Json
-import Logic.Environment as Environment exposing (Environment)
 import Logic.GameFlow
 import Task exposing (Task)
 import VirtualDom
 
 
+type Error
+    = Error Int String
+
+
 type alias World world =
-    Logic.GameFlow.Model { world | env : Environment }
+    Logic.GameFlow.Model world
 
 
 type Message world
-    = Environment Environment.Message
-    | Frame Float
+    = Frame Float
     | Subscription (World world)
     | Resource (Model world)
     | Event (World world -> World world)
 
 
 type Model world
-    = Loading Environment
+    = Loading
     | Succeed (World world)
     | Fail Error
 
@@ -38,12 +39,11 @@ type alias Launcher world =
 
 
 document :
-    { init : Json.Value -> Task.Task Error.Error (World world)
+    { init : Json.Value -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> World world
     , view :
-        List (VirtualDom.Attribute msg)
-        -> World world
+        World world
         -> List (VirtualDom.Node (World world -> World world))
     }
     -> Launcher world
@@ -57,7 +57,7 @@ document { init, update, view, subscriptions } =
 
 
 worker :
-    { init : Json.Value -> Task.Task Error.Error (World world)
+    { init : Json.Value -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> World world
     }
@@ -71,14 +71,11 @@ worker { init, update, subscriptions } =
 
 
 init_ :
-    (Json.Value -> Task.Task Error.Error (World world))
+    (Json.Value -> Task.Task Error (World world))
     -> Json.Value
     -> ( Model world1, Cmd (Message world) )
 init_ init flags =
     let
-        ( env, envMsg ) =
-            Environment.init flags
-
         initTask =
             init flags
                 |> Task.attempt
@@ -91,11 +88,8 @@ init_ init flags =
                                 Resource (Fail e)
                     )
     in
-    ( Loading env
-    , Cmd.batch
-        [ envMsg |> Cmd.map Environment
-        , initTask
-        ]
+    ( Loading
+    , initTask
     )
 
 
@@ -106,14 +100,13 @@ subscriptions_ :
 subscriptions_ subscriptions model_ =
     case model_ of
         Succeed world ->
-            [ Sub.map Environment Environment.subscriptions
-            , Browser.onAnimationFrameDelta Frame
+            [ Browser.onAnimationFrameDelta Frame
             , subscriptions world |> Sub.map Subscription
             ]
                 |> Sub.batch
 
-        Loading _ ->
-            Sub.map Environment Environment.subscriptions
+        Loading ->
+            Sub.none
 
         Fail _ ->
             Sub.none
@@ -139,14 +132,8 @@ update_ update msg model =
         ( Event f, Succeed world ) ->
             ( Succeed (f world), Cmd.none )
 
-        ( Environment info, Loading tmpEnv ) ->
-            ( Loading (Environment.update info tmpEnv), Cmd.none )
-
-        ( Environment info, Succeed world ) ->
-            ( Succeed { world | env = Environment.update info world.env }, Cmd.none )
-
-        ( Resource (Succeed world), Loading tmpEnv ) ->
-            ( Succeed { world | env = tmpEnv }, start () )
+        ( Resource (Succeed world), Loading ) ->
+            ( Succeed world, start () )
 
         ( Resource (Succeed world), Succeed _ ) ->
             ( Succeed world, Cmd.none )
@@ -156,8 +143,7 @@ update_ update msg model =
 
 
 view_ :
-    (List (VirtualDom.Attribute msg)
-     -> World world
+    (World world
      -> List (VirtualDom.Node (World world -> World world))
     )
     -> Model world
@@ -170,11 +156,11 @@ view_ view model =
         Succeed world ->
             { title = "Success"
             , body =
-                view (Environment.style world.env) world
+                view world
                     |> List.map (VirtualDom.map Event)
             }
 
-        Loading _ ->
+        Loading ->
             { title = "Loading", body = [] }
 
         Fail (Error code e) ->

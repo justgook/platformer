@@ -2,7 +2,7 @@ module Logic.Tiled.Util exposing (animation, animationFraming, common, extractOb
 
 import Defaults exposing (default)
 import Dict
-import Error exposing (Error(..))
+import Logic.Launcher exposing (Error(..))
 import Logic.Tiled.Reader exposing (GetTileset)
 import Logic.Tiled.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)

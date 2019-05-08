@@ -20,9 +20,9 @@ module Logic.Tiled.ResourceTask exposing
 
 import Defaults exposing (default)
 import Dict exposing (Dict)
-import Error exposing (Error(..))
 import Http
 import Json.Decode as Decode exposing (Decoder)
+import Logic.Launcher exposing (Error(..))
 import Task exposing (Task)
 import Tiled.Level
 import Tiled.Tileset

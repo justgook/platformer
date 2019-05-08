@@ -1,11 +1,11 @@
 module Logic.Tiled.Read.Camera exposing (read, readId)
 
+import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Defaults exposing (default)
 import Dict
 import Logic.Asset.Camera as Camera
 import Logic.Tiled.Reader exposing (Read(..), defaultRead)
 import Logic.Tiled.Util exposing (levelProps)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
 import Set
 
@@ -13,7 +13,7 @@ import Set
 readId spec_ =
     let
         baseRead =
-            read_ Camera.emptyWithId spec_
+            read spec_
     in
     { baseRead
         | objectTile =
@@ -30,9 +30,7 @@ readId spec_ =
                                             cam =
                                                 spec_.get w
                                         in
-                                        ( eID
-                                        , spec_.set { cam | id = eID } w
-                                        )
+                                        ( eID, spec_.set { cam | id = eID } w )
 
                                     _ ->
                                         acc
@@ -42,11 +40,7 @@ readId spec_ =
     }
 
 
-read =
-    read_ Camera.empty
-
-
-read_ empty_ spec_ =
+read spec_ =
     { defaultRead
         | level =
             Sync
@@ -65,8 +59,11 @@ read_ empty_ spec_ =
                                                 default.viewportOffset
                                                     |> Vec2.getX
                                                     |> prop.float "offset.y"
+
+                                            cam =
+                                                spec_.get world
                                         in
-                                        { empty_
+                                        { cam
                                             | pixelsPerUnit = prop.float "pixelsPerUnit" default.pixelsPerUnit
                                             , viewportOffset = vec2 x y
                                         }

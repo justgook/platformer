@@ -1,6 +1,7 @@
-module World.System.Physics exposing (aabb, applyInput, body)
+module World.System.Physics exposing (aabb, applyInput)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
+import Logic.Asset.Input as Input
 import Logic.Entity
 import Logic.System
 import Physic
@@ -8,21 +9,20 @@ import Physic.AABB
 import Physic.Narrow.AABB as AABB
 
 
-body { get, set } ecs =
-    set (Physic.update 1 (get ecs)) ecs
-
-
 aabb { get, set } ecs =
     set (Physic.AABB.simulate 1 (get ecs)) ecs
 
 
-applyInput force inputSpec physicsSpec ecs =
+applyInput force inputSpec_ physicsSpec ecs =
     let
         engine =
             physicsSpec.get ecs
 
         physicsComps =
             engine |> Physic.AABB.getIndexed |> Logic.Entity.fromList
+
+        inputSpec =
+            Input.getComps inputSpec_
 
         ( updatedPhysicsComps, _ ) =
             Logic.System.step2
@@ -49,7 +49,7 @@ applyInput force inputSpec physicsSpec ecs =
                 (bindSpecSecond inputSpec)
                 (bindCreate physicsComps ecs)
     in
-    ecs |> physicsSpec.set { engine | indexed = updatedPhysicsComps |> Logic.Entity.toDict }
+    physicsSpec.set { engine | indexed = updatedPhysicsComps |> Logic.Entity.toDict } ecs
 
 
 bindSpecFirst =

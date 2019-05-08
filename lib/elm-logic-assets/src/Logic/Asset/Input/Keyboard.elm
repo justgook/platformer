@@ -1,4 +1,4 @@
-module World.Subscription exposing (keyboard, portInput)
+module Logic.Asset.Input.Keyboard exposing (sub)
 
 import Array
 import Browser.Events
@@ -8,45 +8,38 @@ import Logic.Entity as Entity exposing (EntityID)
 import Set exposing (Set)
 
 
-portInput ( gamepadDown, gamepadUp ) port_ world =
-    --    https://github.com/jeromeetienne/virtualjoystick.js
-    gamepadDown
-        (\income ->
-            let
-                _ =
-                    income
-                        |> Decode.decodeValue Decode.string
-
-                --                        |> Debug.log "gamePad msg"
-            in
-            world
-        )
-
-
-keyboard world =
+sub spec world =
     Sub.batch
-        [ Browser.Events.onKeyDown (onKeyDown world)
-        , Browser.Events.onKeyUp (onKeyUp world)
+        [ Browser.Events.onKeyDown (onKeyDown spec world)
+        , Browser.Events.onKeyUp (onKeyUp spec world)
         ]
 
 
-onKeyDown ({ direction } as world) =
+onKeyDown spec world =
+    let
+        direction =
+            spec.get world
+    in
     Decode.field "key" Decode.string
         |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.insert key direction.pressed
-                    |> updateKeys key world
+                    |> updateKeys spec key world
             )
 
 
-onKeyUp ({ direction } as world) =
+onKeyUp spec world =
+    let
+        direction =
+            spec.get world
+    in
     Decode.field "key" Decode.string
         |> Decode.andThen (isRegistered direction)
         |> Decode.andThen
             (\key ->
                 Set.remove key direction.pressed
-                    |> updateKeys key world
+                    |> updateKeys spec key world
             )
 
 
@@ -59,9 +52,13 @@ isRegistered direction key =
         Decode.fail "not registered key"
 
 
-updateKeys keyChanged ({ direction } as world) pressed =
-    if world.direction.pressed == pressed then
-        Decode.fail "nothing chnaged"
+updateKeys { get, set } keyChanged world pressed =
+    let
+        direction =
+            get world
+    in
+    if direction.pressed == pressed then
+        Decode.fail "Nothing change"
 
     else
         let
@@ -86,13 +83,7 @@ updateKeys keyChanged ({ direction } as world) pressed =
             updatedDirection =
                 { direction | comps = newComps }
         in
-        Decode.succeed
-            { world
-                | direction =
-                    { updatedDirection
-                        | pressed = pressed
-                    }
-            }
+        Decode.succeed (set { updatedDirection | pressed = pressed } world)
 
 
 arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Float, y : Float }

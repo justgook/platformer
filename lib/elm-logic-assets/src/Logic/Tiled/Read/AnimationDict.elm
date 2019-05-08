@@ -2,10 +2,10 @@ module Logic.Tiled.Read.AnimationDict exposing (read)
 
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
-import Error exposing (Error(..))
 import Image
 import Image.BMP exposing (encodeWith)
 import Logic.Entity as Entity
+import Logic.Launcher exposing (Error(..))
 import Logic.Tiled.Reader exposing (Read(..), defaultRead)
 import Logic.Tiled.ResourceTask as ResourceTask
 import Logic.Tiled.Util exposing (animationFraming)

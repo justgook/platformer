@@ -1,4 +1,4 @@
-module Logic.Asset.Input exposing (Component, Direction, empty, spec)
+module Logic.Asset.Input exposing (Component, Direction, empty, getComps, spec)
 
 import Dict exposing (Dict)
 import Logic.Component
@@ -31,12 +31,18 @@ empty =
 
 
 spec =
-    { get = .direction >> .comps
+    { get = .input
+    , set = \comps world -> { world | input = comps }
+    }
+
+
+getComps spec_ =
+    { get = spec_.get >> .comps
     , set =
         \comps world ->
             let
                 dir =
-                    world.direction
+                    spec_.get world
             in
-            { world | direction = { dir | comps = comps } }
+            spec_.set { dir | comps = comps } world
     }
