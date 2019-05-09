@@ -29,7 +29,7 @@ linear_ speed value cam =
         distance =
             cam.viewportOffset.y - value
 
-        newDistance =
+        speed_ =
             if distance < 0 then
                 -speed
 
@@ -37,9 +37,9 @@ linear_ speed value cam =
                 speed
 
         newY =
-            cam.viewportOffset.y - newDistance
+            cam.viewportOffset.y - speed_
     in
-    if (distance * distance) > 1 && ((0 < distance && newY < cam.viewportOffset.y) || (0 > distance && newY > cam.viewportOffset.y)) then
+    if (distance * distance) > speed * speed && ((0 < distance && newY < cam.viewportOffset.y) || (0 > distance && newY > cam.viewportOffset.y)) then
         { cam
             | viewportOffset = { x = cam.viewportOffset.x, y = newY }
         }

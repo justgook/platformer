@@ -40,6 +40,7 @@ render (Layer common individual) =
 fragmentShader : Shader a (Uniform Model) { vcoord : Vec2 }
 fragmentShader =
     --TODO /Add suport for tiles-sets that is bigger than level tile size
+    --    https://gamedevelopment.tutsplus.com/tutorials/creating-isometric-worlds-a-primer-for-game-developers--gamedev-6511
     -- need to create loop that go over all posible covered neighbours and merge resulting pixel (alpha level including)
     [glsl|
         precision mediump float;

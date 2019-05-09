@@ -25,7 +25,7 @@ webGLOption : List WebGL.Option
 webGLOption =
     [ WebGL.alpha False
     , WebGL.depth 1
-    , WebGL.clearColor 0 0 0 1
+    , WebGL.clearColor (29 / 255) (33 / 255) (45 / 255) 1
     ]
 
 

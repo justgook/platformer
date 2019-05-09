@@ -135,8 +135,8 @@ update_ update msg model =
         ( Resource (Succeed world), Loading ) ->
             ( Succeed world, start () )
 
-        ( Resource (Succeed world), Succeed _ ) ->
-            ( Succeed world, Cmd.none )
+        ( Resource resource, _ ) ->
+            ( resource, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
