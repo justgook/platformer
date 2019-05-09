@@ -23,11 +23,11 @@ module Logic.Asset.Camera exposing (Camera, WithId, spec, system)
     +---+----------------------+----------------------------------------------------------------------------------------------+
     | - | physics-smoothing    | Camera is a physics enabled entity                                                           |
     +---+----------------------+----------------------------------------------------------------------------------------------+
-    | - | platform-snapping    | Camera snaps to the player only as it lands on a platform                                    |
+    | + | platform-snapping    | Camera snaps to the player only as it lands on a platform                                    |
     +---+----------------------+----------------------------------------------------------------------------------------------+
     | - | position-averaging   | Focus on the average position of all relevant targets                                        |
     +---+----------------------+----------------------------------------------------------------------------------------------+
-    | - | position-locking     | Camera is locked to the player’s position                                                    |
+    | + | position-locking     | Camera is locked to the player’s position                                                    |
     +---+----------------------+----------------------------------------------------------------------------------------------+
     | - | position-snapping    | Constantly reduce window drift by focusing the camera back on the player                     |
     +---+----------------------+----------------------------------------------------------------------------------------------+
@@ -50,7 +50,6 @@ module Logic.Asset.Camera exposing (Camera, WithId, spec, system)
 
 -}
 
-import Defaults exposing (default)
 import Logic.Asset.Camera.Common
 
 

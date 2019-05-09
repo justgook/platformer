@@ -5,8 +5,8 @@ import Defaults exposing (default)
 import Json.Decode as Decode
 import Logic.Asset.AnimationDict
 import Logic.Asset.Camera
-import Logic.Asset.Camera.PlatformSnapping exposing (PlatformSnapping)
 import Logic.Asset.Camera.PositionLocking
+import Logic.Asset.Camera.Trigger exposing (Trigger)
 import Logic.Asset.Input
 import Logic.Asset.Input.Keyboard as Keyboard
 import Logic.Asset.Layer
@@ -43,7 +43,7 @@ read =
 
 
 type alias OwnWorld =
-    { camera : Logic.Asset.Camera.WithId (PlatformSnapping {})
+    { camera : Logic.Asset.Camera.WithId (Trigger {})
     , layers : List Logic.Asset.Layer.Layer
     , sprites : Logic.Component.Set Logic.Asset.Sprite.Sprite
     , physics : AABB.World Int
@@ -150,7 +150,7 @@ update w =
                     )
 
         cameraStep =
-            Logic.Asset.Camera.PlatformSnapping.step contact target
+            Logic.Asset.Camera.Trigger.yTrigger 3 contact target
                 >> Logic.Asset.Camera.PositionLocking.xLock target
     in
     w
