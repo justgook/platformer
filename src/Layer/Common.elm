@@ -17,6 +17,10 @@ type alias Common =
     CommonCommon {}
 
 
+
+--https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+
+
 type alias CommonCommon a =
     { a
         | pixelsPerUnit : Float
@@ -39,15 +43,11 @@ type alias Individual a =
 
 mesh : Mesh Vertex
 mesh =
-    WebGL.triangles
-        [ ( Vertex (vec2 0 1)
-          , Vertex (vec2 1 0)
-          , Vertex (vec2 0 0)
-          )
-        , ( Vertex (vec2 0 1)
-          , Vertex (vec2 1 1)
-          , Vertex (vec2 1 0)
-          )
+    WebGL.triangleStrip
+        [ Vertex (vec2 0 0)
+        , Vertex (vec2 0 1)
+        , Vertex (vec2 1 0)
+        , Vertex (vec2 1 1)
         ]
 
 

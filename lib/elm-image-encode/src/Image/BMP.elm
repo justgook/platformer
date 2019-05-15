@@ -112,6 +112,12 @@ encode24 w h pixels =
         -> Base64String
 
 -}
+
+
+
+--https://github.com/ericandrewlewis/bitmap-js/blob/master/index.js
+
+
 encodeWith : Options a -> Int -> Int -> Pixels -> String
 encodeWith opt w h pixels =
     let

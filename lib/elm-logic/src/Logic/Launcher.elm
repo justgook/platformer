@@ -4,6 +4,7 @@ port module Logic.Launcher exposing (Error(..), Launcher, World, document, worke
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
+import Bytes exposing (Bytes)
 import Json.Decode as Json
 import Logic.GameFlow
 import Task exposing (Task)

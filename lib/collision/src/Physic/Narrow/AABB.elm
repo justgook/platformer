@@ -337,6 +337,10 @@ getMin ( c1, v1 ) ( c2, v2 ) =
             ( c1, v1 )
 
 
+
+--https://www.youtube.com/watch?v=TOEi6T2mtHo&t=731s
+
+
 getRayIntersectionFractionOfFirstRay : Vec2 -> Vec2 -> Vec2 -> Vec2 -> Maybe Float
 getRayIntersectionFractionOfFirstRay originA endA originB endB =
     let
