@@ -1,11 +1,7 @@
 port module Logic.Launcher exposing (Error(..), Launcher, World, document, worker)
 
---import World.Component.Layer as Layer exposing (Layer)
-
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
-import Bytes exposing (Bytes)
-import Json.Decode as Json
 import Logic.GameFlow
 import Task exposing (Task)
 import VirtualDom
@@ -35,19 +31,19 @@ type Model world
 port start : () -> Cmd msg
 
 
-type alias Launcher world =
-    Program Json.Value (Model world) (Message world)
+type alias Launcher flags world =
+    Program flags (Model world) (Message world)
 
 
 document :
-    { init : Json.Value -> Task.Task Error (World world)
+    { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> World world
     , view :
         World world
         -> List (VirtualDom.Node (World world -> World world))
     }
-    -> Launcher world
+    -> Launcher flags world
 document { init, update, view, subscriptions } =
     Browser.document
         { init = init_ init
@@ -58,11 +54,11 @@ document { init, update, view, subscriptions } =
 
 
 worker :
-    { init : Json.Value -> Task.Task Error (World world)
+    { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> World world
     }
-    -> Launcher world
+    -> Launcher flags world
 worker { init, update, subscriptions } =
     Platform.worker
         { init = init_ init
@@ -72,8 +68,8 @@ worker { init, update, subscriptions } =
 
 
 init_ :
-    (Json.Value -> Task.Task Error (World world))
-    -> Json.Value
+    (flags -> Task.Task Error (World world))
+    -> flags
     -> ( Model world1, Cmd (Message world) )
 init_ init flags =
     let

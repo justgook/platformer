@@ -1,9 +1,9 @@
 module World.System.Physics exposing (aabb, applyInput)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
-import Logic.Asset.Input as Input
 import Logic.Entity
 import Logic.System
+import Logic.Template.Input as Input
 import Physic
 import Physic.AABB
 import Physic.Narrow.AABB as AABB

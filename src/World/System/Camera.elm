@@ -17,7 +17,7 @@ follow spec getPos ecs =
 
         viewportOffset =
             Vec2.fromRecord
-                { x = target.x - cam.pixelsPerUnit / 2 * ecs.env.widthRatio
+                { x = target.x - cam.pixelsPerUnit / 2 * ecs.env.aspectRatio
                 , y = target.y - cam.pixelsPerUnit / 2
                 }
 
@@ -35,7 +35,7 @@ followX spec getPos ( common, ecs ) =
         target =
             getPos cam.id ecs
     in
-    ( common, spec.set { cam | viewportOffset = Vec2.setX (target.x - cam.pixelsPerUnit / 2 * common.env.widthRatio) cam.viewportOffset } ecs )
+    ( common, spec.set { cam | viewportOffset = Vec2.setX (target.x - cam.pixelsPerUnit / 2 * common.env.aspectRatio) cam.viewportOffset } ecs )
 
 
 

@@ -2,9 +2,9 @@ module World.System.AnimationChange exposing (sideScroll)
 
 import Dict
 import Direction as Dir
-import Logic.Asset.Sprite exposing (Sprite(..))
 import Logic.Entity
 import Logic.System as System
+import Logic.Template.SpriteComponent exposing (Sprite(..))
 import Physic.AABB
 import Physic.Narrow.AABB
 

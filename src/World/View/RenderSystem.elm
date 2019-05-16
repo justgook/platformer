@@ -1,30 +1,20 @@
-module World.View.RenderSystem exposing (debugPhysics, debugPhysicsAABB, viewSprite)
+module World.View.RenderSystem exposing (debugPhysicsAABB, viewSprite)
 
 import AltMath.Vector2 as AVec2
-import Layer.Common as Common
-import Layer.Object.Animated
-import Layer.Object.Ellipse
-import Layer.Object.Rectangle
-import Layer.Object.Tile
-import Logic.Asset.Sprite as ObjectComponent
 import Logic.System as System exposing (System)
+import Logic.Template.Internal exposing (pxToScreen)
+import Logic.Template.Layer as Common
+import Logic.Template.Layer.Object.Ellipse as Ellipse
+import Logic.Template.Layer.Object.Rectangle as Rectangle
+import Logic.Template.SpriteComponent
 import Math.Vector2 as Vec2 exposing (vec2)
 import Math.Vector3 exposing (vec3)
 import Math.Vector4 exposing (vec4)
-import Physic
 import Physic.AABB
 import Physic.Narrow.AABB
-import Physic.Narrow.Body exposing (Body(..))
 
 
-debugPhysics common ( ecs, inLayer ) acc =
-    ecs.physics
-        |> Physic.toList
-        |> List.map (Physic.Narrow.Body.debuInfo (fromPhysics common))
-        |> (++) acc
-
-
-debugPhysicsAABB common ( ecs, inLayer ) acc =
+debugPhysicsAABB common ( ecs, _ ) acc =
     ecs.physics
         |> Physic.AABB.toList
         |> List.map (Physic.Narrow.AABB.debuInfo (fromPhysics common))
@@ -42,8 +32,8 @@ fromPhysics common =
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
-                |> Common.Layer common
-                |> Layer.Object.Ellipse.render
+                |> Common.LayerData common
+                |> Ellipse.draw
     , ellipse =
         \p r r2 ->
             { x = AVec2.getX p
@@ -54,8 +44,8 @@ fromPhysics common =
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
-                |> Common.Layer common
-                |> Layer.Object.Ellipse.render
+                |> Common.LayerData common
+                |> Ellipse.draw
     , rectangle =
         \p w h ->
             { x = AVec2.getX p
@@ -66,52 +56,25 @@ fromPhysics common =
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
-                |> Common.Layer common
-                |> Layer.Object.Rectangle.render
+                |> Common.LayerData common
+                |> Rectangle.draw
     , radiusRectangle =
-        \p r h ->
-            { p = Vec2.fromRecord p
-            , r = Vec2.fromRecord r
-            , height = h
+        \p_ r h ->
+            let
+                p =
+                    pxToScreen common.px p_
+            in
+            { p = p
+            , r = pxToScreen common.px r
+            , height = h * common.px
             , color = vec4 0 1 1 1
             , scrollRatio = vec2 1 1
             , transparentcolor = vec3 0 0 0
             }
-                |> Common.Layer common
-                |> Layer.Object.Rectangle.render2
+                |> Common.LayerData common
+                |> Rectangle.render2
     }
 
 
-viewSprite positions sprites getPosition common ( ecs, inLayer ) =
-    System.foldl3 (render getPosition common) inLayer sprites positions
-
-
-render getPosition common _ obj body acc =
-    case obj of
-        ObjectComponent.Sprite info ->
-            let
-                pos =
-                    getPosition body
-            in
-            ({ info
-                | x = pos.x |> round |> toFloat
-                , y = pos.y |> round |> toFloat
-             }
-                |> Common.Layer common
-                |> Layer.Object.Tile.render
-            )
-                :: acc
-
-        ObjectComponent.Animated info ->
-            let
-                pos =
-                    getPosition body
-            in
-            ({ info
-                | x = pos.x |> round |> toFloat
-                , y = pos.y |> round |> toFloat
-             }
-                |> Common.Layer common
-                |> Layer.Object.Animated.render
-            )
-                :: acc
+viewSprite positions sprites getPosition common ( _, inLayer ) =
+    System.foldl3 (Logic.Template.SpriteComponent.draw getPosition common) inLayer sprites positions
