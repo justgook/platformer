@@ -78,7 +78,7 @@ defaultSettings =
                     , data = vec4 position.x position.y size lifespan
                     }
                 )
-                (Random.float 10 40)
+                (Random.float 5 10)
                 (Random.map2 Vec2 (Random.constant 0.000003) (Random.constant 0))
                 (Random.map2 Vec2 (Random.float -0.001 0.001) (Random.float 0.001 0.003))
                 --(Random.map2 Vec2 (Random.constant 0.75) (Random.constant 0.5))

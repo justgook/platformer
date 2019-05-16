@@ -20,7 +20,6 @@ import Logic.Template.Internal exposing (pxToScreen)
 import Logic.Template.Layer
 import Logic.Template.Physics
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
-import Logic.Template.Resize as Resize exposing (Resize)
 import Logic.Template.SpriteComponent
 import Logic.Template.TiledRead.AnimationDict
 import Logic.Template.TiledRead.Camera
@@ -56,7 +55,6 @@ type alias OwnWorld =
     , physics : AABB.World Int
     , animations : Logic.Component.Set Logic.Template.AnimationDict.AnimationDict
     , input : Logic.Template.Input.Direction
-    , env : Resize {}
     , projectile : Projectile
     , viewport : Mat4
     , render : RenderInfo
@@ -65,8 +63,7 @@ type alias OwnWorld =
 
 world : Launcher.World OwnWorld
 world =
-    { env = Resize.empty
-    , frame = 0
+    { frame = 0
     , runtime_ = 0
     , flow = Flow.Running
     , layers = Logic.Template.Layer.empty
@@ -83,12 +80,6 @@ world =
     , projectile = Projectile.empty
     , viewport = Mat4.makeOrtho2D 0 2.2 0 1
     , render = RenderInfo.empty
-
-    --    ,viewport = mat4(
-    --                (2.0 / aspectRatio), 0, 0, 0,
-    --    		 	                 0, 2, 0, 0,
-    --    		 			         0, 0,-1, 0,
-    --    		 			        -1,-1, 0, 1);
     }
 
 
@@ -101,7 +92,6 @@ main =
             \w ->
                 Sub.batch
                     [ Keyboard.sub Logic.Template.Input.spec w
-                    , Resize.sub Resize.spec w
                     , Events.onResize (RenderInfo.resize RenderInfo.spec w)
                     ]
         , init = init
@@ -114,16 +104,10 @@ init flags =
             flags
                 |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
                 |> Result.withDefault "default.json"
-
-        spec =
-            { get = .env2
-            , set = \comps w -> { w | env2 = comps }
-            }
     in
     Task.map2
         (\{ scene } w ->
             RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
-                |> Resize.apply Resize.spec scene
         )
         Browser.getViewport
         (TiledRead.load levelUrl world read)
@@ -144,7 +128,7 @@ view w =
 
         fxUniforms =
             { renderable
-                | aspectRatio = w.env.aspectRatio
+                | aspectRatio = toFloat w.render.screen.width / toFloat w.render.screen.height
                 , viewportOffset =
                     w.camera.viewportOffset
                         |> Vec2.scale px
@@ -159,13 +143,13 @@ view w =
 
         render =
             { render_
-                | absolute = RenderInfo.setOffsetVec newOffset w.render.absolute
-                , offset = newOffset
+              --                | absolute = RenderInfo.setOffsetVec newOffset w.render.absolute
+                | offset = newOffset
             }
     in
     [ Logic.Template.Layer.draw objRender { w | render = render }
         ++ Projectile.draw fxUniforms
-        |> WebGL.toHtmlWith default.webGLOption (Resize.canvasStyle w.env)
+        |> WebGL.toHtmlWith default.webGLOption (RenderInfo.pixelPerfectCanvas w.render)
     ]
 
 
@@ -245,14 +229,14 @@ getPosById id =
         >> Maybe.withDefault (vec2 0 0)
 
 
-getCenter world_ =
+getCenter w =
     let
-        env =
-            world_.env
+        aspectRatio =
+            toFloat w.render.screen.width / toFloat w.render.screen.height
 
-        cam =
-            world_.camera
+        pixelsPerUnit =
+            1.0 / w.render.px
     in
-    { x = cam.pixelsPerUnit / 2 * env.aspectRatio
-    , y = cam.pixelsPerUnit / 2
+    { x = 0.5 / w.render.px * aspectRatio
+    , y = 0.5 / w.render.px
     }

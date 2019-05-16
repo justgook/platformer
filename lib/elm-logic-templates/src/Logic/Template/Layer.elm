@@ -111,11 +111,8 @@ spec =
     }
 
 
-draw objRender ({ env, viewport, frame, camera, layers, render } as world) =
+draw objRender ({ frame, camera, layers, render } as world) =
     let
-        { x, y } =
-            camera.viewportOffset
-
         --, viewportOffset =
         --                Vec2.fromRecord
         --                    { x = (round (x * 64) |> toFloat) / 64

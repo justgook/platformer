@@ -1,17 +1,21 @@
-module Logic.Template.RenderInfo exposing (RenderInfo, empty, read, resize, setOffset, setOffsetVec, spec)
+module Logic.Template.RenderInfo exposing (RenderInfo, canvas, empty, pixelPerfectCanvas, read, resize, setOffset, setOffsetVec, spec)
 
 import Logic.Component
 import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.TiledRead.Internal.Util exposing (levelProps)
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import VirtualDom
 
 
 type alias RenderInfo =
     { px : Float
     , fixed : Mat4
-    , absolute : Mat4
     , offset : Vec2
+    , screen :
+        { width : Int
+        , height : Int
+        }
     }
 
 
@@ -33,6 +37,7 @@ read { get, set } =
                     , set
                         { renderInfo
                             | px =
+                                --1 / 948
                                 levelProps level |> (\prop -> 1 / prop.float "pixelsPerUnit" 0.1)
                         }
                         world
@@ -80,15 +85,64 @@ resize { get, set } world w h =
     set
         { renderInfo
             | fixed = fixed
-            , absolute = setOffsetVec renderInfo.offset fixed
+            , screen =
+                { width = w
+                , height = h
+                }
         }
         world
+
+
+canvas { screen } =
+    let
+        devicePixelRatio =
+            1
+
+        { width, height } =
+            screen
+    in
+    [ toFloat width * devicePixelRatio |> round |> String.fromInt |> VirtualDom.attribute "width"
+    , toFloat height * devicePixelRatio |> round |> String.fromInt |> VirtualDom.attribute "height"
+    , VirtualDom.style "display" "block"
+    , VirtualDom.style "width" (String.fromInt width ++ "px")
+    , VirtualDom.style "height" (String.fromInt height ++ "px")
+    ]
+
+
+pixelPerfectCanvas { px, screen } =
+    let
+        devicePixelRatio =
+            1
+
+        { width, height } =
+            screen
+
+        aspectRatio =
+            toFloat width / toFloat height
+
+        newWidth =
+            1 / px * aspectRatio |> ceiling
+
+        newHeight =
+            1 / px |> ceiling
+    in
+    [ newWidth |> String.fromInt |> VirtualDom.attribute "width"
+    , newHeight |> String.fromInt |> VirtualDom.attribute "height"
+    , VirtualDom.style "display" "block"
+    , VirtualDom.style "width" (String.fromInt ((width // newWidth + 1) * newWidth) ++ "px")
+    , VirtualDom.style "height" (String.fromInt ((height // newHeight + 1) * newHeight) ++ "px")
+    ]
 
 
 empty : RenderInfo
 empty =
     { px = 0.1
     , fixed = Mat4.identity
-    , absolute = Mat4.identity
+
+    --    , absolute = Mat4.identity
     , offset = vec2 0 0
+    , screen =
+        { width = 1
+        , height = 1
+        }
     }
