@@ -23,4 +23,4 @@ documentation.json
 gh-pages/*
 !gh-pages/404.html
 !gh-pages/index.html
-
+!gh-pages/manifest.json

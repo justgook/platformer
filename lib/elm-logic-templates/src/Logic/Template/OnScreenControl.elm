@@ -1,4 +1,4 @@
-module Logic.Template.OnScreenControl exposing (OnScreenControl, dir8, empty, example, position, stick, stickWith)
+module Logic.Template.OnScreenControl exposing (OnScreenControl, dir8, empty, example, pointerConfig, position, stick, stickWith, touchConfig)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Json.Decode as Decode exposing (Decoder)
@@ -44,12 +44,38 @@ dir_ dead a b =
         1
 
 
-stickWith : OnScreenControl a -> ((OnScreenControl a -> OnScreenControl a) -> msg) -> List (VirtualDom.Node msg) -> VirtualDom.Node msg
-stickWith info handler =
+type alias EventConfig =
+    { down : String
+    , move : String
+    , leave : String
+    , up : String
+    }
+
+
+touchConfig : EventConfig
+touchConfig =
+    { down = "touchstart"
+    , move = "touchmove"
+    , leave = "touchcancel"
+    , up = "touchend"
+    }
+
+
+pointerConfig : EventConfig
+pointerConfig =
+    { down = "pointerdown"
+    , move = "pointermove"
+    , leave = "pointerleave"
+    , up = "pointerup"
+    }
+
+
+stickWith : EventConfig -> OnScreenControl a -> ((OnScreenControl a -> OnScreenControl a) -> msg) -> List (VirtualDom.Node msg) -> VirtualDom.Node msg
+stickWith config info handler =
     let
         active_ =
             if info.active then
-                (::) (attribute "class" "active") >> (::) (on "pointermove" onpointermove handler)
+                (::) (attribute "class" "active") >> (::) (on config.move pointermove handler)
 
             else
                 identity
@@ -61,16 +87,16 @@ stickWith info handler =
             , style "right" "0"
             , style "bottom" "0"
             , style "left" "0"
-            , on "pointerdown" pointerdown handler
-            , on "pointerleave" pointerup handler
-            , on "pointerup" pointerup handler
+            , on config.down pointerdown handler
+            , on config.leave pointerup handler
+            , on config.up pointerup handler
             ]
         )
 
 
 stick : OnScreenControl a -> ((OnScreenControl a -> OnScreenControl a) -> msg) -> VirtualDom.Node msg
 stick info handler =
-    stickWith info handler (example info)
+    stickWith touchConfig info handler (example info)
 
 
 example : OnScreenControl a -> List (VirtualDom.Node msg)
@@ -133,46 +159,34 @@ on event decoder_ handler =
     VirtualDom.on event (Custom (decoder_ handler))
 
 
-onpointermove : ((OnScreenControl a -> OnScreenControl a) -> b) -> Decoder { message : b, preventDefault : Bool, stopPropagation : Bool }
-onpointermove handler =
-    Decode.map2
+pointermove : ((OnScreenControl a -> OnScreenControl a) -> b) -> Decoder { message : b, preventDefault : Bool, stopPropagation : Bool }
+pointermove handler =
+    decodeMap2
         (\x y ->
-            { message =
-                handler
-                    (\data ->
-                        { data
-                            | cursor = vec2 x y
+            handler
+                (\data ->
+                    { data
+                        | cursor = vec2 x y
 
-                            --                            ,
-                        }
-                    )
-            , stopPropagation = True
-            , preventDefault = True
-            }
+                        --                            ,
+                    }
+                )
         )
-        (Decode.field "offsetX" Decode.float)
-        (Decode.field "offsetY" Decode.float)
 
 
 pointerdown : ((OnScreenControl a -> OnScreenControl a) -> b) -> Decoder { message : b, preventDefault : Bool, stopPropagation : Bool }
 pointerdown handler =
-    Decode.map2
+    decodeMap2
         (\x y ->
-            { message =
-                handler
-                    (\data ->
-                        { data
-                            | center = vec2 x y
-                            , cursor = vec2 x y
-                            , active = True
-                        }
-                    )
-            , stopPropagation = True
-            , preventDefault = True
-            }
+            handler
+                (\data ->
+                    { data
+                        | center = vec2 x y
+                        , cursor = vec2 x y
+                        , active = True
+                    }
+                )
         )
-        (Decode.field "offsetX" Decode.float)
-        (Decode.field "offsetY" Decode.float)
 
 
 pointerup : ((OnScreenControl a -> OnScreenControl a) -> b) -> Decoder { message : b, preventDefault : Bool, stopPropagation : Bool }
@@ -189,3 +203,23 @@ pointerup handler =
         , stopPropagation = True
         , preventDefault = True
         }
+
+
+decodeMap2 f =
+    Decode.map2
+        (\x y ->
+            { message = f x y
+            , stopPropagation = True
+            , preventDefault = True
+            }
+        )
+        (Decode.oneOf
+            [ Decode.field "offsetX" Decode.float
+            , Decode.at [ "touches", "0", "clientX" ] Decode.float
+            ]
+        )
+        (Decode.oneOf
+            [ Decode.field "offsetY" Decode.float
+            , Decode.at [ "touches", "0", "clientY" ] Decode.float
+            ]
+        )

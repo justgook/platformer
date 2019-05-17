@@ -4,6 +4,9 @@
 <head>
     <title>Game</title>
     <meta charset="utf-8" />
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
     <style>
         * {
@@ -124,22 +127,6 @@
 
 <body class="loading">
 
-
-<script>
-
-    function prevent(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    document.body.addEventListener("gesturechange", prevent);
-    document.body.addEventListener("gesturestart", prevent);
-    document.body.addEventListener("gestureend", prevent);
-
-</script>
-
-
-<!-- https://benpaulhanna.com/building-an-elm-project-with-parcel.html -->
 <script>
     (function () {
         var redirect = sessionStorage.redirect;
@@ -168,9 +155,24 @@
             }
         }
     );
+    // function toggleFullScreen() {
+    //     var doc = window.document;
+    //     var docEl = doc.documentElement;
+    //
+    //     var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    //     var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+    //
+    //     if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+    //         requestFullScreen.call(docEl);
+    //     }
+    //     else {
+    //         cancelFullScreen.call(doc);
+    //     }
+    // }
 
     app.ports.start.subscribe(function (data) {
         console.timeEnd("loading");
+        // document.body.addEventListener("click", toggleFullScreen);
         document.body.className = "loaded";
     });
 </script>
