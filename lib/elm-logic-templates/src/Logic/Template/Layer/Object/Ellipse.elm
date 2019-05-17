@@ -3,7 +3,7 @@ module Logic.Template.Layer.Object.Ellipse exposing (Model, draw)
 import Defaults exposing (default)
 import Logic.Template.Internal exposing (plate, tileVertexShader)
 import Logic.Template.Layer exposing (LayerData(..), Uniform)
-import Math.Vector2 exposing (Vec2)
+import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector4 exposing (Vec4)
 import WebGL exposing (Mesh, Shader)
 
@@ -17,12 +17,14 @@ type alias Model =
     }
 
 
-draw : LayerData Model -> WebGL.Entity
+
+--draw : LayerData Model -> WebGL.Entity
+
+
 draw (LayerData common individual) =
     { height = individual.height
     , width = individual.width
-    , x = individual.x
-    , y = individual.y
+    , p = vec2 individual.x individual.y
     , color = individual.color
 
     -- General
@@ -37,8 +39,7 @@ draw (LayerData common individual) =
     , time = common.time
     , viewport = common.viewport
     , offset = common.offset
-
-    --    , absolute = common.absolute
+    , absolute = common.viewport
     }
         |> WebGL.entityWith
             default.entitySettings
@@ -49,9 +50,9 @@ draw (LayerData common individual) =
 
 
 -- http://glslsandbox.com/e#39889.0
+--fragmentShader : Shader a (Uniform Model) { uv : Vec2 }
 
 
-fragmentShader : Shader a (Uniform Model) { uv : Vec2 }
 fragmentShader =
     [glsl|
         precision mediump float;

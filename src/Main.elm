@@ -18,6 +18,7 @@ import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
 import Logic.Template.Internal exposing (pxToScreen)
 import Logic.Template.Layer
+import Logic.Template.OnScreenControl as OnScreenControl exposing (OnScreenControl)
 import Logic.Template.Physics
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SpriteComponent
@@ -58,6 +59,7 @@ type alias OwnWorld =
     , projectile : Projectile
     , viewport : Mat4
     , render : RenderInfo
+    , onScreen : OnScreenControl {}
     }
 
 
@@ -80,6 +82,7 @@ world =
     , projectile = Projectile.empty
     , viewport = Mat4.makeOrtho2D 0 2.2 0 1
     , render = RenderInfo.empty
+    , onScreen = OnScreenControl.empty
     }
 
 
@@ -135,32 +138,50 @@ view w =
                         |> Math.Vector2.fromRecord
             }
 
-        render_ =
-            w.render
-
         newOffset =
             pxToScreen w.render.px w.camera.viewportOffset
 
-        render =
-            { render_
-              --                | absolute = RenderInfo.setOffsetVec newOffset w.render.absolute
-                | offset = newOffset
-            }
+        updatedWorld =
+            { w | render = RenderInfo.updateOffset newOffset w.render }
     in
-    [ Logic.Template.Layer.draw objRender { w | render = render }
+    [ Logic.Template.Layer.draw (objRender updatedWorld) updatedWorld
         ++ Projectile.draw fxUniforms
-        |> WebGL.toHtmlWith default.webGLOption (RenderInfo.pixelPerfectCanvas w.render)
+        |> WebGL.toHtmlWith default.webGLOption (RenderInfo.canvas w.render)
+    , OnScreenControl.stick w.onScreen onscreenEvent
+
+    --            (Logic.Component.update onScreenControlSpec)
     ]
 
 
-objRender common ( ecs, objLayer ) =
+onscreenEvent f w =
+    let
+        spec =
+            { get = .onScreen
+            , set = \comps w__ -> { w__ | onScreen = comps }
+            }
+
+        controls =
+            f (spec.get w)
+
+        { x, y } =
+            OnScreenControl.dir8 controls
+
+        inputCompsSpec =
+            Logic.Template.Input.getComps Logic.Template.Input.spec
+    in
+    w
+        |> spec.set controls
+        |> Logic.Component.update inputCompsSpec
+            (Logic.Component.mapById (\go -> { go | x = x, y = y }) w.camera.id)
+
+
+objRender ecs objLayer =
     []
         --        |> aabb.view common ( ecs, objLayer )
         |> World.View.RenderSystem.viewSprite
             (aabb.compsExtracter ecs)
             (Logic.Template.SpriteComponent.spec.get ecs)
             aabb.getPosition
-            common
             ( ecs, objLayer )
 
 

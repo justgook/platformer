@@ -1,4 +1,4 @@
-module Logic.Template.RenderInfo exposing (RenderInfo, canvas, empty, pixelPerfectCanvas, read, resize, setOffset, setOffsetVec, spec)
+module Logic.Template.RenderInfo exposing (RenderInfo, applyOffset, applyOffsetVec, canvas, empty, lowResCanvas, read, resize, spec, updateOffset)
 
 import Logic.Component
 import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), Reader, defaultRead)
@@ -11,6 +11,7 @@ import VirtualDom
 type alias RenderInfo =
     { px : Float
     , fixed : Mat4
+    , absolute : Mat4
     , offset : Vec2
     , screen :
         { width : Int
@@ -37,7 +38,6 @@ read { get, set } =
                     , set
                         { renderInfo
                             | px =
-                                --1 / 948
                                 levelProps level |> (\prop -> 1 / prop.float "pixelsPerUnit" 0.1)
                         }
                         world
@@ -53,22 +53,29 @@ spec =
     }
 
 
-setOffset { x, y } m_ =
+applyOffset { x, y } m_ =
     let
         m =
             Mat4.toRecord m_
     in
     { m
-        | m14 = m.m11 * x + m.m12 * y + m.m14
-        , m24 = m.m21 * x + m.m22 * y + m.m24
-        , m34 = m.m31 * x + m.m32 * y + m.m34
-        , m44 = m.m41 * x + m.m42 * y + m.m44
+        | m14 = m.m14 - m.m11 * x - m.m12 * y
+        , m24 = m.m24 - m.m21 * x - m.m22 * y
+        , m34 = m.m34 - m.m31 * x - m.m32 * y
+        , m44 = m.m44 - m.m41 * x - m.m42 * y
     }
         |> Mat4.fromRecord
 
 
-setOffsetVec v =
-    setOffset (Vec2.toRecord v)
+applyOffsetVec v =
+    applyOffset (Vec2.toRecord v)
+
+
+updateOffset newOffset info =
+    { info
+        | offset = newOffset
+        , absolute = applyOffsetVec newOffset info.fixed
+    }
 
 
 resize { get, set } world w h =
@@ -85,6 +92,7 @@ resize { get, set } world w h =
     set
         { renderInfo
             | fixed = fixed
+            , absolute = applyOffsetVec renderInfo.offset fixed
             , screen =
                 { width = w
                 , height = h
@@ -109,7 +117,7 @@ canvas { screen } =
     ]
 
 
-pixelPerfectCanvas { px, screen } =
+lowResCanvas { px, screen } =
     let
         devicePixelRatio =
             1
@@ -138,8 +146,7 @@ empty : RenderInfo
 empty =
     { px = 0.1
     , fixed = Mat4.identity
-
-    --    , absolute = Mat4.identity
+    , absolute = Mat4.identity
     , offset = vec2 0 0
     , screen =
         { width = 1

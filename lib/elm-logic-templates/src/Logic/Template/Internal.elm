@@ -26,47 +26,21 @@ type alias Plate =
     { position : Vector2.Vec2 }
 
 
-tileVertexShader :
-    Shader
-        { a
-            | position : Vector2.Vec2
-        }
-        { b
-            | height : Float
-            , scrollRatio : Vector2.Vec2
-            , offset : Vector2.Vec2
-            , width : Float
-            , viewport : Mat4
-
-            --            , absolute : Mat4
-            , x : Float
-            , y : Float
-        }
-        { uv : Vector2.Vec2 }
+tileVertexShader : Shader Plate { a | height : Float, width : Float, absolute : Mat4, p : Vector2.Vec2 } { uv : Vector2.Vec2 }
 tileVertexShader =
     [glsl|
         precision mediump float;
         attribute vec2 position;
-        uniform float x;
-        uniform float y;
         uniform float height;
         uniform float width;
-        uniform vec2 offset;
-        uniform vec2 scrollRatio;
         varying vec2 uv;
-        uniform mat4 viewport;
-//        uniform mat4 absolute;
-
+        uniform mat4 absolute;
+        uniform vec2 p;
         void main () {
-            float aspectRatio = 2.0 / viewport[0][0]; // Mat4.makeOrtho2D
             uv = position;
-            vec2 sized = vec2(position * vec2(width, height ));
-            vec2 move = vec2(
-                (x - offset.x * scrollRatio.x - width / 2.) ,
-                (y - offset.y * scrollRatio.y - height / 2.)
-            );
-
-            gl_Position = viewport * vec4(sized + move, 0, 1.0);
+            vec2 sized = vec2(position * vec2(width, height));
+            vec2 center = vec2(width, height) * 0.5;
+            gl_Position = absolute * vec4(sized + p - center, 0, 1.0);
         }
     |]
 
@@ -81,7 +55,7 @@ fullscreenVertexShader =
         uniform vec2 offset;
 
         void main () {
-        float aspectRatio = 2.0 / viewport[0][0]; // Mat4.makeOrtho2D
+          float aspectRatio = 2.0 / viewport[0][0]; // Mat4.makeOrtho2D
           uv = vec2(position.x * aspectRatio , position.y);
           vec2 pos = uv;
           uv += offset;

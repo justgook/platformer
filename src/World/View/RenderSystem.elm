@@ -76,5 +76,9 @@ fromPhysics common =
     }
 
 
-viewSprite positions sprites getPosition common ( _, inLayer ) =
-    System.foldl3 (Logic.Template.SpriteComponent.draw getPosition common) inLayer sprites positions
+viewSprite positions sprites getPosition ( esc, inLayer ) =
+    System.foldl3
+        (Logic.Template.SpriteComponent.draw esc.frame esc.render getPosition)
+        inLayer
+        sprites
+        positions

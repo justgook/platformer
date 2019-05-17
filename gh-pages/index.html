@@ -9,6 +9,7 @@
         * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         html {
@@ -47,12 +48,76 @@
                 transform: translate(-50%, -50%) rotate(360deg);
             }
         }
+
         canvas {
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-crisp-edges;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
+            image-rendering: optimizeSpeed; /* Older versions of FF          */
+            image-rendering: -moz-crisp-edges; /* FF 6.0+                       */
+            image-rendering: -webkit-optimize-contrast; /* Safari                        */
+            image-rendering: -o-crisp-edges; /* OS X & Windows Opera (12.02+) */
+            image-rendering: pixelated; /* Awesome future-browsers       */
+            -ms-interpolation-mode: nearest-neighbor; /* IE                            */
         }
+
+
+        /*OnScreenControl*/
+        /*https://www.rucksackcss.org/docs/#responsive-type*/
+        html {
+            font-size: calc(12px + 9 * ((100vw - 420px) / 860));
+        }
+
+        @media screen and (max-width: 420px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        @media screen and (min-width: 1280px) {
+            html {
+                font-size: 21px;
+            }
+        }
+
+
+        .front, .back {
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        .front {
+            box-sizing: border-box;
+            width: 4.5em;
+            height: 4.5em;
+            background: #fafafa;
+            background-clip: padding-box;
+            border: 0.5em solid transparent;
+            transition: border-color 0s, top .2s, left .2s, opacity .5s;
+            transition-delay: .2s, 0s, 0s, .8s;
+        }
+
+        .active .front {
+            border: 0.5em solid rgb(100, 100, 100);
+        }
+
+        .back {
+
+            width: 6em;
+            height: 6em;
+            border: 0.5em solid rgb(157, 157, 157);
+            background: rgb(100, 100, 100);
+            transition: opacity .5s;
+            transition-delay: .8s;
+        }
+
+
+        .active .front, .active .back {
+            opacity: 1;
+            transition-delay: 0s;
+            transition: opacity .2s;
+        }
+
     </style>
 </head>
 
@@ -65,51 +130,11 @@
     function prevent(e) {
         e.preventDefault();
         e.stopPropagation();
-    };
+    }
 
     document.body.addEventListener("gesturechange", prevent);
     document.body.addEventListener("gesturestart", prevent);
     document.body.addEventListener("gestureend", prevent);
-
-    // var dynamic = nipplejs.create({
-    //     zone: document.body,
-    //     color: 'blue'
-    // });
-    // dynamic.on("dir", (a, b) => {
-    //         console.log(b.direction);
-    //         if (b.direction) {
-    //             if (b.direction.angle === "up") {
-    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowUp' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
-    //             } else if (b.direction.angle === "down") {
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowDown' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
-    //             } else if (b.direction.angle === "left") {
-    //                 console.log("left")
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowLeft' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
-    //             } else if (b.direction.angle === "right") {
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
-    //                 document.dispatchEvent(new KeyboardEvent('keydown', { 'key': 'ArrowRight' }));
-    //             }
-    //         }
-    //
-    //     });
-    // dynamic.on("end", (a, b) => {
-    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowUp' }));
-    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowDown' }));
-    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowLeft' }));
-    //     document.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'ArrowRight' }));
-    //     }
-    // );
 
 </script>
 

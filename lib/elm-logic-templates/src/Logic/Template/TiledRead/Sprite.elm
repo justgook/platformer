@@ -55,8 +55,7 @@ read spec =
                                                                         let
                                                                             obj =
                                                                                 Animated
-                                                                                    { x = x
-                                                                                    , y = y
+                                                                                    { p = vec2 x y
                                                                                     , start = 0
                                                                                     , width = width
                                                                                     , height = height
@@ -81,8 +80,7 @@ read spec =
                                                             let
                                                                 obj =
                                                                     Sprite
-                                                                        { x = x
-                                                                        , y = y
+                                                                        { p = vec2 x y
                                                                         , width = width
                                                                         , height = height
                                                                         , tileIndex = toFloat tileIndex

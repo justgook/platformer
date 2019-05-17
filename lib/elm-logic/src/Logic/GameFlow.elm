@@ -62,14 +62,7 @@ updateWith systems delta (( world, _ ) as model) =
 
 
 update : (Model a -> Model a) -> Float -> Model a -> Model a
-update =
-    --    updateWith (Tuple.mapFirst systems) delta ( model, () )
-    --        |> Tuple.first
-    update_
-
-
-update_ : (Model a -> Model a) -> Float -> Model a -> Model a
-update_ systems delta model =
+update systems delta model =
     let
         ( worldWithUpdatedRuntime, countOfFrames ) =
             case model.flow of

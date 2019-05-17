@@ -111,7 +111,7 @@ spec =
     }
 
 
-draw objRender ({ frame, camera, layers, render } as world) =
+draw objRender ({ frame, layers, render } as world) =
     let
         --, viewportOffset =
         --                Vec2.fromRecord
@@ -161,7 +161,7 @@ draw objRender ({ frame, camera, layers, render } as world) =
                         ]
 
                     Object info ->
-                        objRender common ( world, info )
+                        objRender info
             )
 
 
@@ -171,10 +171,6 @@ type LayerData a
 
 type alias Common =
     CommonCommon {}
-
-
-
---https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
 
 
 type alias CommonCommon a =

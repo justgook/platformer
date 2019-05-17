@@ -4,26 +4,29 @@ import Defaults exposing (default)
 import Logic.Template.Internal exposing (plate, tileVertexShader)
 import Logic.Template.Layer exposing (LayerData(..), Uniform)
 import Math.Matrix4 exposing (Mat4)
-import Math.Vector2 exposing (Vec2)
+import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector4 exposing (Vec4)
 import WebGL exposing (Mesh, Shader)
 
 
-type alias Model =
-    { x : Float
-    , y : Float
-    , width : Float
-    , height : Float
-    , color : Vec4
+type alias Model a =
+    { a
+        | x : Float
+        , y : Float
+        , width : Float
+        , height : Float
+        , color : Vec4
     }
 
 
-draw : LayerData Model -> WebGL.Entity
+
+--draw : LayerData (Model a) -> WebGL.Entity
+
+
 draw (LayerData common individual) =
     { height = individual.height
     , width = individual.width
-    , x = individual.x
-    , y = individual.y
+    , p = vec2 individual.x individual.y
     , color = individual.color
 
     -- General
@@ -38,8 +41,7 @@ draw (LayerData common individual) =
     , time = common.time
     , viewport = common.viewport
     , offset = common.offset
-
-    --    , absolute = common.absolute
+    , absolute = common.viewport
     }
         |> WebGL.entityWith
             default.entitySettings
@@ -48,7 +50,10 @@ draw (LayerData common individual) =
             plate
 
 
-fragmentShader : Shader a (Uniform Model) { uv : Vec2 }
+
+--fragmentShader : Shader a (Uniform (Model a)) { uv : Vec2 }
+
+
 fragmentShader =
     [glsl|
         precision mediump float;
@@ -71,15 +76,19 @@ fragmentShader =
     |]
 
 
-type alias Model2 =
-    { p : Vec2
-    , r : Vec2
-    , height : Float
-    , color : Vec4
+type alias Model2 a =
+    { a
+        | p : Vec2
+        , r : Vec2
+        , height : Float
+        , color : Vec4
     }
 
 
-render2 : LayerData Model2 -> WebGL.Entity
+
+--render2 : LayerData (Model2 a) -> WebGL.Entity
+
+
 render2 (LayerData common individual) =
     { height = individual.height
     , r = individual.r
@@ -108,7 +117,10 @@ render2 (LayerData common individual) =
             plate
 
 
-fragmentShader2 : Shader a (Uniform Model2) { uv : Vec2 }
+
+--fragmentShader2 : Shader a (Uniform (Model2 a)) { uv : Vec2 }
+
+
 fragmentShader2 =
     [glsl|
         precision mediump float;
@@ -161,27 +173,27 @@ fragmentShader2 =
 
 
 --https://thebookofshaders.com/08/
+--vertexShaderForFragmentRotation :
+--    Shader
+--        { a
+--            | position : Vec2
+--        }
+--        { b
+--            | height : Float
+--            , r : Vec2
+--            , viewport : Mat4
+--            , px : Float
+--
+--            --            , pixelsPerUnit : Float
+--            --                        , scrollRatio : Vec2
+--            , offset : Vec2
+--
+--            --            , aspectRatio : Float
+--            , p : Vec2
+--        }
+--        { uv : Vec2 }
 
 
-vertexShaderForFragmentRotation :
-    Shader
-        { a
-            | position : Vec2
-        }
-        { b
-            | height : Float
-            , r : Vec2
-            , viewport : Mat4
-            , px : Float
-
-            --            , pixelsPerUnit : Float
-            --                        , scrollRatio : Vec2
-            , offset : Vec2
-
-            --            , aspectRatio : Float
-            , p : Vec2
-        }
-        { uv : Vec2 }
 vertexShaderForFragmentRotation =
     [glsl| precision mediump float;
     attribute vec2 position;

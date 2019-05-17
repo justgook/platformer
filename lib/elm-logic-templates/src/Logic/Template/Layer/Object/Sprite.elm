@@ -2,7 +2,6 @@ module Logic.Template.Layer.Object.Sprite exposing (Model, draw)
 
 import Defaults exposing (default)
 import Logic.Template.Internal exposing (Plate, plate)
-import Math.Matrix4 exposing (Mat4)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
@@ -16,9 +15,7 @@ type alias Model a =
         , tileSetSize : Vec2
         , tileSize : Vec2
         , mirror : Vec2
-        , viewport : Mat4
         , transparentcolor : Vec3
-        , scrollRatio : Vec2
     }
 
 
@@ -41,7 +38,7 @@ fragmentShader =
         uniform vec2 tileSetSize;
         uniform vec2 tileSize;
         uniform vec2 mirror;
-        uniform vec2 scrollRatio;
+//        uniform vec2 scrollRatio;
         uniform float tileIndex;
 
         float color2float(vec4 c) {

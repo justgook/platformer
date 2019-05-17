@@ -25,8 +25,7 @@ empty =
 
 
 type alias SpriteData =
-    { x : Float
-    , y : Float
+    { p : Vec2
     , width : Float
     , height : Float
     , tileIndex : Float
@@ -38,8 +37,7 @@ type alias SpriteData =
 
 
 type alias AnimatedData =
-    { x : Float
-    , y : Float
+    { p : Vec2
     , start : Float
     , width : Float
     , height : Float
@@ -52,40 +50,33 @@ type alias AnimatedData =
     }
 
 
-draw getPosition common _ obj body acc =
+draw time { absolute, px } getPosition _ obj body acc =
     case obj of
         Sprite info ->
-            let
-                pos =
-                    getPosition body
-            in
-            (spriteData common { info | x = pos.x |> round |> toFloat, y = pos.y |> round |> toFloat }
+            (spriteData absolute
+                { px = px }
+                { info
+                    | p = getPosition body |> pxToScreen px
+                }
                 |> Logic.Template.Layer.Object.Sprite.draw tileVertexShader
             )
                 :: acc
 
         Animated info ->
-            let
-                pos =
-                    getPosition body
-            in
-            (animatedData common { info | x = pos.x |> round |> toFloat, y = pos.y |> round |> toFloat }
+            (animatedData absolute
+                { px = px, time = time }
+                { info
+                    | p = getPosition body |> pxToScreen px
+                }
                 |> Logic.Template.Layer.Object.Animated.draw tileVertexShader
             )
                 :: acc
 
 
-
---
---spriteData : Common.Common -> Individual TilesData -> Uniform TilesData
-
-
-spriteData : Common.Common -> Common.Individual SpriteData -> Common.Uniform SpriteData
-spriteData common individual =
+spriteData absolute common individual =
     { height = individual.height * common.px
     , width = individual.width * common.px
-    , x = individual.x * common.px
-    , y = individual.y * common.px
+    , p = individual.p
     , tileSet = individual.tileSet
     , tileSetSize = individual.tileSetSize
     , tileSize = individual.tileSize
@@ -95,25 +86,14 @@ spriteData common individual =
     -- General
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
-
-    --    , pixelsPerUnit = common.pixelsPerUnit
-    , px = common.px
-
-    --    , viewportOffset = common.viewportOffset |> Math.Vector2.scale common.px
-    --    , aspectRatio = common.aspectRatio
-    , time = common.time
-    , viewport = common.viewport
-    , offset = common.offset
-
-    --    , absolute = common.absolute
+    , absolute = absolute
     }
 
 
-animatedData common individual =
+animatedData absolute common individual =
     { height = individual.height * common.px
     , width = individual.width * common.px
-    , x = individual.x * common.px
-    , y = individual.y * common.px
+    , p = individual.p
     , start = individual.start
     , tileSet = individual.tileSet
     , tileSetSize = individual.tileSetSize
@@ -124,16 +104,7 @@ animatedData common individual =
 
     -- General
     , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
-
-    --    , pixelsPerUnit = common.pixelsPerUnit
     , px = common.px
-
-    --    , viewportOffset = common.viewportOffset |> Math.Vector2.scale common.px
-    --    , aspectRatio = common.aspectRatio
     , time = common.time
-    , viewport = common.viewport
-    , offset = common.offset
-
-    --    , absolute = common.absolute
+    , absolute = absolute
     }

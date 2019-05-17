@@ -31,15 +31,16 @@ draw vertexShader_ =
         plate
 
 
-fragmentShader_ : Shader {} (Model a) { uv : Vec2 }
-fragmentShader_ =
-    [glsl|
-        precision mediump float;
-        varying vec2 uv;
-        void main () {
-            gl_FragColor = vec4(1.,0.,0.,1.);
-        }
-    |]
+
+--fragmentShader_ : Shader {} (Model a) { uv : Vec2 }
+--fragmentShader_ =
+--    [glsl|
+--        precision mediump float;
+--        varying vec2 uv;
+--        void main () {
+--            gl_FragColor = vec4(1.,0.,0.,1.);
+--        }
+--    |]
 
 
 fragmentShader : Shader {} (Model a) { uv : Vec2 }

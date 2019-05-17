@@ -117,16 +117,13 @@ update_ :
 update_ update msg model =
     case ( msg, model ) of
         ( Frame delta, Succeed world ) ->
-            let
-                newWorld =
-                    Logic.GameFlow.update update delta world
-            in
-            ( Succeed newWorld, Cmd.none )
+            ( Succeed (Logic.GameFlow.update update delta world), Cmd.none )
 
         ( Subscription custom, _ ) ->
             ( Succeed custom, Cmd.none )
 
         ( Event f, Succeed world ) ->
+            --            ( Succeed (f world |> Logic.GameFlow.update update 1), Cmd.none )
             ( Succeed (f world), Cmd.none )
 
         ( Resource (Succeed world), Loading ) ->
