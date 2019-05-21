@@ -1,22 +1,27 @@
-module Logic.Template.TiledRead.Task exposing (load)
+module Logic.Template.SaveLoad.Task exposing (load)
 
-import Logic.Template.TiledRead.Internal.Reader exposing (combine, tileDataWith)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask
-import Logic.Template.TiledRead.Internal.Util as Util exposing (getTilesetByGid, objFix)
-import Logic.Template.TiledRead.Layer.ImageLayer exposing (imageLayer)
-import Logic.Template.TiledRead.Layer.ObjetLayer exposing (objectLayer)
-import Logic.Template.TiledRead.Layer.TileLayer exposing (tileLayer)
+import Logic.Component.Singleton as Component
+import Logic.Launcher as Launcher
+import Logic.Template.Component.Layer exposing (Layer)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader, combine, tileDataWith)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (getTilesetByGid, objFix)
+import Logic.Template.SaveLoad.Layer.ImageLayer exposing (imageLayer)
+import Logic.Template.SaveLoad.Layer.ObjetLayer exposing (objectLayer)
+import Logic.Template.SaveLoad.Layer.TileLayer exposing (tileLayer)
+import Task exposing (Task)
 import Tiled.Layer
 
 
-load levelUrl empty readers =
+load : Component.Spec (List Layer) world -> String -> world -> List (Reader world) -> Task Launcher.Error world
+load spec levelUrl empty readers =
     ResourceTask.init
-        |> ResourceTask.getLevel levelUrl
-        |> ResourceTask.andThen (init empty readers)
+        |> Reader.getLevel levelUrl
+        |> ResourceTask.andThen (init spec empty readers)
         |> ResourceTask.toTask
 
 
-init emptyECS readers level start =
+init spec emptyECS readers level start =
     let
         fix =
             Util.common level
@@ -78,4 +83,8 @@ init emptyECS readers level start =
                         )
                     )
     in
-    ResourceTask.map (\{ layers, ecs } -> { ecs | layers = layers |> List.reverse }) layersTask
+    ResourceTask.map
+        (\{ layers, ecs } ->
+            spec.set (layers |> List.reverse) ecs
+        )
+        layersTask

@@ -1,7 +1,6 @@
-module Logic.Template.Layer.Object.Sprite exposing (Model, draw)
+module Logic.Template.Sprite exposing (Model, draw)
 
-import Defaults exposing (default)
-import Logic.Template.Internal exposing (Plate, plate)
+import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
@@ -22,7 +21,7 @@ type alias Model a =
 draw : WebGL.Shader Plate (Model a) { uv : Vec2 } -> Model a -> WebGL.Entity
 draw vertexShader_ =
     WebGL.entityWith
-        default.entitySettings
+        entitySettings
         vertexShader_
         fragmentShader
         plate
@@ -38,7 +37,6 @@ fragmentShader =
         uniform vec2 tileSetSize;
         uniform vec2 tileSize;
         uniform vec2 mirror;
-//        uniform vec2 scrollRatio;
         uniform float tileIndex;
 
         float color2float(vec4 c) {
@@ -54,9 +52,8 @@ fragmentShader =
         }
 
         void main () {
-            vec2 point = uv;// + (viewportOffset / tileSize) * scrollRatio;
+            vec2 point = uv;
             vec2 grid = tileSetSize / tileSize;
-//            vec2 tile = vec2(modI(tileIndex, grid.x), floor(tileIndex / grid.x));
             vec2 tile = vec2(modI((tileIndex), grid.x), int(tileIndex) / int(grid.x));
 
             // inverting reading botom to top

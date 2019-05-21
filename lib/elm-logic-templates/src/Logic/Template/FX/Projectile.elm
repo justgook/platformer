@@ -83,7 +83,7 @@ defaultSettings =
                 (Random.map2 Vec2 (Random.float -0.001 0.001) (Random.float 0.001 0.003))
                 (Random.constant pos)
                 (Random.float 10 160)
-    , spawn = \seed -> Random.step (Random.float (1 / 60) 3) seed |> Tuple.first
+    , spawn = \seed -> Random.step (Random.float (5 / 60) (15 / 60)) seed |> Tuple.first
     }
 
 

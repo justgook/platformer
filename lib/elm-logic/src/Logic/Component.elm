@@ -1,4 +1,4 @@
-module Logic.Component exposing (Set, SingletonSpec, Spec, empty, get, mapById, update, updateById)
+module Logic.Component exposing (Set, Spec, empty, get, mapById, updateById)
 
 import Array exposing (Array)
 
@@ -13,15 +13,11 @@ type alias Spec comp world =
     }
 
 
-type alias SingletonSpec comp world =
-    { get : world -> comp
-    , set : comp -> world -> world
-    }
 
-
-update : { get : world -> comp, set : comp -> world -> world } -> (comp -> comp) -> world -> world
-update spec f world =
-    spec.set (f (spec.get world)) world
+--type alias SingletonSpec comp world =
+--    { get : world -> comp
+--    , set : comp -> world -> world
+--    }
 
 
 updateById : (Maybe comp -> Maybe comp) -> Int -> Set comp -> Set comp

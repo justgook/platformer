@@ -4,7 +4,7 @@ import Dict
 import Direction as Dir
 import Logic.Entity
 import Logic.System as System
-import Logic.Template.SpriteComponent exposing (Sprite(..))
+import Logic.Template.Component.Sprite exposing (Sprite(..))
 import Physic.AABB
 import Physic.Narrow.AABB
 

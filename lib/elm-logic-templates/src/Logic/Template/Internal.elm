@@ -1,9 +1,20 @@
-module Logic.Template.Internal exposing (Plate, Points(..), fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader)
+module Logic.Template.Internal exposing (Plate, Points(..), TileVertexShaderModel, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
+import Array exposing (Array)
 import Math.Matrix4 exposing (Mat4)
 import Math.Vector2 as Vector2
 import WebGL exposing (Mesh, Shader)
+import WebGL.Settings as WebGL exposing (Setting)
+import WebGL.Settings.Blend as Blend
+
+
+entitySettings : List Setting
+entitySettings =
+    [ WebGL.cullFace WebGL.front
+    , Blend.add Blend.srcAlpha Blend.oneMinusSrcAlpha
+    , WebGL.colorMask True True True False
+    ]
 
 
 pxToScreen : Float -> Vec2 -> Vector2.Vec2
@@ -26,7 +37,11 @@ type alias Plate =
     { position : Vector2.Vec2 }
 
 
-tileVertexShader : Shader Plate { a | height : Float, width : Float, absolute : Mat4, p : Vector2.Vec2 } { uv : Vector2.Vec2 }
+type alias TileVertexShaderModel a =
+    { a | height : Float, width : Float, absolute : Mat4, p : Vector2.Vec2 }
+
+
+tileVertexShader : Shader Plate (TileVertexShaderModel a) { uv : Vector2.Vec2 }
 tileVertexShader =
     [glsl|
         precision mediump float;
@@ -82,37 +97,23 @@ type Points
 
 
 type Nonempty a
-    = Nonempty a (List a)
+    = Nonempty a (Array a)
 
 
 points : Vec2 -> List Vec2 -> Points
 points first rest =
-    Points (Nonempty first rest)
+    Points (Nonempty first (Array.fromList rest))
 
 
 get : Int -> Nonempty a -> a
-get i ((Nonempty x xs) as ne) =
+get i (Nonempty x xs) =
     let
         j =
-            modBy (List.length xs + 1) i
-
-        find k ys =
-            case ys of
-                [] ->
-                    {- This should never happen, but to avoid Debug.crash,
-                       we return the head of the list.
-                    -}
-                    x
-
-                z :: zs ->
-                    if k == 0 then
-                        z
-
-                    else
-                        find (k - 1) zs
+            modBy (Array.length xs + 1) i
     in
     if j == 0 then
         x
 
     else
-        find (j - 1) xs
+        Array.get (j - 1) xs
+            |> Maybe.withDefault x

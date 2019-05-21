@@ -1,11 +1,11 @@
-module Logic.Template.TiledRead.Layer.ObjetLayer exposing (objectLayer, validateAndUpdate)
+module Logic.Template.SaveLoad.Layer.ObjetLayer exposing (objectLayer, validateAndUpdate)
 
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
-import Logic.Template.Layer as Layer exposing (Layer(..))
-import Logic.Template.TiledRead.Internal.Reader exposing (Reader, combine, tileArgs)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
-import Logic.Template.TiledRead.Internal.Util exposing (getTilesetByGid)
+import Logic.Template.Component.Layer as Layer exposing (Layer(..))
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader, ReaderTask, combine, tileArgs)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Template.SaveLoad.Internal.Util exposing (getTilesetByGid)
 import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Object
@@ -23,9 +23,8 @@ objectLayer :
             , tilesets : List Tileset
         }
     -> Tiled.Layer.ObjectData
-    -> CacheTask
     ->
-        ResourceTask
+        ReaderTask
             { c
                 | ecs : world
                 , idSource : Int

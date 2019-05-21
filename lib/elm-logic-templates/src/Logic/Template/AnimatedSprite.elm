@@ -1,7 +1,6 @@
-module Logic.Template.Layer.Object.Animated exposing (Model, draw)
+module Logic.Template.AnimatedSprite exposing (Model, draw)
 
-import Defaults exposing (default)
-import Logic.Template.Internal exposing (Plate, plate)
+import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
@@ -25,7 +24,7 @@ type alias Model a =
 draw : WebGL.Shader Plate (Model a) { uv : Vec2 } -> Model a -> WebGL.Entity
 draw vertexShader_ =
     WebGL.entityWith
-        default.entitySettings
+        entitySettings
         vertexShader_
         fragmentShader
         plate

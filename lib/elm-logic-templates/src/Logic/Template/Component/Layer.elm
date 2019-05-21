@@ -1,6 +1,7 @@
-module Logic.Template.Layer exposing (Common, Individual, Layer(..), LayerData(..), Uniform, draw, empty)
+module Logic.Template.Component.Layer exposing (Common, Individual, Layer(..), LayerData(..), Uniform, draw, empty, spec)
 
 import Logic.Component
+import Logic.Component.Singleton as Component
 import Logic.Template.AnimatedTiles as AnimatedTiles
 import Logic.Template.Image as Image
 import Logic.Template.Internal exposing (fullscreenVertexShader)
@@ -47,15 +48,19 @@ type alias ImageData =
     }
 
 
+spec : Component.Spec (List Layer) { world | layers : List Layer }
+spec =
+    { get = .layers
+    , set = \layers world -> { world | layers = layers }
+    }
+
+
 tilesData : Common -> Individual TilesData -> Uniform TilesData
 tilesData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
     , time = common.time
-
-    --    , absolute = common.absolute
-    --    , time = common.time
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
     , tileSet = individual.tileSet
@@ -63,9 +68,6 @@ tilesData common individual =
     , tileSize = individual.tileSize
     , lut = individual.lut
     , lutSize = individual.lutSize
-
-    ----
-    --    , aspectRatio = common.aspectRatio
     }
 
 
@@ -103,12 +105,6 @@ imageData common individual =
 empty : List Layer
 empty =
     []
-
-
-spec =
-    { get = .layers
-    , set = \comps world -> { world | layers = comps }
-    }
 
 
 draw objRender ({ frame, layers, render } as world) =

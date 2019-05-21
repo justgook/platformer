@@ -1,14 +1,16 @@
-module Logic.Template.TiledRead.AnimationDict exposing (read)
+module Logic.Template.SaveLoad.AnimationDict exposing (read)
 
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
 import Image
 import Image.BMP exposing (encodeWith)
+import Logic.Component as Component
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), defaultRead)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask
-import Logic.Template.TiledRead.Internal.Util as Util exposing (animationFraming)
+import Logic.Template.Component.AnimationDict exposing (Animation, AnimationDict)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, ReaderTask, defaultRead)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Parser exposing ((|.), (|=), Parser)
 import Set
@@ -16,10 +18,7 @@ import Tiled.Properties exposing (Property(..))
 import Tiled.Tileset
 
 
-
---animations : EcsSpec { a | animations : Logic.Component.Set AnimationDict } AnimationDict (Logic.Component.Set AnimationDict)
-
-
+read : Component.Spec AnimationDict world -> Reader world
 read spec =
     { defaultRead
         | objectTile =
@@ -147,7 +146,7 @@ parseName =
 
 
 animLutPlusImageTask t tileIndex =
-    ResourceTask.getTexture t.image
+    Reader.getTexture t.image
         >> ResourceTask.andThen
             (\tileSetImage ->
                 case Util.animation t tileIndex of
@@ -159,7 +158,7 @@ animLutPlusImageTask t tileIndex =
                             animLength =
                                 List.length animLutData
                         in
-                        ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
+                        Reader.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
                             >> ResourceTask.map
                                 (\animLUT ->
                                     { tileSet = tileSetImage

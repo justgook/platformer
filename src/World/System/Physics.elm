@@ -4,9 +4,9 @@ import AltMath.Vector2 as Vec2 exposing (vec2)
 import Logic.Entity
 import Logic.System
 import Logic.Template.Input as Input
-import Physic
 import Physic.AABB
 import Physic.Narrow.AABB as AABB
+import Set
 
 
 aabb { get, set } ecs =
@@ -27,7 +27,7 @@ applyInput force inputSpec_ physicsSpec ecs =
         ( updatedPhysicsComps, _ ) =
             Logic.System.step2
                 (\( body_, setBody ) ( key, _ ) acc ->
-                    case ( key.x, key.y == 1 ) of
+                    case ( key.x, Set.member "Jump" key.action ) of
                         ( a, True ) ->
                             if .y (AABB.getContact body_) == -1 then
                                 setBody (AABB.setVelocity (vec2 (key.x * force.x) force.y) body_) acc

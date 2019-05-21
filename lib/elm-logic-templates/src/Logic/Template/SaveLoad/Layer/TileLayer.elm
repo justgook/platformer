@@ -1,19 +1,20 @@
-module Logic.Template.TiledRead.Layer.TileLayer exposing (tileLayer)
+module Logic.Template.SaveLoad.Layer.TileLayer exposing (tileLayer)
 
-import Defaults exposing (default)
 import Dict exposing (Dict)
 import Image exposing (Order(..))
 import Image.BMP exposing (encodeWith)
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.Layer as Layer exposing (Layer(..))
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
-import Logic.Template.TiledRead.Internal.Util as Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
+import Logic.Template.Component.Layer as Layer exposing (Layer(..))
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ReaderTask)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
 import Math.Vector2 exposing (vec2)
+import Math.Vector3 exposing (vec3)
 import Tiled.Layer exposing (TileData)
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
 
 
-tileLayer : List Tileset -> TileData -> CacheTask -> ResourceTask ( List Layer, List Tileset )
+tileLayer : List Tileset -> TileData -> ReaderTask ( List Layer, List Tileset )
 tileLayer tilesets_ ({ data } as layerData) =
     splitTileLayerByTileSet
         tilesets_
@@ -35,9 +36,8 @@ splitTileLayerByTileSet :
         , cache : Image.Pixels
         , static : Dict Int ( EmbeddedTileData, Image.Pixels )
         }
-    -> CacheTask
     ->
-        ResourceTask
+        ReaderTask
             { animated :
                 List ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
             , static : List ( EmbeddedTileData, Image.Pixels )
@@ -60,7 +60,7 @@ splitTileLayerByTileSet tilesets dataLeft ({ cache, static, animated } as acc) =
                         splitTileLayerByTileSet tilesets rest (fillTiles gid info acc)
 
                     Just ((Tiled.Tileset.Source { firstgid, source }) as was) ->
-                        ResourceTask.getTileset source firstgid
+                        Reader.getTileset source firstgid
                             >> ResourceTask.andThen
                                 (\tileset ->
                                     splitTileLayerByTileSet
@@ -95,7 +95,7 @@ imageOptions =
 tileStaticLayerBuilder :
     TileData
     -> List ( Tiled.Tileset.EmbeddedTileData, Image.Pixels )
-    -> List (CacheTask -> ResourceTask Layer)
+    -> List (ReaderTask Layer)
 tileStaticLayerBuilder layerData =
     List.map
         (\( tileset, data ) ->
@@ -103,10 +103,10 @@ tileStaticLayerBuilder layerData =
                 layerProps =
                     Util.properties layerData
             in
-            ResourceTask.getTexture tileset.image
+            Reader.getTexture tileset.image
                 >> ResourceTask.andThen
                     (\tileSetImage ->
-                        ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)
+                        Reader.getTexture (encodeWith imageOptions layerData.width layerData.height data)
                             >> ResourceTask.map
                                 (\lut ->
                                     Tiles
@@ -115,7 +115,7 @@ tileStaticLayerBuilder layerData =
                                         , tileSet = tileSetImage
                                         , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                         , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                        , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
+                                        , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
                                         , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                         }
                                 )
@@ -126,7 +126,7 @@ tileStaticLayerBuilder layerData =
 tileAnimatedLayerBuilder :
     TileData
     -> List ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
-    -> List (CacheTask -> ResourceTask Layer)
+    -> List (ReaderTask Layer)
 tileAnimatedLayerBuilder layerData =
     List.map
         (\( ( tileset, anim ), data ) ->
@@ -140,13 +140,13 @@ tileAnimatedLayerBuilder layerData =
                 animLength =
                     List.length animLutData
             in
-            ResourceTask.getTexture tileset.image
+            Reader.getTexture tileset.image
                 >> ResourceTask.andThen
                     (\tileSetImage ->
-                        ResourceTask.getTexture (encodeWith imageOptions layerData.width layerData.height data)
+                        Reader.getTexture (encodeWith imageOptions layerData.width layerData.height data)
                             >> ResourceTask.andThen
                                 (\lut ->
-                                    ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
+                                    Reader.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
                                         >> ResourceTask.map
                                             (\animLUT ->
                                                 AnimatedTiles
@@ -155,7 +155,7 @@ tileAnimatedLayerBuilder layerData =
                                                     , tileSet = tileSetImage
                                                     , tileSetSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                                     , tileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                                    , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 tileset.transparentcolor)
+                                                    , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
                                                     , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                                     , animLUT = animLUT
                                                     , animLength = animLength

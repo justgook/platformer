@@ -1,10 +1,10 @@
-module Logic.Template.SpriteComponent exposing (Sprite(..), draw, empty, spec)
+module Logic.Template.Component.Sprite exposing (Sprite(..), draw, empty, spec)
 
-import Logic.Component
+import Logic.Component exposing (Set, Spec)
+import Logic.Template.AnimatedSprite
+import Logic.Template.Component.Layer as Common
 import Logic.Template.Internal exposing (pxToScreen, tileVertexShader)
-import Logic.Template.Layer as Common
-import Logic.Template.Layer.Object.Animated
-import Logic.Template.Layer.Object.Sprite
+import Logic.Template.Sprite
 import Math.Vector2 exposing (Vec2)
 import WebGL.Texture exposing (Texture)
 
@@ -14,12 +14,14 @@ type Sprite
     | Animated (Common.Individual AnimatedData)
 
 
+spec : Spec Sprite { world | sprites : Set Sprite }
 spec =
     { get = .sprites
     , set = \comps world -> { world | sprites = comps }
     }
 
 
+empty : Set Sprite
 empty =
     Logic.Component.empty
 
@@ -58,7 +60,7 @@ draw time { absolute, px } getPosition _ obj body acc =
                 { info
                     | p = getPosition body |> pxToScreen px
                 }
-                |> Logic.Template.Layer.Object.Sprite.draw tileVertexShader
+                |> Logic.Template.Sprite.draw tileVertexShader
             )
                 :: acc
 
@@ -68,7 +70,7 @@ draw time { absolute, px } getPosition _ obj body acc =
                 { info
                     | p = getPosition body |> pxToScreen px
                 }
-                |> Logic.Template.Layer.Object.Animated.draw tileVertexShader
+                |> Logic.Template.AnimatedSprite.draw tileVertexShader
             )
                 :: acc
 

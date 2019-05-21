@@ -157,7 +157,7 @@ reSpawn : Emitter uniforms a -> Emitter uniforms a
 reSpawn acc =
     case acc.dead of
         { id } :: rest ->
-            if acc.queue > 0 then
+            if acc.queue > 1 then
                 spawn id rest { acc | queue = acc.queue - 1 }
                     |> reSpawn
 

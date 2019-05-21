@@ -1,13 +1,11 @@
-module Logic.Template.TiledRead.Physics exposing (read)
+module Logic.Template.SaveLoad.Physics exposing (read)
 
 import Dict
-import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), defaultRead)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask
-import Logic.Template.TiledRead.Internal.Util as Util exposing (extractObjectData)
-import Physic
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (extractObjectData)
 import Physic.AABB
 import Physic.Narrow.AABB as AABB exposing (AABB)
-import Physic.Narrow.Body as Body exposing (Body)
 import Tiled.Object exposing (Object(..))
 
 

@@ -1,21 +1,29 @@
-module Logic.Template.TiledRead.Internal.Reader exposing
+module Logic.Template.SaveLoad.Internal.Reader exposing
     ( GetTileset
     , Read(..)
     , Reader
+    , ReaderTask
     , combine
     , defaultRead
+    , getLevel
+    , getTexture
+    , getTileset
     , tileArgs
     , tileDataWith
     )
 
+import Dict
 import Logic.Entity exposing (EntityID)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Launcher exposing (Error(..))
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask, getJson)
+import Task
 import Tiled exposing (GidInfo)
 import Tiled.Layer
 import Tiled.Level
 import Tiled.Object exposing (Common, CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints, Dimension, Gid, PolyPoints)
 import Tiled.Properties
 import Tiled.Tileset exposing (Tileset)
+import WebGL.Texture exposing (linear, nonPowerOfTwoOptions)
 
 
 type alias Reader world =
@@ -31,8 +39,18 @@ type alias Reader world =
     }
 
 
+type Response
+    = Texture WebGL.Texture.Texture
+    | Tileset Tiled.Tileset.Tileset
+    | Level Tiled.Level.Level
+
+
+type alias ReaderTask a =
+    CacheTask Response -> ResourceTask a Response
+
+
 type alias GetTileset =
-    Int -> CacheTask -> ResourceTask Tileset
+    Int -> ReaderTask Tileset
 
 
 type alias ReturnSync world =
@@ -40,7 +58,7 @@ type alias ReturnSync world =
 
 
 type alias ReturnAsync world =
-    CacheTask -> ResourceTask (( EntityID, world ) -> ( EntityID, world ))
+    ReaderTask (( EntityID, world ) -> ( EntityID, world ))
 
 
 type Read world a
@@ -138,8 +156,8 @@ combine :
     -> a
     -> List reader
     -> ( EntityID, world )
-    -> CacheTask
-    -> ResourceTask ( EntityID, world )
+    -> CacheTask Response
+    -> ResourceTask ( EntityID, world ) Response
 combine getKey arg readers acc =
     case readers of
         item :: rest ->
@@ -155,3 +173,89 @@ combine getKey arg readers acc =
 
         [] ->
             ResourceTask.succeed acc
+
+
+getTileset : String -> Int -> CacheTask Response -> ResourceTask Tiled.Tileset.Tileset Response
+getTileset url firstgid =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Tileset r) ->
+                    Task.succeed ( r, d )
+
+                _ ->
+                    getJson (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
+            (\( resp, d ) ->
+                ( resp, { d | dict = Dict.insert url (Tileset resp) d.dict } )
+            )
+
+
+getTexture : String -> CacheTask Response -> ResourceTask WebGL.Texture.Texture Response
+getTexture url =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Texture r) ->
+                    Task.succeed ( r, d )
+
+                _ ->
+                    (if String.startsWith "data:image" url then
+                        url
+
+                     else
+                        d.url ++ url
+                    )
+                        |> WebGL.Texture.loadWith textureOption
+                        |> Task.mapError (textureError url)
+                        |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
+            (\( resp, d ) ->
+                ( resp, { d | dict = Dict.insert url (Texture resp) d.dict } )
+            )
+
+
+textureOption : WebGL.Texture.Options
+textureOption =
+    { nonPowerOfTwoOptions
+        | magnify = linear
+        , minify = linear
+    }
+
+
+textureError : String -> WebGL.Texture.Error -> Error
+textureError url e =
+    case e of
+        WebGL.Texture.LoadError ->
+            Error 4005 ("Texture.LoadError: " ++ url)
+
+        WebGL.Texture.SizeError a b ->
+            Error 4006 ("Texture.SizeError: " ++ url)
+
+
+getLevel : String -> CacheTask Response -> ResourceTask Tiled.Level.Level Response
+getLevel url =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Level r) ->
+                    Task.succeed ( r, d )
+
+                _ ->
+                    getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
+            (\( resp, d ) ->
+                let
+                    relUrl =
+                        String.split "/" url
+                            |> List.reverse
+                            |> List.drop 1
+                            |> (::) ""
+                            |> List.reverse
+                            |> String.join "/"
+                in
+                ( resp, { d | url = relUrl, dict = Dict.insert url (Level resp) d.dict } )
+            )

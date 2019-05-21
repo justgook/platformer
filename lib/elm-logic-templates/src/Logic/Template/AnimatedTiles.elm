@@ -1,7 +1,6 @@
 module Logic.Template.AnimatedTiles exposing (Model, draw)
 
-import Defaults exposing (default)
-import Logic.Template.Internal exposing (Plate, plate)
+import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
@@ -27,7 +26,7 @@ type alias Model a =
 draw : Shader Plate (Model a) { uv : Vec2 } -> Model a -> WebGL.Entity
 draw vertexShader_ =
     WebGL.entityWith
-        default.entitySettings
+        entitySettings
         vertexShader_
         fragmentShader
         plate
@@ -94,7 +93,7 @@ fragmentShader =
             gl_FragColor.a *= float(tileIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
 
 //            gl_FragColor.rgb = vec3(1.,0., mod(floor(uv / px + 0.5), 2.));
-            gl_FragColor.rgb *= gl_FragColor.a;
+//            gl_FragColor.rgb *= gl_FragColor.a;
 
         }
     |]

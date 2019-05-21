@@ -1,9 +1,8 @@
 module Logic.Template.Image exposing (Model, draw, drawNo, drawX, drawY)
 
---import Logic.Template.Layer.Common exposing (vertexShader)
+--import Logic.Template.Component.Layer.Common exposing (vertexShader)
 
-import Defaults exposing (default)
-import Logic.Template.Internal exposing (Plate, plate)
+import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
 import WebGL exposing (Shader)
@@ -53,7 +52,7 @@ render_ :
     -> WebGL.Entity
 render_ fragmentShader vertexShader =
     WebGL.entityWith
-        default.entitySettings
+        entitySettings
         vertexShader
         fragmentShader
         plate

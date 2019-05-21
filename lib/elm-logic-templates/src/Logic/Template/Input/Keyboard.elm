@@ -15,59 +15,52 @@ sub spec world =
         ]
 
 
-onKeyDown spec world =
+onKeyDown =
+    onKeyChange Set.insert
+
+
+onKeyUp =
+    onKeyChange Set.remove
+
+
+onKeyChange update spec world =
     let
-        direction =
+        input =
             spec.get world
     in
     Decode.field "key" Decode.string
-        |> Decode.andThen (isRegistered direction)
+        |> Decode.andThen (isRegistered input)
         |> Decode.andThen
             (\key ->
-                Set.insert key direction.pressed
-                    |> updateKeys spec key world
+                update key input.pressed
+                    |> updateKeys spec update key world
             )
 
 
-onKeyUp spec world =
-    let
-        direction =
-            spec.get world
-    in
-    Decode.field "key" Decode.string
-        |> Decode.andThen (isRegistered direction)
-        |> Decode.andThen
-            (\key ->
-                Set.remove key direction.pressed
-                    |> updateKeys spec key world
-            )
-
-
-isRegistered direction key =
+isRegistered input key =
     --TODO maybe get rid of it and extend more updateKeys to fail in Maybe..
-    if Dict.member key direction.registered then
+    if Dict.member key input.registered then
         Decode.succeed key
 
     else
         Decode.fail "not registered key"
 
 
-updateKeys { get, set } keyChanged world pressed =
+updateKeys { get, set } update keyChanged world pressed =
     let
-        direction =
+        input =
             get world
     in
-    if direction.pressed == pressed then
+    if input.pressed == pressed then
         Decode.fail "Nothing change"
 
     else
         let
             newComps =
-                direction.registered
-                    |> Dict.get keyChanged
+                Dict.get keyChanged input.registered
                     |> Maybe.andThen
-                        (\id ->
-                            Array.get id direction.comps
+                        (\( id, action ) ->
+                            Array.get id input.comps
                                 |> Maybe.andThen identity
                                 |> Maybe.map
                                     (\comp ->
@@ -75,15 +68,21 @@ updateKeys { get, set } keyChanged world pressed =
                                             { x, y } =
                                                 arrows comp pressed
                                         in
-                                        Entity.setComponent id { comp | x = x, y = y } direction.comps
+                                        Entity.setComponent id
+                                            { comp
+                                                | x = x
+                                                , y = y
+                                                , action = update action comp.action
+                                            }
+                                            input.comps
                                     )
                         )
-                    |> Maybe.withDefault direction.comps
+                    |> Maybe.withDefault input.comps
 
-            updatedDirection =
-                { direction | comps = newComps }
+            updatedInput =
+                { input | comps = newComps }
         in
-        Decode.succeed (set { updatedDirection | pressed = pressed } world)
+        Decode.succeed (set { updatedInput | pressed = pressed } world)
 
 
 arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Float, y : Float }

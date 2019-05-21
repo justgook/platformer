@@ -1,7 +1,6 @@
-module Logic.Template.Physics exposing (World, empty, spec)
+module Logic.Template.Component.Physics exposing (World, empty, spec)
 
---physics : EcsSpec { a | dimensions : Logic.Component.Set Vec2 } Vec2 (Logic.Component.Set Vec2)
-
+import Logic.Component.Singleton exposing (Spec)
 import Physic.AABB
 
 
@@ -9,11 +8,13 @@ type alias World =
     Physic.AABB.World Int
 
 
+spec : Spec World { world | physics : World }
 spec =
     { get = .physics
     , set = \comps world -> { world | physics = comps }
     }
 
 
+empty : World
 empty =
     Physic.AABB.empty

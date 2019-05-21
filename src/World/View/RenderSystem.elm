@@ -2,83 +2,81 @@ module World.View.RenderSystem exposing (debugPhysicsAABB, viewSprite)
 
 import AltMath.Vector2 as AVec2
 import Logic.System as System exposing (System)
-import Logic.Template.Internal exposing (pxToScreen)
-import Logic.Template.Layer as Common
-import Logic.Template.Layer.Object.Ellipse as Ellipse
-import Logic.Template.Layer.Object.Rectangle as Rectangle
-import Logic.Template.SpriteComponent
-import Math.Vector2 as Vec2 exposing (vec2)
-import Math.Vector3 exposing (vec3)
+import Logic.Template.Component.Sprite
+import Logic.Template.Ellipse as Ellipse
+import Logic.Template.Internal exposing (TileVertexShaderModel, pxToScreen, tileVertexShader)
+import Logic.Template.Rectangle as Rectangle
+import Math.Matrix4 exposing (Mat4)
 import Math.Vector4 exposing (vec4)
 import Physic.AABB
 import Physic.Narrow.AABB
+import WebGL
 
 
-debugPhysicsAABB common ( ecs, _ ) acc =
+debugPhysicsAABB common ecs acc =
     ecs.physics
         |> Physic.AABB.toList
         |> List.map (Physic.Narrow.AABB.debuInfo (fromPhysics common))
         |> (++) acc
 
 
-fromPhysics common =
+fromPhysics :
+    { a | absolute : Mat4, px : Float }
+    ->
+        { circle : AVec2.Vec2 -> Float -> WebGL.Entity
+        , ellipse : AVec2.Vec2 -> Float -> Float -> WebGL.Entity
+        , radiusRectangle : AVec2.Vec2 -> AVec2.Vec2 -> Float -> WebGL.Entity
+        , rectangle : AVec2.Vec2 -> Float -> Float -> WebGL.Entity
+        }
+fromPhysics renderInfo =
     { circle =
         \p r ->
-            { x = AVec2.getX p
-            , y = AVec2.getY p
+            { height = r * 2
             , width = r * 2
-            , height = r * 2
+            , absolute = renderInfo.absolute
+            , p = pxToScreen renderInfo.px p
             , color = vec4 0 1 1 1
-            , scrollRatio = vec2 1 1
-            , transparentcolor = vec3 0 0 0
             }
-                |> Common.LayerData common
-                |> Ellipse.draw
+                |> Ellipse.draw tileVertexShader
     , ellipse =
         \p r r2 ->
-            { x = AVec2.getX p
-            , y = AVec2.getY p
+            { height = r2 * 2
             , width = r * 2
-            , height = r2 * 2
+            , absolute = renderInfo.absolute
+            , p = pxToScreen renderInfo.px p
             , color = vec4 0 1 1 1
-            , scrollRatio = vec2 1 1
-            , transparentcolor = vec3 0 0 0
             }
-                |> Common.LayerData common
-                |> Ellipse.draw
+                |> Ellipse.draw tileVertexShader
     , rectangle =
         \p w h ->
-            { x = AVec2.getX p
-            , y = AVec2.getY p
-            , width = w
-            , height = h
+            { height = h * renderInfo.px
+            , width = w * renderInfo.px
+            , absolute = renderInfo.absolute
+            , p = pxToScreen renderInfo.px p
             , color = vec4 0 1 1 1
-            , scrollRatio = vec2 1 1
-            , transparentcolor = vec3 0 0 0
             }
-                |> Common.LayerData common
-                |> Rectangle.draw
+                |> Rectangle.draw tileVertexShader
     , radiusRectangle =
-        \p_ r h ->
+        \p r h ->
             let
-                p =
-                    pxToScreen common.px p_
+                w =
+                    r.x
             in
-            { p = p
-            , r = pxToScreen common.px r
-            , height = h * common.px
+            { height = h * 2 * renderInfo.px
+            , width = w * 2 * renderInfo.px
+            , absolute = renderInfo.absolute
+            , p = pxToScreen renderInfo.px p
+            , r = pxToScreen renderInfo.px r
+            , px = renderInfo.px
             , color = vec4 0 1 1 1
-            , scrollRatio = vec2 1 1
-            , transparentcolor = vec3 0 0 0
             }
-                |> Common.LayerData common
-                |> Rectangle.render2
+                |> Rectangle.draw2 tileVertexShader
     }
 
 
 viewSprite positions sprites getPosition ( esc, inLayer ) =
     System.foldl3
-        (Logic.Template.SpriteComponent.draw esc.frame esc.render getPosition)
+        (Logic.Template.Component.Sprite.draw esc.frame esc.render getPosition)
         inLayer
         sprites
         positions

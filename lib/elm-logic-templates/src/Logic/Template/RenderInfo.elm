@@ -1,8 +1,8 @@
 module Logic.Template.RenderInfo exposing (RenderInfo, applyOffset, applyOffsetVec, canvas, empty, lowResCanvas, read, resize, spec, updateOffset)
 
-import Logic.Component
-import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), Reader, defaultRead)
-import Logic.Template.TiledRead.Internal.Util exposing (levelProps)
+import Logic.Component.Singleton
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import VirtualDom
@@ -21,7 +21,7 @@ type alias RenderInfo =
 
 
 type alias Spec world =
-    Logic.Component.SingletonSpec RenderInfo world
+    Logic.Component.Singleton.Spec RenderInfo world
 
 
 read : Spec world -> Reader world

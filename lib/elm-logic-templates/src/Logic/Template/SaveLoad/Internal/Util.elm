@@ -1,10 +1,24 @@
-module Logic.Template.TiledRead.Internal.Util exposing (animation, animationFraming, common, extractObjectData, firstGid, getTilesetByGid, hexColor2Vec3, levelProps, objFix, properties, scrollRatio, tilesetById, tilesets, updateTileset)
+module Logic.Template.SaveLoad.Internal.Util exposing
+    ( animation
+    , animationFraming
+    , common
+    , extractObjectData
+    , firstGid
+    , getTilesetByGid
+    , hexColor2Vec3
+    , levelProps
+    , objFix
+    , properties
+    , scrollRatio
+    , tilesetById
+    , tilesets
+    , updateTileset
+    )
 
-import Defaults exposing (default)
 import Dict
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.TiledRead.Internal.Reader exposing (GetTileset)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Reader exposing (GetTileset, getTileset)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Tiled.Level as Level exposing (Level)
@@ -17,7 +31,7 @@ getTilesetByGid : List Tileset -> GetTileset
 getTilesetByGid tilesets_ gid =
     case tilesetById tilesets_ gid of
         Just (Tiled.Tileset.Source info) ->
-            ResourceTask.getTileset info.source info.firstgid
+            getTileset info.source info.firstgid
 
         Just t ->
             ResourceTask.succeed t
@@ -128,10 +142,10 @@ common level =
 scrollRatio : Bool -> PropertiesReader -> Vec2
 scrollRatio dual props =
     if dual then
-        vec2 (props.float "scrollRatio.x" default.scrollRatio) (props.float "scrollRatio.y" default.scrollRatio)
+        vec2 (props.float "scrollRatio.x" 1) (props.float "scrollRatio.y" 1)
 
     else
-        vec2 (props.float "scrollRatio" default.scrollRatio) (props.float "scrollRatio" default.scrollRatio)
+        vec2 (props.float "scrollRatio" 1) (props.float "scrollRatio" 1)
 
 
 tilesets : Level -> List Tiled.Tileset.Tileset
@@ -155,7 +169,7 @@ animationFraming anim =
     anim
         |> List.concatMap
             (\{ duration, tileid } ->
-                List.repeat (toFloat duration / 1000 * default.fps |> floor) tileid
+                List.repeat (toFloat duration / 1000 * 60 |> floor) tileid
             )
 
 

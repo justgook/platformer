@@ -1,37 +1,38 @@
-port module Main exposing (main)
+port module Main exposing (main, onscreenSpecExtend)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Browser.Dom as Browser
 import Browser.Events as Events
-import Defaults exposing (default)
 import Json.Decode as Decode exposing (Value)
 import Logic.Component
+import Logic.Component.Singleton
 import Logic.Entity
 import Logic.GameFlow as Flow
 import Logic.Launcher as Launcher exposing (Launcher, document)
-import Logic.Template.AnimationDict
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
 import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.AnimationDict
+import Logic.Template.Component.Layer
+import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
+import Logic.Template.Component.Physics
+import Logic.Template.Component.Sprite
 import Logic.Template.FX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
 import Logic.Template.Internal exposing (pxToScreen)
-import Logic.Template.Layer
-import Logic.Template.OnScreenControl as OnScreenControl exposing (OnScreenControl)
-import Logic.Template.Physics
+import Logic.Template.OnScreenControl as OnScreenControl
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
-import Logic.Template.SpriteComponent
-import Logic.Template.TiledRead.AnimationDict
-import Logic.Template.TiledRead.Camera
-import Logic.Template.TiledRead.Input
-import Logic.Template.TiledRead.Physics
-import Logic.Template.TiledRead.Sprite
-import Logic.Template.TiledRead.Task as TiledRead
-import Math.Matrix4 as Mat4 exposing (Mat4)
+import Logic.Template.SaveLoad.AnimationDict
+import Logic.Template.SaveLoad.Camera
+import Logic.Template.SaveLoad.Input
+import Logic.Template.SaveLoad.Physics
+import Logic.Template.SaveLoad.Sprite
+import Logic.Template.SaveLoad.Task as TiledRead
 import Math.Vector2
 import Physic.AABB as AABB
 import Physic.Narrow.AABB as AABB
+import Set
 import Task
 import WebGL
 import World.System.AnimationChange
@@ -40,10 +41,10 @@ import World.View.RenderSystem
 
 
 read =
-    [ Logic.Template.TiledRead.Sprite.read Logic.Template.SpriteComponent.spec
-    , Logic.Template.TiledRead.AnimationDict.read Logic.Template.AnimationDict.spec
-    , Logic.Template.TiledRead.Input.read Logic.Template.Input.spec
-    , Logic.Template.TiledRead.Camera.readId Logic.Template.Camera.spec
+    [ Logic.Template.SaveLoad.Sprite.read Logic.Template.Component.Sprite.spec
+    , Logic.Template.SaveLoad.AnimationDict.read Logic.Template.Component.AnimationDict.spec
+    , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec
+    , Logic.Template.SaveLoad.Camera.readId Logic.Template.Camera.spec
     , RenderInfo.read RenderInfo.spec
     , aabb.read
     ]
@@ -51,15 +52,14 @@ read =
 
 type alias OwnWorld =
     { camera : Logic.Template.Camera.WithId (Trigger {})
-    , layers : List Logic.Template.Layer.Layer
-    , sprites : Logic.Component.Set Logic.Template.SpriteComponent.Sprite
+    , layers : List Logic.Template.Component.Layer.Layer
+    , sprites : Logic.Component.Set Logic.Template.Component.Sprite.Sprite
     , physics : AABB.World Int
-    , animations : Logic.Component.Set Logic.Template.AnimationDict.AnimationDict
+    , animations : Logic.Component.Set Logic.Template.Component.AnimationDict.AnimationDict
     , input : Logic.Template.Input.Direction
     , projectile : Projectile
-    , viewport : Mat4
     , render : RenderInfo
-    , onScreen : OnScreenControl {}
+    , onScreen : TwoButtonStick {}
     }
 
 
@@ -68,21 +68,15 @@ world =
     { frame = 0
     , runtime_ = 0
     , flow = Flow.Running
-    , layers = Logic.Template.Layer.empty
-    , camera =
-        { pixelsPerUnit = default.pixelsPerUnit
-        , viewportOffset = default.viewportOffset
-        , id = 0
-        , yTarget = 0
-        }
-    , sprites = Logic.Template.SpriteComponent.empty
-    , animations = Logic.Template.AnimationDict.empty
+    , layers = Logic.Template.Component.Layer.empty
+    , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = 0 }
+    , sprites = Logic.Template.Component.Sprite.empty
+    , animations = Logic.Template.Component.AnimationDict.empty
     , input = Logic.Template.Input.empty
     , physics = aabb.empty
     , projectile = Projectile.empty
-    , viewport = Mat4.makeOrtho2D 0 2.2 0 1
     , render = RenderInfo.empty
-    , onScreen = OnScreenControl.empty
+    , onScreen = OnScreenControl.emptyTwoButtonStick
     }
 
 
@@ -101,6 +95,10 @@ main =
         }
 
 
+
+--init : Value -> Task.Task Launcher.Error (Launcher.World OwnWorld)
+
+
 init flags =
     let
         levelUrl =
@@ -113,7 +111,7 @@ init flags =
             RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
         )
         Browser.getViewport
-        (TiledRead.load levelUrl world read)
+        (TiledRead.load Logic.Template.Component.Layer.spec levelUrl world read)
 
 
 
@@ -126,15 +124,12 @@ view w =
         { renderable } =
             w.projectile
 
-        px =
-            1.0 / w.camera.pixelsPerUnit
-
         fxUniforms =
             { renderable
                 | aspectRatio = toFloat w.render.screen.width / toFloat w.render.screen.height
                 , viewportOffset =
                     w.camera.viewportOffset
-                        |> Vec2.scale px
+                        |> Vec2.scale w.render.px
                         |> Math.Vector2.fromRecord
             }
 
@@ -144,45 +139,60 @@ view w =
         updatedWorld =
             { w | render = RenderInfo.updateOffset newOffset w.render }
     in
-    [ Logic.Template.Layer.draw (objRender updatedWorld) updatedWorld
+    [ Logic.Template.Component.Layer.draw (objRender updatedWorld) updatedWorld
         ++ Projectile.draw fxUniforms
-        |> WebGL.toHtmlWith default.webGLOption (RenderInfo.canvas w.render)
-    , OnScreenControl.stick w.onScreen onscreenEvent
-
-    --            (Logic.Component.update onScreenControlSpec)
+        |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
+    , OnScreenControl.twoButtonStick onscreenSpecExtend updatedWorld
     ]
 
 
-onscreenEvent f w =
-    let
-        spec =
-            { get = .onScreen
-            , set = \comps w__ -> { w__ | onScreen = comps }
-            }
-
-        controls =
-            f (spec.get w)
-
-        { x, y } =
-            OnScreenControl.dir8 controls
-
-        inputCompsSpec =
-            Logic.Template.Input.getComps Logic.Template.Input.spec
-    in
-    w
-        |> spec.set controls
-        |> Logic.Component.update inputCompsSpec
-            (Logic.Component.mapById (\go -> { go | x = x, y = y }) w.camera.id)
+webGLOption : List WebGL.Option
+webGLOption =
+    [ WebGL.alpha False
+    , WebGL.depth 1
+    , WebGL.clearColor (29 / 255) (33 / 255) (45 / 255) 1
+    ]
 
 
-objRender ecs objLayer =
+onscreenSpecExtend :
+    Logic.Component.Singleton.Spec (TwoButtonStick {})
+        { world
+            | onScreen : TwoButtonStick {}
+            , input : Logic.Template.Input.Direction
+            , camera : Logic.Template.Camera.WithId (Trigger {})
+        }
+onscreenSpecExtend =
+    { get = OnScreenControl.spec.get
+    , set =
+        \comp w ->
+            let
+                jump =
+                    if comp.button2.active then
+                        Set.insert "Jump"
+
+                    else
+                        Set.remove "Jump"
+
+                setXY { x, y } a =
+                    { a | x = x, y = y }
+
+                aaa =
+                    setXY (OnScreenControl.dir8 comp.center comp.cursor)
+            in
+            OnScreenControl.spec.set comp w
+                |> Logic.Component.Singleton.update (Logic.Template.Input.getComps Logic.Template.Input.spec)
+                    (Logic.Component.mapById (\key -> aaa { key | action = jump key.action }) w.camera.id)
+    }
+
+
+objRender w objLayer =
     []
-        --        |> aabb.view common ( ecs, objLayer )
+        |> aabb.view w.render w
         |> World.View.RenderSystem.viewSprite
-            (aabb.compsExtracter ecs)
-            (Logic.Template.SpriteComponent.spec.get ecs)
+            (aabb.compsExtracter w)
+            (Logic.Template.Component.Sprite.spec.get w)
             aabb.getPosition
-            ( ecs, objLayer )
+            ( w, objLayer )
 
 
 
@@ -192,6 +202,9 @@ objRender ecs objLayer =
 
 update w =
     let
+        pixelsPerUnit =
+            1.0 / w.render.px
+
         target_ =
             getPosById w.camera.id w
 
@@ -200,9 +213,9 @@ update w =
                 |> (\a -> Vec2.sub a (getCenter w))
 
         targetInRelSpace =
-            Vec2.vec2 (target_.x / w.camera.pixelsPerUnit / 2) (target_.y / w.camera.pixelsPerUnit / 2)
+            Vec2.vec2 (target_.x / pixelsPerUnit / 2) (target_.y / pixelsPerUnit / 2)
 
-        contact =
+        contactForCamera =
             aabb.spec.get w
                 |> AABB.byId w.camera.id
                 |> Maybe.map (AABB.getContact >> .y)
@@ -216,7 +229,7 @@ update w =
                     )
 
         cameraStep =
-            Logic.Template.Camera.Trigger.yTrigger 3 contact target
+            Logic.Template.Camera.Trigger.yTrigger 3 contactForCamera target
                 >> Logic.Template.Camera.PositionLocking.xLock target
     in
     { w
@@ -224,20 +237,20 @@ update w =
     }
         |> World.System.Physics.applyInput (vec2 3 8) Logic.Template.Input.spec aabb.spec
         |> aabb.system
-        |> World.System.AnimationChange.sideScroll aabb.spec Logic.Template.SpriteComponent.spec Logic.Template.AnimationDict.spec
+        |> World.System.AnimationChange.sideScroll aabb.spec Logic.Template.Component.Sprite.spec Logic.Template.Component.AnimationDict.spec
         |> Logic.Template.Camera.system Logic.Template.Camera.spec cameraStep
 
 
 aabb =
     let
         empty =
-            Logic.Template.Physics.empty
+            Logic.Template.Component.Physics.empty
     in
-    { spec = Logic.Template.Physics.spec
+    { spec = Logic.Template.Component.Physics.spec
     , empty = { empty | gravity = { x = 0, y = -0.5 } }
     , view = World.View.RenderSystem.debugPhysicsAABB
-    , system = World.System.Physics.aabb Logic.Template.Physics.spec
-    , read = Logic.Template.TiledRead.Physics.read Logic.Template.Physics.spec
+    , system = World.System.Physics.aabb Logic.Template.Component.Physics.spec
+    , read = Logic.Template.SaveLoad.Physics.read Logic.Template.Component.Physics.spec
     , getPosition = AABB.getPosition
     , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
     }

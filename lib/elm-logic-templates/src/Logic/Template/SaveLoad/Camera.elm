@@ -1,10 +1,9 @@
-module Logic.Template.TiledRead.Camera exposing (read, readId)
+module Logic.Template.SaveLoad.Camera exposing (read, readId)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
-import Defaults exposing (default)
 import Dict
-import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), defaultRead)
-import Logic.Template.TiledRead.Internal.Util exposing (levelProps)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
+import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
 import Parser exposing ((|.), (|=), Parser)
 import Set
 
@@ -49,23 +48,16 @@ read spec_ =
                             levelProps level
                                 |> (\prop ->
                                         let
-                                            x =
-                                                default.viewportOffset
-                                                    |> Vec2.getX
-                                                    |> prop.float "offset.x"
-
-                                            y =
-                                                default.viewportOffset
-                                                    |> Vec2.getX
-                                                    |> prop.float "offset.y"
-
                                             cam =
                                                 spec_.get world
+
+                                            x =
+                                                prop.float "offset.x" (Vec2.getX cam.viewportOffset)
+
+                                            y =
+                                                prop.float "offset.y" (Vec2.getY cam.viewportOffset)
                                         in
-                                        { cam
-                                            | pixelsPerUnit = prop.float "pixelsPerUnit" default.pixelsPerUnit
-                                            , viewportOffset = vec2 x y
-                                        }
+                                        { cam | viewportOffset = vec2 x y }
                                    )
                     in
                     ( entityID, spec_.set cameraComp world )

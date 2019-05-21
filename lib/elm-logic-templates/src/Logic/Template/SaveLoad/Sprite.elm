@@ -1,15 +1,15 @@
-module Logic.Template.TiledRead.Sprite exposing (read)
+module Logic.Template.SaveLoad.Sprite exposing (read)
 
-import Defaults exposing (default)
 import Image
 import Image.BMP exposing (encodeWith)
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.SpriteComponent exposing (Sprite(..))
-import Logic.Template.TiledRead.Internal.Reader exposing (Read(..), defaultRead)
-import Logic.Template.TiledRead.Internal.ResourceTask as ResourceTask
-import Logic.Template.TiledRead.Internal.Util as Util exposing (animationFraming, hexColor2Vec3)
+import Logic.Template.Component.Sprite exposing (Sprite(..))
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), ReaderTask, defaultRead)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming, hexColor2Vec3)
 import Math.Vector2 exposing (vec2)
+import Math.Vector3 exposing (vec3)
 import Tiled.Tileset
 
 
@@ -39,7 +39,7 @@ read spec =
                                         in
                                         case Util.animation t tileIndex of
                                             Just anim ->
-                                                ResourceTask.getTexture t.image
+                                                Reader.getTexture t.image
                                                     >> ResourceTask.andThen
                                                         (\tileSetImage ->
                                                             let
@@ -49,7 +49,7 @@ read spec =
                                                                 animLength =
                                                                     List.length animLutData
                                                             in
-                                                            ResourceTask.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
+                                                            Reader.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
                                                                 >> ResourceTask.map
                                                                     (\animLUT ->
                                                                         let
@@ -66,7 +66,7 @@ read spec =
                                                                                     , animLUT = animLUT
                                                                                     , animLength = animLength
                                                                                     , scrollRatio = vec2 1 1
-                                                                                    , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 t.transparentcolor)
+                                                                                    , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 t.transparentcolor)
                                                                                     }
                                                                         in
                                                                         Entity.with ( spec, obj )
@@ -74,7 +74,7 @@ read spec =
                                                         )
 
                                             Nothing ->
-                                                ResourceTask.getTexture t.image
+                                                Reader.getTexture t.image
                                                     >> ResourceTask.map
                                                         (\tileSetImage ->
                                                             let
@@ -89,7 +89,7 @@ read spec =
                                                                         , tileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
                                                                         , mirror = vec2 (boolToFloat fh) (boolToFloat fv)
                                                                         , scrollRatio = vec2 1 1
-                                                                        , transparentcolor = Maybe.withDefault default.transparentcolor (hexColor2Vec3 t.transparentcolor)
+                                                                        , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 t.transparentcolor)
                                                                         }
                                                             in
                                                             Entity.with ( spec, obj )

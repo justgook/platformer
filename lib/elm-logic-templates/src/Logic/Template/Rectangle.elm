@@ -1,59 +1,48 @@
-module Logic.Template.Layer.Object.Rectangle exposing (Model, draw, render2)
+module Logic.Template.Rectangle exposing (Model, Model2, draw, draw2)
 
-import Defaults exposing (default)
-import Logic.Template.Internal exposing (plate, tileVertexShader)
-import Logic.Template.Layer exposing (LayerData(..), Uniform)
-import Math.Matrix4 exposing (Mat4)
-import Math.Vector2 exposing (Vec2, vec2)
+import Logic.Template.Internal exposing (Plate, entitySettings, plate)
+import Math.Vector2 exposing (Vec2)
 import Math.Vector4 exposing (Vec4)
 import WebGL exposing (Mesh, Shader)
 
 
 type alias Model a =
     { a
-        | x : Float
-        , y : Float
-        , width : Float
+        | width : Float
         , height : Float
         , color : Vec4
     }
 
 
-
---draw : LayerData (Model a) -> WebGL.Entity
-
-
-draw (LayerData common individual) =
-    { height = individual.height
-    , width = individual.width
-    , p = vec2 individual.x individual.y
-    , color = individual.color
-
-    -- General
-    , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
-
-    --    , pixelsPerUnit = common.pixelsPerUnit
-    , px = common.px
-
-    --    , viewportOffset = common.viewportOffset
-    --    , aspectRatio = common.aspectRatio
-    , time = common.time
-    , viewport = common.viewport
-    , offset = common.offset
-    , absolute = common.viewport
+type alias Model2 a =
+    { a
+        | p : Vec2
+        , r : Vec2
+        , px : Float
+        , height : Float
+        , color : Vec4
     }
-        |> WebGL.entityWith
-            default.entitySettings
-            tileVertexShader
-            fragmentShader
-            plate
 
 
+draw : WebGL.Shader Plate (Model a) { uv : Vec2 } -> Model a -> WebGL.Entity
+draw vertexShader_ =
+    WebGL.entityWith
+        entitySettings
+        vertexShader_
+        fragmentShader
+        plate
 
---fragmentShader : Shader a (Uniform (Model a)) { uv : Vec2 }
+
+draw2 : WebGL.Shader Plate (Model2 a) { uv : Vec2 } -> Model2 a -> WebGL.Entity
+draw2 vertexShader_ =
+    WebGL.entityWith
+        entitySettings
+        vertexShader_
+        fragmentShader2
+        plate
 
 
+fragmentShader : Shader {} (Model a) { uv : Vec2 }
 fragmentShader =
     [glsl|
         precision mediump float;
@@ -76,51 +65,7 @@ fragmentShader =
     |]
 
 
-type alias Model2 a =
-    { a
-        | p : Vec2
-        , r : Vec2
-        , height : Float
-        , color : Vec4
-    }
-
-
-
---render2 : LayerData (Model2 a) -> WebGL.Entity
-
-
-render2 (LayerData common individual) =
-    { height = individual.height
-    , r = individual.r
-    , p = individual.p
-    , color = individual.color
-
-    -- General
-    , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
-
-    --    , pixelsPerUnit = common.pixelsPerUnit
-    , px = common.px
-
-    --    , viewportOffset = common.viewportOffset
-    --    , aspectRatio = common.aspectRatio
-    , time = common.time
-    , viewport = common.viewport
-    , offset = common.offset
-
-    --    , absolute = common.absolute
-    }
-        |> WebGL.entityWith
-            default.entitySettings
-            vertexShaderForFragmentRotation
-            fragmentShader2
-            plate
-
-
-
---fragmentShader2 : Shader a (Uniform (Model2 a)) { uv : Vec2 }
-
-
+fragmentShader2 : WebGL.Shader {} (Model2 a) { uv : Vec2 }
 fragmentShader2 =
     [glsl|
         precision mediump float;
@@ -148,14 +93,14 @@ fragmentShader2 =
         void main () {
           float maxed = sqrt(width * width + height * height);
           vec2 uv_ = uv;
-            uv_ -= vec2(0.5);
-
-
-            uv_ = rotate2d(r) * uv_;
-
-            uv_ = scale( vec2 (maxed / width, maxed / height)) * uv_;
-
-            uv_ += vec2(0.5);
+//            uv_ -= vec2(0.5);
+//
+//
+//            uv_ = rotate2d(r) * uv_;
+//
+//            uv_ = scale( vec2 (maxed / width, maxed / height)) * uv_;
+//
+//            uv_ += vec2(0.5);
           gl_FragColor = color;
           if (uv_.x < 1.0 - widthPx
               && uv_.x > widthPx
