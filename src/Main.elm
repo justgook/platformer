@@ -140,6 +140,7 @@ view w =
             { w | render = RenderInfo.updateOffset newOffset w.render }
     in
     [ Logic.Template.Component.Layer.draw (objRender updatedWorld) updatedWorld
+        --        ++ aabb.view updatedWorld.render updatedWorld []
         ++ Projectile.draw fxUniforms
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
     , OnScreenControl.twoButtonStick onscreenSpecExtend updatedWorld
@@ -187,7 +188,6 @@ onscreenSpecExtend =
 
 objRender w objLayer =
     []
-        |> aabb.view w.render w
         |> World.View.RenderSystem.viewSprite
             (aabb.compsExtracter w)
             (Logic.Template.Component.Sprite.spec.get w)
