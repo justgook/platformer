@@ -12,13 +12,13 @@ type alias Model a =
         | offset : Vec2
         , px : Float
         , transparentcolor : Vec3
-        , lut : Texture
-        , lutSize : Vec2
+        , uLut : Texture
+        , uLutSize : Vec2
         , animLUT : Texture
         , animLength : Int
-        , tileSet : Texture
-        , tileSetSize : Vec2
-        , tileSize : Vec2
+        , uAtlas : Texture
+        , uAtlasSize : Vec2
+        , uTileSize : Vec2
         , time : Int
     }
 
@@ -39,13 +39,13 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 uv;
-        uniform sampler2D tileSet;
-        uniform sampler2D lut;
+        uniform sampler2D uAtlas;
+        uniform sampler2D uLut;
         uniform vec3 transparentcolor;
-        uniform vec2 lutSize;
-        uniform vec2 tileSetSize;
+        uniform vec2 uLutSize;
+        uniform vec2 uAtlasSize;
         uniform float px;
-        uniform vec2 tileSize;
+        uniform vec2 uTileSize;
 //        uniform vec2 viewportOffset;
 //        uniform vec2 scrollRatio;
         uniform sampler2D animLUT;
@@ -54,7 +54,7 @@ fragmentShader =
         float animLength_ = float(animLength);
         float time_ = float(time);
 
-        vec2 tilesPerUnit = tileSize * px;
+        vec2 tilesPerUnit = uTileSize * px;
 //        float px = 1.0 / pixelsPerUnit;
 
         float color2float(vec4 c) {
@@ -70,27 +70,27 @@ fragmentShader =
         }
 
         void main () {
-            vec2 point = ((uv / (1.0 / tilesPerUnit)));// + (viewportOffset / tileSize) * scrollRatio;
+            vec2 point = ((uv / (1.0 / tilesPerUnit)));// + (viewportOffset / uTileSize) * scrollRatio;
             vec2 look = floor(point);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 coordinate = (look + 0.5) / lutSize;
+            vec2 coordinate = (look + 0.5) / uLutSize;
             float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
             float newIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 ))) + 1.;
-            float tileIndex = color2float(texture2D(lut, coordinate)) * newIndex;
-//            tileIndex = tileIndex - 1.; // tile indexes in tileset starts from zero, but in lut zero is used for "none" placeholder
-            vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI((tileIndex - 1.), grid.x), int(tileIndex - 1.) / int(grid.x));
+            float uIndex = color2float(texture2D(uLut, coordinate)) * newIndex;
+//            uIndex = uIndex - 1.; // tile indexes in uAtlas starts from zero, but in lut zero is used for "none" placeholder
+            vec2 grid = uAtlasSize / uTileSize;
+            vec2 tile = vec2(modI((uIndex - 1.), grid.x), int(uIndex - 1.) / int(grid.x));
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
 
-            vec2 fragmentOffsetPx = floor((point - look) * tileSize);
+            vec2 fragmentOffsetPx = floor((point - look) * uTileSize);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
-            gl_FragColor = texture2D(tileSet, pixel);
+            vec2 pixel = (floor(tile * uTileSize + fragmentOffsetPx) + 0.5) / uAtlasSize;
+            gl_FragColor = texture2D(uAtlas, pixel);
 
-            gl_FragColor.a *= float(tileIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
+            gl_FragColor.a *= float(uIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
 
 //            gl_FragColor.rgb = vec3(1.,0., mod(floor(uv / px + 0.5), 2.));
 //            gl_FragColor.rgb *= gl_FragColor.a;

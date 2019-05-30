@@ -1,4 +1,4 @@
-module Logic.Template.Internal exposing (Plate, Points(..), TileVertexShaderModel, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader)
+module Logic.Template.Internal exposing (FullScreenVertexShaderModel, Plate, Points(..), TileVertexShaderModel, Timeline, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader, timeline, toList)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
 import Array exposing (Array)
@@ -34,44 +34,47 @@ plate =
 
 
 type alias Plate =
-    { position : Vector2.Vec2 }
+    { aP : Vector2.Vec2 }
 
 
 type alias TileVertexShaderModel a =
-    { a | height : Float, width : Float, absolute : Mat4, p : Vector2.Vec2 }
+    { a | uDimension : Vector2.Vec2, uAbsolute : Mat4, uP : Vector2.Vec2 }
+
+
+type alias FullScreenVertexShaderModel a =
+    { a | viewport : Mat4, offset : Vector2.Vec2 }
 
 
 tileVertexShader : Shader Plate (TileVertexShaderModel a) { uv : Vector2.Vec2 }
 tileVertexShader =
     [glsl|
         precision mediump float;
-        attribute vec2 position;
-        uniform float height;
-        uniform float width;
+        attribute vec2 aP;
+        uniform vec2 uDimension;
         varying vec2 uv;
-        uniform mat4 absolute;
-        uniform vec2 p;
+        uniform mat4 uAbsolute;
+        uniform vec2 uP;
         void main () {
-            uv = position;
-            vec2 sized = vec2(position * vec2(width, height));
-            vec2 center = vec2(width, height) * 0.5;
-            gl_Position = absolute * vec4(sized + p - center, 0, 1.0);
+            uv = aP;
+            vec2 sized = vec2(aP * uDimension);
+            vec2 center = uDimension * 0.5;
+            gl_Position = uAbsolute * vec4(sized + uP - center, 0, 1.0);
         }
     |]
 
 
-fullscreenVertexShader : Shader Plate { b | viewport : Mat4, offset : Vector2.Vec2 } { uv : Vector2.Vec2 }
+fullscreenVertexShader : Shader Plate (FullScreenVertexShaderModel a) { uv : Vector2.Vec2 }
 fullscreenVertexShader =
     [glsl|
         precision mediump float;
-        attribute vec2 position;
+        attribute vec2 aP;
         varying vec2 uv;
         uniform mat4 viewport;
         uniform vec2 offset;
 
         void main () {
           float aspectRatio = 2.0 / viewport[0][0]; // Mat4.makeOrtho2D
-          uv = vec2(position.x * aspectRatio , position.y);
+          uv = vec2(aP.x * aspectRatio , aP.y);
           vec2 pos = uv;
           uv += offset;
           gl_Position = viewport * vec4(pos, 0, 1.0);
@@ -100,6 +103,15 @@ type Nonempty a
     = Nonempty a (Array a)
 
 
+type alias Timeline a =
+    Nonempty a
+
+
+timeline : a -> List a -> Timeline a
+timeline first rest =
+    Nonempty first (Array.fromList rest)
+
+
 points : Vec2 -> List Vec2 -> Points
 points first rest =
     Points (Nonempty first (Array.fromList rest))
@@ -115,5 +127,9 @@ get i (Nonempty x xs) =
         x
 
     else
-        Array.get (j - 1) xs
-            |> Maybe.withDefault x
+        Array.get (j - 1) xs |> Maybe.withDefault x
+
+
+toList : Nonempty a -> List a
+toList (Nonempty a l) =
+    a :: Array.toList l

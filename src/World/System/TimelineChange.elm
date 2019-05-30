@@ -1,15 +1,14 @@
-module World.System.AnimationChange exposing (sideScroll)
+module World.System.TimelineChange exposing (sideScroll)
 
 import Dict
 import Direction as Dir
 import Logic.Entity
 import Logic.System as System
-import Logic.Template.Component.Sprite exposing (Sprite(..))
 import Physic.AABB
 import Physic.Narrow.AABB
 
 
-sideScroll physicsSpec objSpec animSpec ecs =
+sideScroll animSpec physicsSpec objSpec ecs =
     let
         engine =
             physicsSpec.get ecs
@@ -19,7 +18,7 @@ sideScroll physicsSpec objSpec animSpec ecs =
 
         ( _, newEcs ) =
             System.step3
-                (\( body, _ ) ( obj_, setObj ) ( ( ( name, dir_ ) as current, anim ), setAnim ) acc ->
+                (\( body, _ ) ( obj_, setObj ) ( ( ( _, dir_ ) as current, anim ), setAnim ) acc ->
                     let
                         velocity =
                             Physic.Narrow.AABB.getVelocity body
@@ -52,25 +51,14 @@ sideScroll physicsSpec objSpec animSpec ecs =
 
                     else
                         case ( obj_, Dict.get key anim ) of
-                            ( Animated obj, Just a ) ->
-                                --                                let
-                                --                                    _ =
-                                --                                        ( Physic.Narrow.AABB.getPosition body, ( current, key, contact.y ) )
-                                --                                            |> Debug.log "AnimationChange"
-                                --                                in
+                            ( obj, Just a ) ->
                                 acc
                                     |> setObj
-                                        (Animated
-                                            { obj
-                                                | tileSet = a.tileSet
-                                                , tileSetSize = a.tileSetSize
-                                                , tileSize = a.tileSize
-                                                , mirror = a.mirror
-                                                , animLUT = a.animLUT
-                                                , animLength = a.animLength
-                                                , start = ecs.frame |> toFloat
-                                            }
-                                        )
+                                        { obj
+                                            | timeline = a.timeline
+                                            , uMirror = a.uMirror
+                                            , start = ecs.frame
+                                        }
                                     |> setAnim ( key, anim )
 
                             _ ->

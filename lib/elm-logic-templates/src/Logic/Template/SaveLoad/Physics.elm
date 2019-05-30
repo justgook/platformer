@@ -1,14 +1,88 @@
-module Logic.Template.SaveLoad.Physics exposing (read)
+module Logic.Template.SaveLoad.Physics exposing (decode, encode, read)
 
+import Broad.Grid
+import Bytes.Decode as D
+import Bytes.Encode as E exposing (Encoder)
 import Dict
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
+import Logic.Component.Singleton as Singleton
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (extractObjectData)
 import Physic.AABB
 import Physic.Narrow.AABB as AABB exposing (AABB)
 import Tiled.Object exposing (Object(..))
 
 
+encode : Singleton.Spec (Physic.AABB.World Int) world -> world -> Encoder
+encode { get } world =
+    let
+        itemEncoder =
+            AABB.toBytes (Maybe.map ((+) 1) >> Maybe.withDefault 0 >> E.id)
+
+        indexedEncoder indexed =
+            indexed
+                |> Dict.toList
+                |> E.list (\( id, item ) -> E.sequence [ E.id id, itemEncoder item ])
+
+        static =
+            get world
+                |> .static
+                |> Broad.Grid.toBytes itemEncoder
+    in
+    get world
+        |> (\{ gravity, indexed } ->
+                E.sequence
+                    [ E.xy gravity
+                    , indexedEncoder indexed
+                    , static
+                    ]
+           )
+
+
+decode : Singleton.Spec (Physic.AABB.World Int) world -> WorldDecoder world
+decode spec_ =
+    let
+        itemIndex =
+            D.id
+                |> D.map
+                    (\i ->
+                        if i > 0 then
+                            Just (i - 1)
+
+                        else
+                            Nothing
+                    )
+
+        itemDecoder =
+            AABB.fromBytes itemIndex
+
+        itemDecoderWith =
+            AABB.fromBytes itemIndex |> D.map (\aabb_ -> ( AABB.boundary aabb_, aabb_ ))
+
+        indexedDecoder =
+            D.map2 Tuple.pair D.id itemDecoder
+                |> D.list
+                |> D.map Dict.fromList
+
+        staticDecoder =
+            Broad.Grid.fromBytes itemDecoderWith
+    in
+    D.map3
+        (\gravity indexed static ->
+            Singleton.update spec_
+                (\a ->
+                    { a | gravity = gravity, indexed = indexed, static = static }
+                )
+        )
+        D.xy
+        indexedDecoder
+        staticDecoder
+
+
+read : Singleton.Spec (Physic.AABB.World Int) world -> Reader world
 read spec =
     let
         updateConfig f info =

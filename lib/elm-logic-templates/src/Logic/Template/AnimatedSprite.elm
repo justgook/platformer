@@ -10,10 +10,10 @@ import WebGL.Texture exposing (Texture)
 type alias Model a =
     { a
         | start : Float
-        , tileSet : Texture
-        , tileSetSize : Vec2
-        , tileSize : Vec2
-        , mirror : Vec2
+        , uAtlas : Texture
+        , uAtlasSize : Vec2
+        , uTileSize : Vec2
+        , uMirror : Vec2
         , animLUT : Texture
         , animLength : Int
         , time : Int
@@ -48,10 +48,10 @@ fragmentShader =
         precision mediump float;
         varying vec2 uv;
         uniform vec3 transparentcolor;
-        uniform sampler2D tileSet;
-        uniform vec2 tileSetSize;
-        uniform vec2 tileSize;
-        uniform vec2 mirror;
+        uniform sampler2D uAtlas;
+        uniform vec2 uAtlasSize;
+        uniform vec2 uTileSize;
+        uniform vec2 uMirror;
         uniform sampler2D animLUT;
         uniform int animLength;
         uniform int time;
@@ -73,23 +73,23 @@ fragmentShader =
 
         void main () {
             float currentFrame = modI(time_, animLength_) + 0.5; // Middle of pixel
-            float tileIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 )));
-            vec2 grid = tileSetSize / tileSize;
-            vec2 tile = vec2(modI((tileIndex), grid.x), int(tileIndex) / int(grid.x));
+            float uIndex = color2float(texture2D(animLUT, vec2(currentFrame / animLength_, 0.5 )));
+            vec2 grid = uAtlasSize / uTileSize;
+            vec2 tile = vec2(modI((uIndex), grid.x), int(uIndex) / int(grid.x));
             // inverting reading botom to top
             tile.y = grid.y - tile.y - 1.;
-            vec2 fragmentOffsetPx = floor((uv) * tileSize);
+            vec2 fragmentOffsetPx = floor((uv) * uTileSize);
 
 
-            //vec2 fragmentOffsetPx = floor(point * tileSize);
-            fragmentOffsetPx.x = abs(((tileSize.x - 1.) * mirror.x ) - fragmentOffsetPx.x);
-            fragmentOffsetPx.y = abs(((tileSize.y - 1.)  * mirror.y ) - fragmentOffsetPx.y);
+            //vec2 fragmentOffsetPx = floor(point * uTileSize);
+            fragmentOffsetPx.x = abs(((uTileSize.x - 1.) * uMirror.x ) - fragmentOffsetPx.x);
+            fragmentOffsetPx.y = abs(((uTileSize.y - 1.)  * uMirror.y ) - fragmentOffsetPx.y);
 
             //(2i + 1)/(2N) Pixel center
-            vec2 pixel = (floor(tile * tileSize + fragmentOffsetPx) + 0.5) / tileSetSize;
+            vec2 pixel = (floor(tile * uTileSize + fragmentOffsetPx) + 0.5) / uAtlasSize;
 
-            //gl_FragColor = texture2D(tileSet, pixel);
-            gl_FragColor = texture2D(tileSet, pixel);
+            //gl_FragColor = texture2D(uAtlas, pixel);
+            gl_FragColor = texture2D(uAtlas, pixel);
             gl_FragColor.a *= float(gl_FragColor.rgb != transparentcolor);
             gl_FragColor.rgb *= gl_FragColor.a;
         }

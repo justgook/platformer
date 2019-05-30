@@ -1,102 +1,122 @@
-module Logic.Template.Component.Layer exposing (Common, Individual, Layer(..), LayerData(..), Uniform, draw, empty, spec)
+module Logic.Template.Component.Layer exposing (Common, Layer(..), animatedTilesData, draw, empty, spec, tilesData)
 
 import Logic.Component
-import Logic.Component.Singleton as Component
+import Logic.Component.Singleton as Singleton
 import Logic.Template.AnimatedTiles as AnimatedTiles
 import Logic.Template.Image as Image
-import Logic.Template.Internal exposing (fullscreenVertexShader)
+import Logic.Template.Internal exposing (FullScreenVertexShaderModel, TileVertexShaderModel, fullscreenVertexShader)
 import Logic.Template.Tiles as Tiles
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2)
 import Math.Vector3 exposing (Vec3)
+import WebGL
 import WebGL.Texture exposing (Texture)
 
 
 type Layer
-    = Tiles (Individual TilesData)
-    | AnimatedTiles (Individual AnimatedTilesData)
-    | ImageX (Individual ImageData)
-    | ImageY (Individual ImageData)
-    | ImageNo (Individual ImageData)
-    | Image (Individual ImageData)
-    | Object (Logic.Component.Set ())
+    = Tiles TilesData
+    | AnimatedTiles AnimatedTilesData
+    | ImageNo ImageData
+    | ImageX ImageData
+    | ImageY ImageData
+    | Image ImageData
+    | Object ( Int, Logic.Component.Set () )
 
 
 type alias TilesData =
-    { lut : Texture
-    , lutSize : Vec2
-    , tileSet : Texture
-    , tileSetSize : Vec2
-    , tileSize : Vec2
+    { uLut : Texture
+    , uLutSize : Vec2
+    , uAtlas : Texture
+    , uAtlasSize : Vec2
+    , uTileSize : Vec2
+    , transparentcolor : Vec3
+    , scrollRatio : Vec2
+
+    -- Encoding related
+    , id : Int
+    , data : List Int
+    , firstgid : Int
     }
 
 
 type alias AnimatedTilesData =
-    { lut : Texture
-    , lutSize : Vec2
+    { uLut : Texture
+    , uLutSize : Vec2
     , animLUT : Texture
     , animLength : Int
-    , tileSet : Texture
-    , tileSetSize : Vec2
-    , tileSize : Vec2
+    , uAtlas : Texture
+    , uAtlasSize : Vec2
+    , uTileSize : Vec2
+    , transparentcolor : Vec3
+    , scrollRatio : Vec2
+
+    -- Encoding related
+    , data : List Int
     }
 
 
 type alias ImageData =
     { image : Texture
     , size : Vec2
+    , transparentcolor : Vec3
+    , scrollRatio : Vec2
+    , id : Int
     }
 
 
-spec : Component.Spec (List Layer) { world | layers : List Layer }
+spec : Singleton.Spec (List Layer) { world | layers : List Layer }
 spec =
     { get = .layers
     , set = \layers world -> { world | layers = layers }
     }
 
 
-tilesData : Common -> Individual TilesData -> Uniform TilesData
+tilesData : Common -> TilesData -> FullScreenVertexShaderModel (Tiles.Model {})
 tilesData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , time = common.time
     , transparentcolor = individual.transparentcolor
     , scrollRatio = individual.scrollRatio
-    , tileSet = individual.tileSet
-    , tileSetSize = individual.tileSetSize
-    , tileSize = individual.tileSize
-    , lut = individual.lut
-    , lutSize = individual.lutSize
+    , uAtlas = individual.uAtlas
+    , uAtlasSize = individual.uAtlasSize
+    , uTileSize = individual.uTileSize
+    , uLut = individual.uLut
+    , uLutSize = individual.uLutSize
     }
 
 
-animatedTilesData : Common -> Individual AnimatedTilesData -> Uniform AnimatedTilesData
+
+--animatedTilesData : Common -> AnimatedTilesData -> FullScreenVertexShaderModel (AnimatedTiles.Model {})
+
+
+animatedTilesData : Common -> AnimatedTilesData -> FullScreenVertexShaderModel (AnimatedTiles.Model {})
 animatedTilesData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , time = common.time
     , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
-    , tileSet = individual.tileSet
-    , tileSetSize = individual.tileSetSize
-    , tileSize = individual.tileSize
-    , lut = individual.lut
-    , lutSize = individual.lutSize
+
+    --    , scrollRatio = individual.scrollRatio
+    , uAtlas = individual.uAtlas
+    , uAtlasSize = individual.uAtlasSize
+    , uTileSize = individual.uTileSize
+    , uLut = individual.uLut
+    , uLutSize = individual.uLutSize
     , animLUT = individual.animLUT
     , animLength = individual.animLength
+    , time = common.time
     }
 
 
-imageData : Common -> Individual ImageData -> Uniform ImageData
+imageData : Common -> ImageData -> FullScreenVertexShaderModel (Image.Model {})
 imageData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , time = common.time
     , transparentcolor = individual.transparentcolor
-    , scrollRatio = individual.scrollRatio
+
+    --    , scrollRatio = individual.scrollRatio
     , image = individual.image
     , size = individual.size
     }
@@ -107,6 +127,20 @@ empty =
     []
 
 
+draw :
+    (( Int, Logic.Component.Set () ) -> List WebGL.Entity)
+    ->
+        { b
+            | frame : Int
+            , layers : List Layer
+            , render :
+                { a
+                    | fixed : Mat4
+                    , offset : Vec2
+                    , px : Float
+                }
+        }
+    -> List WebGL.Entity
 draw objRender ({ frame, layers, render } as world) =
     let
         --, viewportOffset =
@@ -115,11 +149,12 @@ draw objRender ({ frame, layers, render } as world) =
         --                    , y = (round (y * 64) |> toFloat) / 64
         --                    }
         --https://www.h-schmidt.net/FloatConverter/IEEE754.html
+        common : Common
         common =
             { viewport = render.fixed
-            , time = frame
             , px = render.px
             , offset = render.offset
+            , time = frame
             }
     in
     layers
@@ -161,29 +196,9 @@ draw objRender ({ frame, layers, render } as world) =
             )
 
 
-type LayerData a
-    = LayerData Common (Individual a)
-
-
 type alias Common =
-    CommonCommon {}
-
-
-type alias CommonCommon a =
-    { a
-        | px : Float
-        , viewport : Mat4
-        , offset : Vec2
-        , time : Int
-    }
-
-
-type alias Uniform a =
-    Individual (CommonCommon a)
-
-
-type alias Individual a =
-    { a
-        | transparentcolor : Vec3
-        , scrollRatio : Vec2
+    { viewport : Mat4
+    , px : Float
+    , offset : Vec2
+    , time : Int
     }

@@ -1,6 +1,7 @@
 module Logic.Template.SaveLoad.Internal.Util exposing
     ( animation
     , animationFraming
+    , boolToFloat
     , common
     , extractObjectData
     , firstGid
@@ -17,7 +18,7 @@ module Logic.Template.SaveLoad.Internal.Util exposing
 
 import Dict
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.SaveLoad.Internal.Reader exposing (GetTileset, getTileset)
+import Logic.Template.SaveLoad.Internal.Loader exposing (GetTileset, getTileset)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
@@ -224,7 +225,7 @@ tilesetById tilesets_ id =
     innerfind
         (\item next ->
             case ( item, next ) of
-                ( Tiled.Tileset.Source info, Nothing ) ->
+                ( Tiled.Tileset.Source _, Nothing ) ->
                     True
 
                 ( Tiled.Tileset.Source info, Just nextTileset ) ->
@@ -468,3 +469,12 @@ maybeMap6 func ma mb mc md me mf =
 
                                                 Just f ->
                                                     Just (func a b c d e f)
+
+
+boolToFloat : Bool -> Float
+boolToFloat bool =
+    if bool then
+        1
+
+    else
+        0

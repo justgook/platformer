@@ -1,24 +1,73 @@
-module Logic.Template.SaveLoad.AnimationDict exposing (read)
+module Logic.Template.SaveLoad.TimeLineDict exposing (decode, encode, fillAnimation, read)
 
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
 import Direction as DirectionHelper exposing (Direction(..))
-import Image
-import Image.BMP exposing (encodeWith)
 import Logic.Component as Component
+import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.Component.AnimationDict exposing (Animation, AnimationDict)
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, ReaderTask, defaultRead)
+import Logic.Template.Component.TimeLine
+import Logic.Template.Component.TimeLineDict exposing (AnimationId, TimeLineDict)
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Logic.Template.SaveLoad.TimeLine exposing (decodeSimple, encodeSimple)
+import Math.Vector2 as Vec2 exposing (Vec2)
 import Parser exposing ((|.), (|=), Parser)
 import Set
 import Tiled.Properties exposing (Property(..))
 import Tiled.Tileset
 
 
-read : Component.Spec AnimationDict world -> Reader world
+encodeAnimationId : AnimationId -> Encoder
+encodeAnimationId ( a, b ) =
+    E.sequence [ E.sizedString a, E.unsignedInt8 b ]
+
+
+decodeAnimationId : Decoder AnimationId
+decodeAnimationId =
+    D.map2 Tuple.pair D.sizedString D.unsignedInt8
+
+
+encode : Component.Spec TimeLineDict world -> world -> Encoder
+encode { get } world =
+    Entity.toList (get world)
+        |> E.list
+            (\( id, ( current, dict ) ) ->
+                let
+                    encodeDict =
+                        dict
+                            |> Dict.toList
+                            |> E.list
+                                (\( animId, animLine ) ->
+                                    E.sequence [ encodeAnimationId animId, encodeSimple animLine ]
+                                )
+                in
+                E.sequence [ E.id id, encodeAnimationId current, encodeDict ]
+            )
+
+
+decode : Component.Spec TimeLineDict world -> WorldDecoder world
+decode spec_ =
+    let
+        decodeDict =
+            D.list (D.map2 (\animId animLine -> ( animId, animLine )) decodeAnimationId decodeSimple)
+                |> D.map Dict.fromList
+
+        decoder =
+            D.map3 (\id current dict -> ( id, ( current, dict ) )) D.id decodeAnimationId decodeDict
+    in
+    D.list decoder
+        |> D.map
+            (\list -> Singleton.update spec_ (\_ -> Entity.fromList list))
+
+
+read : Component.Spec TimeLineDict world -> Reader world
 read spec =
     { defaultRead
         | objectTile =
@@ -31,10 +80,10 @@ read spec =
                                     Tiled.Tileset.Embedded t ->
                                         properties
                                             |> Dict.filter (\a _ -> String.startsWith "anim" a)
-                                            |> fillAnimation spec t getTilesetByGid Dict.empty
+                                            |> fillAnimation spec t Dict.empty
 
                                     _ ->
-                                        ResourceTask.fail (Error 6003 "object tile readers works only with single image tilesets")
+                                        ResourceTask.fail (Error 8003 "object tile readers works only with single image tilesets")
                             )
                 )
     }
@@ -45,15 +94,15 @@ type What
     | Tileset
 
 
-fillAnimation spec t getTilesetByGid acc all =
+fillAnimation spec t acc all =
     case Dict.toList all of
         ( k, v ) :: _ ->
             case ( Parser.run parseName k, v ) of
                 ( Ok ( _, Neither, _ ), _ ) ->
-                    fillAnimation spec t getTilesetByGid acc (Dict.remove k all)
+                    fillAnimation spec t acc (Dict.remove k all)
 
-                ( Ok ( name, dir, Id ), PropInt tileIndex ) ->
-                    animLutPlusImageTask t tileIndex
+                ( Ok ( name, dir, Id ), PropInt index ) ->
+                    animLutPlusImageTask t index
                         >> ResourceTask.andThen
                             (\info ->
                                 let
@@ -73,13 +122,12 @@ fillAnimation spec t getTilesetByGid acc all =
                                             |> List.map (\k2 -> "anim." ++ name ++ "." ++ k2 ++ ".id")
                                 in
                                 case dictGetFirst haveOpposite all of
-                                    Just ( k2, PropInt tileIndex2 ) ->
-                                        animLutPlusImageTask t tileIndex2
+                                    Just ( k2, PropInt uIndex2 ) ->
+                                        animLutPlusImageTask t uIndex2
                                             >> ResourceTask.andThen
                                                 (\info2 ->
                                                     fillAnimation spec
                                                         t
-                                                        getTilesetByGid
                                                         (Dict.insert ( name, DirectionHelper.toInt opposite ) info2 accWithCurrent)
                                                         (Dict.remove k2 rest)
                                                 )
@@ -87,8 +135,7 @@ fillAnimation spec t getTilesetByGid acc all =
                                     _ ->
                                         fillAnimation spec
                                             t
-                                            getTilesetByGid
-                                            (Dict.insert ( name, DirectionHelper.toInt opposite ) { info | mirror = DirectionHelper.oppositeMirror dir |> Vec2.fromRecord } accWithCurrent)
+                                            (Dict.insert ( name, DirectionHelper.toInt opposite ) { info | uMirror = DirectionHelper.oppositeMirror dir |> Vec2.fromRecord } accWithCurrent)
                                             rest
                             )
 
@@ -96,7 +143,7 @@ fillAnimation spec t getTilesetByGid acc all =
                     ResourceTask.fail (Error 6004 "Animation from other tile set not implemented yet")
 
                 _ ->
-                    fillAnimation spec t getTilesetByGid acc (Dict.remove k all)
+                    fillAnimation spec t acc (Dict.remove k all)
 
         _ ->
             if Dict.isEmpty acc then
@@ -145,31 +192,16 @@ parseName =
         |. Parser.end
 
 
-animLutPlusImageTask t tileIndex =
-    Reader.getTexture t.image
-        >> ResourceTask.andThen
-            (\tileSetImage ->
-                case Util.animation t tileIndex of
-                    Just anim ->
-                        let
-                            animLutData =
-                                animationFraming anim
+animLutPlusImageTask t uIndex =
+    case Util.animation t uIndex of
+        Just anim ->
+            let
+                animLutData =
+                    animationFraming anim
+                        |> List.map toFloat
+            in
+            Logic.Template.Component.TimeLine.emptyComp animLutData
+                |> ResourceTask.succeed
 
-                            animLength =
-                                List.length animLutData
-                        in
-                        Reader.getTexture (encodeWith Image.defaultOptions animLength 1 animLutData)
-                            >> ResourceTask.map
-                                (\animLUT ->
-                                    { tileSet = tileSetImage
-                                    , tileSetSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
-                                    , tileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
-                                    , mirror = vec2 0 0
-                                    , animLUT = animLUT
-                                    , animLength = animLength
-                                    }
-                                )
-
-                    Nothing ->
-                        ResourceTask.fail (Error 6005 ("Sprite with index " ++ String.fromInt tileIndex ++ "must have animation"))
-            )
+        Nothing ->
+            ResourceTask.fail (Error 6005 ("Sprite with index " ++ String.fromInt uIndex ++ "must have animation"))

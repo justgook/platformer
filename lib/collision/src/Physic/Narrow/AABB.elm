@@ -4,6 +4,7 @@ module Physic.Narrow.AABB exposing
     , applyVelocity
     , boundary
     , debuInfo
+    , fromBytes
     , getContact
     , getIndex
     , getInvMass
@@ -14,6 +15,7 @@ module Physic.Narrow.AABB exposing
     , response
     , setContact
     , setVelocity
+    , toBytes
     , toStatic
     , translate
     , union
@@ -24,12 +26,48 @@ module Physic.Narrow.AABB exposing
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Broad exposing (Boundary)
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
 import Direction
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Physic.Narrow.Common as Generic exposing (Generic, Options, defaultOptions)
 
 
 type AABB comparable
     = AABB (Generic comparable) { h : Float }
+
+
+toBytes : (Maybe comparable -> Encoder) -> AABB comparable -> Encoder
+toBytes enId (AABB c { h }) =
+    E.sequence
+        [ c.index |> enId
+        , c.p |> E.xy
+        , c.r |> E.xy
+        , c.invMass |> E.float
+        , h |> E.float
+        ]
+
+
+fromBytes : Decoder (Maybe comparable) -> Decoder (AABB comparable)
+fromBytes deId =
+    D.map5
+        (\index p r invMass h ->
+            AABB
+                { index = index
+                , p = p
+                , r = r
+                , invMass = invMass
+                , velocity = vec2 0 0
+                , contact = vec2 0 0
+                }
+                { h = h }
+        )
+        deId
+        D.xy
+        D.xy
+        D.float
+        D.float
 
 
 debuInfo :
@@ -179,8 +217,9 @@ unionCollision a_ b_ =
             a
 
 
-type FourBools
-    = FourBools Bool Bool Bool Bool
+
+--type FourBools
+--    = FourBools Bool Bool Bool Bool
 
 
 response body1 body2 =
@@ -476,5 +515,5 @@ updateGeneric__ f (AABB o a) =
 
 
 getFromGeneric__ : (Generic comparable -> a) -> AABB comparable -> a
-getFromGeneric__ f (AABB o { h }) =
+getFromGeneric__ f (AABB o _) =
     f o

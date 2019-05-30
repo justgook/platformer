@@ -1,4 +1,7 @@
-module Image.BMP exposing (encode24, encodeWith)
+module Image.BMP exposing
+    ( encode24, encodeWith
+    , encodeBytesWith
+    )
 
 {-|
 
@@ -12,10 +15,94 @@ module Image.BMP exposing (encode24, encodeWith)
 -- import BinaryBase64
 
 import Base64 as Base64
-import Bitwise exposing (and, shiftRightBy)
-import Bytes exposing (Endianness(..))
+import Bitwise exposing (and)
+import Bytes exposing (Bytes, Endianness(..))
+import Bytes.Decode as Decode exposing (Decoder)
 import Bytes.Encode as Encode exposing (Encoder, unsignedInt16, unsignedInt32, unsignedInt8)
-import Image exposing (ColorDepth(..), Options, Order(..), Pixels, defaultOptions)
+import Image exposing (ColorDepth(..), Options, Order(..), Pixels, defaultOptions, pixelInt24)
+
+
+encodeBytesWith : Options a -> Int -> Int -> Bytes -> Bytes
+encodeBytesWith { defaultColor, order, depth } w h bytes =
+    let
+        reverseHorizontal =
+            order == RightDown || order == RightUp
+
+        reverseVertical =
+            order == LeftDown || order == RightDown
+
+        ( rowLength, pad, bytesPerPixel ) =
+            case depth of
+                Bit24 ->
+                    let
+                        bPerPx =
+                            3
+
+                        size_ =
+                            w * bPerPx
+
+                        pad_ =
+                            and (4 - and size_ bPerPx) bPerPx
+
+                        pad__ =
+                            unsignedInt8 0
+                                |> List.repeat pad_
+                                |> Encode.sequence
+                    in
+                    ( size_, pad__, bPerPx )
+
+        rowCreate =
+            Decode.bytes rowLength
+                |> Decode.map
+                    (\row ->
+                        if reverseHorizontal then
+                            Encode.sequence
+                                [ row
+                                    |> Decode.decode (splitToList w (Decode.bytes bytesPerPixel))
+                                    |> Maybe.withDefault []
+                                    |> List.map Encode.bytes
+                                    |> Encode.sequence
+                                , pad
+                                ]
+
+                        else
+                            Encode.sequence
+                                [ Encode.bytes row
+                                , pad
+                                ]
+                    )
+
+        pixels_ =
+            Decode.decode (splitToList h rowCreate) bytes
+                |> Maybe.withDefault []
+                |> (if reverseVertical then
+                        List.reverse
+
+                    else
+                        identity
+                   )
+                |> Encode.sequence
+                |> Encode.encode
+    in
+    Encode.sequence
+        [ Encode.sequence (header w h (Bytes.width pixels_))
+        , Encode.bytes pixels_
+        ]
+        |> Encode.encode
+
+
+splitToList : Int -> Decoder a -> Decoder (List a)
+splitToList len decoder =
+    Decode.loop ( len, [] ) (listStep decoder)
+
+
+listStep : Decoder a -> ( Int, List a ) -> Decoder (Decode.Step ( Int, List a ) (List a))
+listStep decoder ( n, xs ) =
+    if n <= 0 then
+        Decode.succeed (Decode.Done xs)
+
+    else
+        Decode.map (\x -> Decode.Loop ( n - 1, x :: xs )) decoder
 
 
 header : Int -> Int -> Int -> List Encoder
@@ -119,161 +206,26 @@ encode24 w h pixels =
 
 
 encodeWith : Options a -> Int -> Int -> Pixels -> String
-encodeWith opt w h pixels =
+encodeWith opt w h data =
     let
-        pixels_ =
-            encodeImageData w opt pixels
-                |> Encode.encode
+        bytes =
+            Encode.encode (List.map pixelInt24 data |> Encode.sequence)
 
         result =
-            header w h (Bytes.width pixels_)
-                ++ [ Encode.bytes pixels_ ]
+            encodeBytesWith opt w h bytes
 
+        --        pixels_ =
+        --            encodeImageData w opt data
+        --                |> Encode.encode
+        --
+        --        result =
+        --            header w h (Bytes.width pixels_)
+        --                ++ [ Encode.bytes pixels_ ]
         imageData =
-            Encode.sequence result
-                |> Encode.encode
+            --            Encode.sequence result
+            --                |> Encode.encode
+            result
                 |> Base64.fromBytes
                 |> Maybe.withDefault ""
     in
     "data:image/bmp;base64," ++ imageData
-
-
-encodeImageData : Int -> Options a -> List Int -> Encoder
-encodeImageData w { depth, order } pxs =
-    let
-        delme line acc =
-            case order of
-                RightDown ->
-                    lineFolder24 line [] ++ acc
-
-                RightUp ->
-                    acc ++ lineFolder24 line []
-
-                LeftDown ->
-                    lineFolder24reverse line [] ++ acc
-
-                LeftUp ->
-                    acc ++ lineFolder24reverse line []
-    in
-    case depth of
-        Bit24 ->
-            Encode.sequence <| greedyGroupsOfWithStep delme [] w w pxs
-
-
-{-| Insipired by List.Extra
--}
-greedyGroupsOfWithStep : (List a -> acc -> acc) -> acc -> Int -> Int -> List a -> acc
-greedyGroupsOfWithStep f acc size step xs =
-    let
-        xs_ =
-            List.drop step xs
-
-        okayArgs =
-            size > 0 && step > 0
-
-        okayXs =
-            List.length xs > 0
-    in
-    if okayArgs && okayXs then
-        greedyGroupsOfWithStep f (f (List.take size xs) acc) size step xs_
-
-    else
-        acc
-
-
-lineFolder24 : List Int -> List Encoder -> List Encoder
-lineFolder24 pixelInLineLeft acc =
-    -- TODO remove ++ - use reverse folding
-    case pixelInLineLeft of
-        e1 :: e2 :: e3 :: e4 :: rest ->
-            [ unsignedInt24 Bytes.LE e1
-            , unsignedInt24 Bytes.LE e2
-            , unsignedInt24 Bytes.LE e3
-            , unsignedInt24 Bytes.LE e4
-            ]
-                |> (++) acc
-                |> lineFolder24 rest
-
-        [ e1, e2, e3 ] ->
-            [ unsignedInt24 Bytes.LE e1
-            , unsignedInt24 Bytes.LE e2
-            , unsignedInt24 Bytes.LE e3
-            , unsignedInt8 0
-            , unsignedInt8 0
-            , unsignedInt8 0
-            ]
-                |> (++) acc
-
-        [ e1, e2 ] ->
-            [ unsignedInt24 Bytes.LE e1
-            , unsignedInt24 Bytes.LE e2
-            , unsignedInt8 0
-            , unsignedInt8 0
-            ]
-                |> (++) acc
-
-        [ e1 ] ->
-            [ unsignedInt24 Bytes.LE e1
-            , unsignedInt8 0
-            ]
-                |> (++) acc
-
-        [] ->
-            acc
-
-
-lineFolder24reverse : List Int -> List Encoder -> List Encoder
-lineFolder24reverse pixelInLineLeft acc =
-    -- [e1] -> 3 bytes -> add 1 to get a multiple of 4
-    -- [e1,e2] -> 6 bytes -> add 2 to get a multiple of 4
-    -- [e1,e2,e3] -> 9 bytes -> add 3 to get a multiple of 4
-    -- [e1,e2,e3,e4] -> 12 bytes -> add 0 to get a multiple of 4
-    case pixelInLineLeft of
-        e1 :: e2 :: e3 :: e4 :: rest ->
-            unsignedInt24 Bytes.LE e4
-                :: unsignedInt24 Bytes.LE e3
-                :: unsignedInt24 Bytes.LE e2
-                :: unsignedInt24 Bytes.LE e1
-                :: acc
-                |> lineFolder24reverse rest
-
-        [ e1, e2, e3 ] ->
-            unsignedInt24 Bytes.LE e3
-                :: unsignedInt24 Bytes.LE e2
-                :: unsignedInt24 Bytes.LE e1
-                :: acc
-                ++ [ unsignedInt8 0, unsignedInt8 0, unsignedInt8 0 ]
-
-        [ e1, e2 ] ->
-            unsignedInt24 Bytes.LE e2
-                :: unsignedInt24 Bytes.LE e1
-                :: acc
-                ++ [ unsignedInt8 0
-                   , unsignedInt8 0
-                   ]
-
-        [ e1 ] ->
-            unsignedInt24 Bytes.LE e1
-                :: acc
-                ++ [ unsignedInt8 0
-                   ]
-
-        [] ->
-            acc
-
-
-unsignedInt24 : Endianness -> Int -> Encoder
-unsignedInt24 endian num =
-    if endian == Bytes.LE then
-        Encode.sequence
-            [ and num 0xFF |> unsignedInt8
-            , shiftRightBy 8 (and num 0xFF00) |> unsignedInt8
-            , shiftRightBy 16 (and num 0x00FF0000) |> unsignedInt8
-            ]
-
-    else
-        Encode.sequence
-            [ shiftRightBy 16 (and num 0x00FF0000) |> unsignedInt8
-            , shiftRightBy 8 (and num 0xFF00) |> unsignedInt8
-            , and num 0xFF |> unsignedInt8
-            ]

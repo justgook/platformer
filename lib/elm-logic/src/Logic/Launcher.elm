@@ -1,4 +1,4 @@
-port module Logic.Launcher exposing (Error(..), Launcher, World, document, worker)
+port module Logic.Launcher exposing (Error(..), Launcher, World, document, task, worker)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
@@ -38,10 +38,8 @@ type alias Launcher flags world =
 document :
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
-    , update : World world -> World world
-    , view :
-        World world
-        -> List (VirtualDom.Node (World world -> World world))
+    , update : World world -> ( World world, Cmd (Message world) )
+    , view : World world -> List (VirtualDom.Node (World world -> World world))
     }
     -> Launcher flags world
 document { init, update, view, subscriptions } =
@@ -56,7 +54,7 @@ document { init, update, view, subscriptions } =
 worker :
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
-    , update : World world -> World world
+    , update : World world -> ( World world, Cmd (Message world) )
     }
     -> Launcher flags world
 worker { init, update, subscriptions } =
@@ -67,14 +65,26 @@ worker { init, update, subscriptions } =
         }
 
 
+task : (Result x a -> World world -> World world) -> Task.Task x a -> Cmd (Message world)
+task f t =
+    Task.attempt (f >> Event) t
+
+
 init_ :
     (flags -> Task.Task Error (World world))
     -> flags
     -> ( Model world1, Cmd (Message world) )
 init_ init flags =
+    ( Loading
+    , load_ (init flags)
+    )
+
+
+load_ : Task.Task Error (World world) -> Cmd (Message world)
+load_ task_ =
     let
         initTask =
-            init flags
+            task_
                 |> Task.attempt
                     (\r ->
                         case r of
@@ -85,9 +95,7 @@ init_ init flags =
                                 Resource (Fail e)
                     )
     in
-    ( Loading
-    , initTask
-    )
+    initTask
 
 
 subscriptions_ :
@@ -110,14 +118,14 @@ subscriptions_ subscriptions model_ =
 
 
 update_ :
-    (World world -> World world)
+    (World world -> ( World world, Cmd (Message world) ))
     -> Message world
     -> Model world
-    -> ( Model world, Cmd msg )
+    -> ( Model world, Cmd (Message world) )
 update_ update msg model =
     case ( msg, model ) of
         ( Frame delta, Succeed world ) ->
-            ( Succeed (Logic.GameFlow.update update delta world), Cmd.none )
+            Logic.GameFlow.updateWith (updateWrapper update) delta ( world, [] ) |> Tuple.mapBoth Succeed Cmd.batch
 
         ( Subscription custom, _ ) ->
             ( Succeed custom, Cmd.none )
@@ -134,6 +142,14 @@ update_ update msg model =
 
         _ ->
             ( model, Cmd.none )
+
+
+updateWrapper :
+    (World world -> ( World world, Cmd (Message world) ))
+    -> ( World world, List (Cmd (Message world)) )
+    -> ( World world, List (Cmd (Message world)) )
+updateWrapper update ( w, cmd ) =
+    Tuple.mapSecond (\a -> a :: cmd) (update w)
 
 
 view_ :
@@ -158,7 +174,7 @@ view_ view model =
             { title = "Loading", body = [] }
 
         Fail (Error code e) ->
-            { title = "Failure:" ++ String.fromInt code
+            { title = "Failure:" ++ String.fromInt code ++ "(" ++ e ++ ")"
             , body =
                 []
             }

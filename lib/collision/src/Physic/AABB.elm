@@ -12,7 +12,7 @@ type alias World comparable =
     , gravity : Vec2
 
     --    , enableSleeping : Bool
-    , timScale : Float
+    --    , timScale : Float
     , indexed : Dict comparable (AABB comparable)
     }
 
@@ -21,7 +21,7 @@ type alias Config =
     { gravity : Vec2
 
     --    , enableSleeping : Bool
-    , timScale : Float
+    --    , timScale : Float
     , grid : Broad.Grid.NewConfig
     }
 
@@ -32,7 +32,7 @@ empty =
     , gravity = vec2 0 -1
 
     --    , enableSleeping = False
-    , timScale = 0.3
+    --    , timScale = 0.3
     , indexed = Dict.empty
     }
 
@@ -42,7 +42,7 @@ getConfig world =
     { gravity = world.gravity
 
     --    , enableSleeping = world.enableSleeping
-    , timScale = world.timScale
+    --    , timScale = world.timScale
     , grid = Broad.Grid.getConfig world.static
     }
 
@@ -54,7 +54,7 @@ setConfig config world =
         , gravity = config.gravity
 
         --        , enableSleeping = config.enableSleeping
-        , timScale = config.timScale
+        --        , timScale = config.timScale
     }
 
 

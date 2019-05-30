@@ -146,7 +146,7 @@ updateRuntime_ model delta fps =
 
 
 worldUpdate : (ExtendedModel a b -> ExtendedModel a b) -> Int -> ExtendedModel a b -> ExtendedModel a b
-worldUpdate system framesLeft (( world, world2 ) as model) =
+worldUpdate system framesLeft model =
     if framesLeft < 1 then
         model
 

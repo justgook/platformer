@@ -2,7 +2,7 @@ module Tiled.Layer exposing
     ( Layer(..), decode, encode
     , TileData, ImageData, ObjectData, DrawOrder(..)
     , decodeDraworder, encodeDraworder
-    , Chunk
+    , Chunk, TileChunkedData
     )
 
 {-|

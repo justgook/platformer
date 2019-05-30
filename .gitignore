@@ -25,3 +25,4 @@ gh-pages/*
 !gh-pages/index.html
 !gh-pages/manifest.json
 !gh-pages/style.css
+!gh-pages/script.js

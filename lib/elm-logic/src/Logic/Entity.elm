@@ -1,4 +1,4 @@
-module Logic.Entity exposing (EntityID, create, fromDict, fromList, setComponent, toDict, with)
+module Logic.Entity exposing (EntityID, create, fromDict, fromList, getComponent, mapComponent, mapComponentSet, setComponent, toDict, toList, with)
 
 import Array
 import Dict exposing (Dict)
@@ -39,6 +39,21 @@ setComponent index value components =
             |> Array.push (Just value)
 
 
+getComponent : Int -> Component.Set comp -> Maybe comp
+getComponent i =
+    Array.get i >> Maybe.withDefault Nothing
+
+
+mapComponent : (Maybe comp -> Maybe comp) -> Int -> Component.Set comp -> Component.Set comp
+mapComponent f i comps =
+    Array.set i (f (getComponent i comps)) comps
+
+
+mapComponentSet : (comp -> comp) -> Int -> Component.Set comp -> Component.Set comp
+mapComponentSet f i comps =
+    Array.set i (getComponent i comps |> Maybe.map f) comps
+
+
 fromList : List ( EntityID, a ) -> Component.Set a
 fromList =
     List.foldl (\( index, value ) components -> setComponent index value components) Component.empty
@@ -52,3 +67,8 @@ fromDict =
 toDict : Component.Set a -> Dict EntityID a
 toDict =
     indexedFoldlArray (\i a acc -> Maybe.map (\a_ -> Dict.insert i a_ acc) a |> Maybe.withDefault acc) Dict.empty
+
+
+toList : Component.Set a -> List ( EntityID, a )
+toList =
+    indexedFoldlArray (\i a acc -> Maybe.map (\a_ -> ( i, a_ ) :: acc) a |> Maybe.withDefault acc) []

@@ -1,6 +1,23 @@
-module Logic.Template.RenderInfo exposing (RenderInfo, applyOffset, applyOffsetVec, canvas, empty, lowResCanvas, read, resize, spec, updateOffset)
+module Logic.Template.RenderInfo exposing
+    ( RenderInfo
+    , applyOffset
+    , applyOffsetVec
+    , canvas
+    , decode
+    , empty
+    , encode
+    , lowResCanvas
+    , read
+    , resize
+    , spec
+    , updateOffset
+    )
 
-import Logic.Component.Singleton
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
+import Logic.Component.Singleton as Singleton
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
 import Math.Matrix4 as Mat4 exposing (Mat4)
@@ -21,7 +38,7 @@ type alias RenderInfo =
 
 
 type alias Spec world =
-    Logic.Component.Singleton.Spec RenderInfo world
+    Singleton.Spec RenderInfo world
 
 
 read : Spec world -> Reader world
@@ -44,6 +61,17 @@ read { get, set } =
                     )
                 )
     }
+
+
+encode : Spec world -> world -> Encoder
+encode { get } world =
+    E.float (get world).px
+
+
+decode : Spec world -> Decoder (world -> world)
+decode spec_ =
+    D.float
+        |> D.map (\px -> Singleton.update spec_ (\info -> { info | px = px }))
 
 
 spec : Spec { world | render : RenderInfo }

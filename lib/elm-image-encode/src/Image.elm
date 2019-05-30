@@ -1,4 +1,7 @@
-module Image exposing (Pixels, defaultOptions, Options, Order(..), ColorDepth(..))
+module Image exposing
+    ( Pixels, defaultOptions, Options, Order(..), ColorDepth(..)
+    , pixelInt24
+    )
 
 {-|
 
@@ -8,6 +11,9 @@ module Image exposing (Pixels, defaultOptions, Options, Order(..), ColorDepth(..
 @docs Pixels, defaultOptions, Options, Order, ColorDepth
 
 -}
+
+import Bytes
+import Image.Internal exposing (unsignedInt24)
 
 
 {-| Pixel render order in image
@@ -49,6 +55,10 @@ type alias Options a =
     }
 
 
+pixelInt24 e1 =
+    unsignedInt24 Bytes.LE e1
+
+
 {-|
 
     { defaultColor = 0x00FFFF00
@@ -59,6 +69,6 @@ type alias Options a =
 defaultOptions : Options {}
 defaultOptions =
     { defaultColor = 0x00FFFF00
-    , order = RightUp
+    , order = LeftUp
     , depth = Bit24
     }

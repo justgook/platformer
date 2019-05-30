@@ -1,4 +1,4 @@
-module World.System.Physics exposing (aabb, applyInput)
+module World.System.Control exposing (aabb, jumper)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Logic.Entity
@@ -13,7 +13,7 @@ aabb { get, set } ecs =
     set (Physic.AABB.simulate 1 (get ecs)) ecs
 
 
-applyInput force inputSpec_ physicsSpec ecs =
+jumper force inputSpec_ physicsSpec ecs =
     let
         engine =
             physicsSpec.get ecs

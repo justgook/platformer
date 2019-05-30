@@ -1,4 +1,4 @@
-module Logic.Template.Input exposing (Direction, Input, empty, emptyComp, getComps, spec)
+module Logic.Template.Input exposing (Input, InputSingleton, empty, emptyComp, getComps, spec)
 
 import Dict exposing (Dict)
 import Logic.Component exposing (Set, Spec)
@@ -18,7 +18,7 @@ type alias Input =
     }
 
 
-type alias Direction =
+type alias InputSingleton =
     { comps : Logic.Component.Set Input
     , registered : Dict String ( EntityID, String )
     , pressed : Set.Set String
@@ -37,7 +37,7 @@ emptyComp =
     }
 
 
-empty : Direction
+empty : InputSingleton
 empty =
     { pressed = Set.empty
     , comps = Logic.Component.empty
@@ -45,7 +45,7 @@ empty =
     }
 
 
-spec : Singleton.Spec Direction { world | input : Direction }
+spec : Singleton.Spec InputSingleton { world | input : InputSingleton }
 spec =
     { get = .input
     , set = \comps world -> { world | input = comps }

@@ -4,15 +4,20 @@ module Broad.Grid exposing
     , draw
     , empty
     , empty_
+    , fromBytes
     , getConfig
     , insert
     , optimize
     , query
     , setConfig
+    , toBytes
     , toList
     )
 
 import Broad exposing (Boundary)
+import Bytes exposing (Endianness(..))
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
 
 
@@ -25,6 +30,69 @@ type alias Grid a =
       , cell : ( Float, Float )
       }
     )
+
+
+toBytes : (a -> Encoder) -> Grid a -> Encoder
+toBytes eItem grid =
+    let
+        list : (a -> Encoder) -> List a -> Encoder
+        list f l =
+            E.sequence (E.unsignedInt32 BE (List.length l) :: List.map f l)
+
+        items =
+            toList grid |> list eItem
+
+        config =
+            grid
+                |> getConfig
+                |> (\{ boundary, cell } ->
+                        E.sequence
+                            [ E.float32 BE boundary.xmin
+                            , E.float32 BE boundary.xmax
+                            , E.float32 BE boundary.ymin
+                            , E.float32 BE boundary.ymax
+                            , E.float32 BE cell.width
+                            , E.float32 BE cell.height
+                            ]
+                   )
+    in
+    E.sequence [ config, items ]
+
+
+fromBytes : Decoder ( Broad.Boundary, a1 ) -> Decoder (Grid a1)
+fromBytes dItem =
+    let
+        list decoder =
+            D.unsignedInt32 BE
+                |> D.andThen (\len -> D.loop ( len, [] ) (listStep decoder))
+
+        listStep decoder ( n, xs ) =
+            if n <= 0 then
+                D.succeed (D.Done xs)
+
+            else
+                D.map (\x -> D.Loop ( n - 1, x :: xs )) decoder
+
+        dBoundary =
+            D.map4 (\xmin xmax ymin ymax -> { xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax }) (D.float32 BE) (D.float32 BE) (D.float32 BE) (D.float32 BE)
+
+        dCell =
+            D.map2 (\width height -> { width = width, height = height }) (D.float32 BE) (D.float32 BE)
+
+        dConfig =
+            D.map2 (\boundary cell -> { boundary = boundary, cell = cell })
+                dBoundary
+                dCell
+
+        dItems =
+            list dItem
+    in
+    D.map2
+        (\config items ->
+            List.foldl (\( boundary, item ) acc -> insert boundary item acc) (setConfig config empty) items
+        )
+        dConfig
+        dItems
 
 
 type alias Config =

@@ -1,56 +1,114 @@
 module Logic.Template.SaveLoad.Internal.Reader exposing
-    ( GetTileset
+    ( EllipseData
     , Read(..)
     , Reader
-    , ReaderTask
+    , RectangleData
+    , TileDataWith
     , combine
+    , combineListInTask
     , defaultRead
-    , getLevel
-    , getTexture
-    , getTileset
+    , pointData
+    , polygonData
+    , rectangleData
     , tileArgs
     , tileDataWith
     )
 
-import Dict
 import Logic.Entity exposing (EntityID)
-import Logic.Launcher exposing (Error(..))
-import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask, getJson)
-import Task
+import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled(..), GetTileset)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
-import Tiled.Layer
+import Tiled.Layer exposing (TileChunkedData)
 import Tiled.Level
 import Tiled.Object exposing (Common, CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints, Dimension, Gid, PolyPoints)
 import Tiled.Properties
-import Tiled.Tileset exposing (Tileset)
-import WebGL.Texture exposing (linear, nonPowerOfTwoOptions)
 
 
 type alias Reader world =
     { objectTile : Read world TileArg
-    , objectPoint : Read world (Common {})
-    , objectRectangle : Read world CommonDimension
-    , objectEllipse : Read world CommonDimension
-    , objectPolygon : Read world CommonDimensionPolyPoints
-    , objectPolyLine : Read world CommonDimensionPolyPoints
+    , objectPoint : Read world PointData
+    , objectRectangle : Read world RectangleData
+    , objectEllipse : Read world EllipseData
+    , objectPolygon : Read world PolygonData
+    , objectPolyLine : Read world PolyLineData
     , layerTile : Read world TileDataWith
+    , layerInfiniteTile : Read world TileChunkedData
     , layerImage : Read world Tiled.Layer.ImageData
+    , layerObject : Read world Tiled.Layer.ObjectData
     , level : Read world Tiled.Level.Level
     }
 
 
-type Response
-    = Texture WebGL.Texture.Texture
-    | Tileset Tiled.Tileset.Tileset
-    | Level Tiled.Level.Level
+type alias PointData =
+    Common { layer : Tiled.Layer.ObjectData }
 
 
-type alias ReaderTask a =
-    CacheTask Response -> ResourceTask a Response
+type alias RectangleData =
+    Common (Dimension { layer : Tiled.Layer.ObjectData })
 
 
-type alias GetTileset =
-    Int -> ReaderTask Tileset
+type alias EllipseData =
+    RectangleData
+
+
+type alias PolygonData =
+    Common
+        (Dimension
+            { points : List { x : Float, y : Float }
+            , layer : Tiled.Layer.ObjectData
+            }
+        )
+
+
+type alias PolyLineData =
+    PolygonData
+
+
+pointData : Tiled.Layer.ObjectData -> Common {} -> PointData
+pointData layer a =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , rotation = a.rotation
+    , properties = a.properties
+    , layer = layer
+    }
+
+
+rectangleData : Tiled.Layer.ObjectData -> CommonDimension -> RectangleData
+rectangleData layer a =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , width = a.width
+    , height = a.height
+    , rotation = a.rotation
+    , properties = a.properties
+    , layer = layer
+    }
+
+
+polygonData : Tiled.Layer.ObjectData -> CommonDimensionPolyPoints -> PolygonData
+polygonData layer a =
+    { id = a.id
+    , name = a.name
+    , kind = a.kind
+    , visible = a.visible
+    , x = a.x
+    , y = a.y
+    , width = a.width
+    , height = a.height
+    , rotation = a.rotation
+    , properties = a.properties
+    , points = a.points
+    , layer = layer
+    }
 
 
 type alias ReturnSync world =
@@ -58,7 +116,7 @@ type alias ReturnSync world =
 
 
 type alias ReturnAsync world =
-    ReaderTask (( EntityID, world ) -> ( EntityID, world ))
+    Loader.TaskTiled (( EntityID, world ) -> ( EntityID, world ))
 
 
 type Read world a
@@ -76,7 +134,9 @@ defaultRead =
     , objectPolygon = None
     , objectPolyLine = None
     , layerTile = None
+    , layerInfiniteTile = None
     , layerImage = None
+    , layerObject = None
     , level = None
     }
 
@@ -97,6 +157,7 @@ type alias TileArg =
     , width : Float
     , x : Float
     , y : Float
+    , layer : Tiled.Layer.ObjectData
     }
 
 
@@ -131,8 +192,8 @@ tileDataWith getTilesetByGid tileData =
     }
 
 
-tileArgs : CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
-tileArgs a c d =
+tileArgs : Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
+tileArgs objectData a c d =
     { id = a.id
     , name = a.name
     , kind = a.kind
@@ -148,114 +209,82 @@ tileArgs a c d =
     , fh = c.fh
     , fv = c.fv
     , fd = c.fd
+    , layer = objectData
     }
 
 
-combine :
+combine : Reader world -> Reader world -> Reader world
+combine r1 r2 =
+    { objectTile = combine_ .objectTile r1 r2
+    , objectPoint = combine_ .objectPoint r1 r2
+    , objectRectangle = combine_ .objectRectangle r1 r2
+    , objectEllipse = combine_ .objectEllipse r1 r2
+    , objectPolygon = combine_ .objectPolygon r1 r2
+    , objectPolyLine = combine_ .objectPolyLine r1 r2
+    , layerTile = combine_ .layerTile r1 r2
+    , layerInfiniteTile = combine_ .layerInfiniteTile r1 r2
+    , layerImage = combine_ .layerImage r1 r2
+    , layerObject = combine_ .layerObject r1 r2
+    , level = combine_ .level r1 r2
+    }
+
+
+combine_ : (Reader world -> Read world a) -> Reader world -> Reader world -> Read world a
+combine_ getKey r1 r2 =
+    case ( getKey r1, getKey r2 ) of
+        ( None, None ) ->
+            None
+
+        ( Sync f1, Sync f2 ) ->
+            Sync (\a b -> f1 a b |> f2 a)
+
+        ( Async f1, Sync f2 ) ->
+            Async
+                (\a b ->
+                    f1 a b
+                        |> ResourceTask.map (\_ d -> f2 a d)
+                )
+
+        ( Async f1, Async f2 ) ->
+            Async
+                (\a b ->
+                    f1 a b
+                        |> ResourceTask.andThen (\_ d -> f2 a d)
+                )
+
+        ( Sync f1, Async f2 ) ->
+            Async
+                (\a b ->
+                    ResourceTask.succeed (f1 a) b
+                        |> ResourceTask.andThen (\_ d -> f2 a d)
+                )
+
+        ( f1, None ) ->
+            f1
+
+        ( None, f2 ) ->
+            f2
+
+
+combineListInTask :
     (reader -> Read world a)
     -> a
     -> List reader
     -> ( EntityID, world )
-    -> CacheTask Response
-    -> ResourceTask ( EntityID, world ) Response
-combine getKey arg readers acc =
+    -> CacheTask CacheTiled
+    -> ResourceTask ( EntityID, world ) CacheTiled
+combineListInTask getKey arg readers acc =
     case readers of
         item :: rest ->
             case getKey item of
                 None ->
-                    combine getKey arg rest acc
+                    combineListInTask getKey arg rest acc
 
                 Sync f ->
-                    combine getKey arg rest (f arg acc)
+                    combineListInTask getKey arg rest (f arg acc)
 
                 Async f ->
-                    f arg >> ResourceTask.andThen (\f1 -> combine getKey arg rest (f1 acc))
+                    f arg >> ResourceTask.andThen (\f1 -> combineListInTask getKey arg rest (f1 acc))
 
         [] ->
             ResourceTask.succeed acc
-
-
-getTileset : String -> Int -> CacheTask Response -> ResourceTask Tiled.Tileset.Tileset Response
-getTileset url firstgid =
-    Task.andThen
-        (\d ->
-            case Dict.get url d.dict of
-                Just (Tileset r) ->
-                    Task.succeed ( r, d )
-
-                _ ->
-                    getJson (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
-        )
-        >> Task.map
-            (\( resp, d ) ->
-                ( resp, { d | dict = Dict.insert url (Tileset resp) d.dict } )
-            )
-
-
-getTexture : String -> CacheTask Response -> ResourceTask WebGL.Texture.Texture Response
-getTexture url =
-    Task.andThen
-        (\d ->
-            case Dict.get url d.dict of
-                Just (Texture r) ->
-                    Task.succeed ( r, d )
-
-                _ ->
-                    (if String.startsWith "data:image" url then
-                        url
-
-                     else
-                        d.url ++ url
-                    )
-                        |> WebGL.Texture.loadWith textureOption
-                        |> Task.mapError (textureError url)
-                        |> Task.map (\r -> ( r, d ))
-        )
-        >> Task.map
-            (\( resp, d ) ->
-                ( resp, { d | dict = Dict.insert url (Texture resp) d.dict } )
-            )
-
-
-textureOption : WebGL.Texture.Options
-textureOption =
-    { nonPowerOfTwoOptions
-        | magnify = linear
-        , minify = linear
-    }
-
-
-textureError : String -> WebGL.Texture.Error -> Error
-textureError url e =
-    case e of
-        WebGL.Texture.LoadError ->
-            Error 4005 ("Texture.LoadError: " ++ url)
-
-        WebGL.Texture.SizeError a b ->
-            Error 4006 ("Texture.SizeError: " ++ url)
-
-
-getLevel : String -> CacheTask Response -> ResourceTask Tiled.Level.Level Response
-getLevel url =
-    Task.andThen
-        (\d ->
-            case Dict.get url d.dict of
-                Just (Level r) ->
-                    Task.succeed ( r, d )
-
-                _ ->
-                    getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
-        )
-        >> Task.map
-            (\( resp, d ) ->
-                let
-                    relUrl =
-                        String.split "/" url
-                            |> List.reverse
-                            |> List.drop 1
-                            |> (::) ""
-                            |> List.reverse
-                            |> String.join "/"
-                in
-                ( resp, { d | url = relUrl, dict = Dict.insert url (Level resp) d.dict } )
-            )

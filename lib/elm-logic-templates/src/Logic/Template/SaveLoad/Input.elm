@@ -1,14 +1,91 @@
-module Logic.Template.SaveLoad.Input exposing (read)
+module Logic.Template.SaveLoad.Input exposing (decode, encode, read)
 
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
+import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
-import Logic.Template.Input exposing (emptyComp)
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
+import Logic.Template.Input as Input exposing (Input, InputSingleton, emptyComp)
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Parser exposing ((|.), (|=))
 import Set
 import Tiled.Properties exposing (Property(..))
 
 
+encode : Singleton.Spec InputSingleton world -> world -> Encoder
+encode { get } world =
+    let
+        { registered } =
+            get world
+    in
+    Dict.toList registered
+        |> E.list
+            (\( key, ( id, action ) ) ->
+                E.sequence
+                    [ E.id id
+                    , E.sizedString key
+                    , E.sizedString action
+                    ]
+            )
+
+
+decode : Singleton.Spec InputSingleton world -> WorldDecoder world
+decode spec_ =
+    let
+        decoder =
+            D.map3
+                (\id key action -> ( key, ( id, action ) ))
+                D.id
+                D.sizedString
+                D.sizedString
+    in
+    D.list decoder
+        |> D.map
+            (\registered ->
+                Singleton.update spec_
+                    (\info ->
+                        let
+                            newInfo =
+                                List.foldl
+                                    (\( key, ( id, action ) ) acc ->
+                                        let
+                                            comp =
+                                                Entity.getComponent id acc.comps
+                                                    |> Maybe.withDefault emptyComp
+                                                    |> (\c ->
+                                                            case action of
+                                                                "Move.south" ->
+                                                                    { c | down = key }
+
+                                                                "Move.west" ->
+                                                                    { c | left = key }
+
+                                                                "Move.east" ->
+                                                                    { c | right = key }
+
+                                                                "Move.north" ->
+                                                                    { c | up = key }
+
+                                                                _ ->
+                                                                    c
+                                                       )
+                                        in
+                                        { acc
+                                            | comps = Entity.setComponent id comp acc.comps
+                                        }
+                                    )
+                                    info
+                                    registered
+                        in
+                        { newInfo | registered = Dict.fromList registered }
+                    )
+            )
+
+
+read : Singleton.Spec InputSingleton world -> Reader world
 read spec =
     let
         compsSpec =

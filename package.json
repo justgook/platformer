@@ -8,10 +8,9 @@
     "build": "foo=\"$(mktemp).js\" && elm make src/Main.elm --output=$foo && cat $foo | prepack "
   },
   "devDependencies": {
+    "jscodeshift": "0.6.4",
     "prepack": "0.2.54",
     "uglify-js": "3.5.3"
   },
-  "dependencies": {
-    "nipplejs": "^0.8.1"
-  }
+  "dependencies": {}
 }

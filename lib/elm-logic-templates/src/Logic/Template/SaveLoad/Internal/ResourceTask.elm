@@ -6,7 +6,6 @@ module Logic.Template.SaveLoad.Internal.ResourceTask exposing
     , attemptWithCach
     , fail
     , getCache
-    , getJson
     , init
     , map
     , map2
@@ -16,8 +15,6 @@ module Logic.Template.SaveLoad.Internal.ResourceTask exposing
     )
 
 import Dict exposing (Dict)
-import Http
-import Json.Decode as Decode exposing (Decoder)
 import Logic.Launcher exposing (Error(..))
 import Task exposing (Task)
 
@@ -103,37 +100,6 @@ andThen f =
             f a (Task.succeed d1)
                 |> Task.map (\( b, d2 ) -> ( b, { d1 | dict = Dict.union d1.dict d2.dict } ))
         )
-
-
-getJson : String -> Decoder a -> Task.Task Error a
-getJson url decoder =
-    Http.task
-        { method = "GET"
-        , headers = []
-        , url = url
-        , body = Http.emptyBody
-        , resolver =
-            Http.stringResolver
-                (\response ->
-                    case response of
-                        Http.GoodStatus_ meta body ->
-                            Decode.decodeString decoder body
-                                |> Result.mapError (Decode.errorToString >> Error 4004)
-
-                        Http.BadUrl_ info ->
-                            Err (Error 4000 info)
-
-                        Http.Timeout_ ->
-                            Err (Error 4001 "Timeout")
-
-                        Http.NetworkError_ ->
-                            Err (Error 4002 "NetworkError")
-
-                        Http.BadStatus_ { statusCode } _ ->
-                            Err (Error 4003 ("BadStatus:" ++ String.fromInt statusCode))
-                )
-        , timeout = Nothing
-        }
 
 
 init : CacheTask b

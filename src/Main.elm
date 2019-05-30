@@ -1,83 +1,40 @@
 port module Main exposing (main, onscreenSpecExtend)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
+import Base64
 import Browser.Dom as Browser
 import Browser.Events as Events
+import Common exposing (OwnWorld, decoders, emptyWorld, read)
 import Json.Decode as Decode exposing (Value)
-import Logic.Component
 import Logic.Component.Singleton
 import Logic.Entity
-import Logic.GameFlow as Flow
 import Logic.Launcher as Launcher exposing (Launcher, document)
+import Logic.System as System
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
 import Logic.Template.Camera.Trigger exposing (Trigger)
-import Logic.Template.Component.AnimationDict
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
-import Logic.Template.Component.Sprite
+import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
+import Logic.Template.Component.TimeLine as TimeLine
+import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
 import Logic.Template.FX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
 import Logic.Template.Internal exposing (pxToScreen)
-import Logic.Template.OnScreenControl as OnScreenControl
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
-import Logic.Template.SaveLoad.AnimationDict
-import Logic.Template.SaveLoad.Camera
-import Logic.Template.SaveLoad.Input
-import Logic.Template.SaveLoad.Physics
-import Logic.Template.SaveLoad.Sprite
-import Logic.Template.SaveLoad.Task as TiledRead
+import Logic.Template.SaveLoad as SaveLoad
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2
 import Physic.AABB as AABB
 import Physic.Narrow.AABB as AABB
 import Set
 import Task
 import WebGL
-import World.System.AnimationChange
-import World.System.Physics
+import World.System.Control
+import World.System.TimelineChange as TimelineChange
 import World.View.RenderSystem
-
-
-read =
-    [ Logic.Template.SaveLoad.Sprite.read Logic.Template.Component.Sprite.spec
-    , Logic.Template.SaveLoad.AnimationDict.read Logic.Template.Component.AnimationDict.spec
-    , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec
-    , Logic.Template.SaveLoad.Camera.readId Logic.Template.Camera.spec
-    , RenderInfo.read RenderInfo.spec
-    , aabb.read
-    ]
-
-
-type alias OwnWorld =
-    { camera : Logic.Template.Camera.WithId (Trigger {})
-    , layers : List Logic.Template.Component.Layer.Layer
-    , sprites : Logic.Component.Set Logic.Template.Component.Sprite.Sprite
-    , physics : AABB.World Int
-    , animations : Logic.Component.Set Logic.Template.Component.AnimationDict.AnimationDict
-    , input : Logic.Template.Input.Direction
-    , projectile : Projectile
-    , render : RenderInfo
-    , onScreen : TwoButtonStick {}
-    }
-
-
-world : Launcher.World OwnWorld
-world =
-    { frame = 0
-    , runtime_ = 0
-    , flow = Flow.Running
-    , layers = Logic.Template.Component.Layer.empty
-    , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = 0 }
-    , sprites = Logic.Template.Component.Sprite.empty
-    , animations = Logic.Template.Component.AnimationDict.empty
-    , input = Logic.Template.Input.empty
-    , physics = aabb.empty
-    , projectile = Projectile.empty
-    , render = RenderInfo.empty
-    , onScreen = OnScreenControl.emptyTwoButtonStick
-    }
 
 
 main : Launcher Value OwnWorld
@@ -85,17 +42,29 @@ main =
     document
         { update = update
         , view = view
-        , subscriptions =
-            \w ->
-                Sub.batch
-                    [ Keyboard.sub Logic.Template.Input.spec w
-                    , Events.onResize (RenderInfo.resize RenderInfo.spec w)
-                    ]
+        , subscriptions = subscriptions
         , init = init
         }
 
 
+subscriptions w =
+    Sub.batch
+        [ Keyboard.sub Logic.Template.Input.spec w
+        , Events.onResize (RenderInfo.resize RenderInfo.spec w)
 
+        --        , delmeSubscriptions
+        --            (\_ ->
+        --                let
+        --                    _ =
+        --                        Debug.log "currentFrame" w.frame
+        --                in
+        --                w
+        --            )
+        ]
+
+
+
+--port delmeSubscriptions : (() -> msg) -> Sub msg
 --init : Value -> Task.Task Launcher.Error (Launcher.World OwnWorld)
 
 
@@ -105,13 +74,21 @@ init flags =
             flags
                 |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
                 |> Result.withDefault "default.json"
+
+        worldTask =
+            flags
+                |> Decode.decodeValue (Decode.field "world" Decode.string)
+                |> Result.toMaybe
+                |> Maybe.andThen Base64.toBytes
+                |> Maybe.map (\bytes -> SaveLoad.loadBytes bytes emptyWorld decoders |> ResourceTask.toTask)
+                |> Maybe.withDefault (SaveLoad.loadTiled levelUrl emptyWorld read)
     in
-    Task.map2
-        (\{ scene } w ->
-            RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
-        )
-        Browser.getViewport
-        (TiledRead.load Logic.Template.Component.Layer.spec levelUrl world read)
+    worldTask
+        |> Task.map2
+            (\{ scene } w ->
+                RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
+            )
+            Browser.getViewport
 
 
 
@@ -159,7 +136,7 @@ onscreenSpecExtend :
     Logic.Component.Singleton.Spec (TwoButtonStick {})
         { world
             | onScreen : TwoButtonStick {}
-            , input : Logic.Template.Input.Direction
+            , input : Logic.Template.Input.InputSingleton
             , camera : Logic.Template.Camera.WithId (Trigger {})
         }
 onscreenSpecExtend =
@@ -182,22 +159,40 @@ onscreenSpecExtend =
             in
             OnScreenControl.spec.set comp w
                 |> Logic.Component.Singleton.update (Logic.Template.Input.getComps Logic.Template.Input.spec)
-                    (Logic.Component.mapById (\key -> aaa { key | action = jump key.action }) w.camera.id)
+                    (Logic.Entity.mapComponentSet (\key -> aaa { key | action = jump key.action }) w.camera.id)
     }
 
 
-objRender w objLayer =
-    []
-        |> World.View.RenderSystem.viewSprite
-            (aabb.compsExtracter w)
-            (Logic.Template.Component.Sprite.spec.get w)
-            aabb.getPosition
-            ( w, objLayer )
+objRender w ( _, objLayer ) =
+    System.indexedFoldl3
+        (\i _ c1 sprite acc ->
+            acc
+                |> (::)
+                    (Sprite.draw
+                        w.render
+                        (case Logic.Entity.getComponent i w.timelines of
+                            Just t ->
+                                { sprite
+                                    | uP =
+                                        c1
+                                            |> AABB.getPosition
+                                            |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
+                                            |> Math.Vector2.fromRecord
+                                    , uIndex = TimeLine.get w.frame t
+                                    , uMirror = t.uMirror
+                                }
 
-
-
--- Not works with intellij elm plugin
---update : Launcher.World OwnWorld -> Launcher.World OwnWorld
+                            Nothing ->
+                                { sprite
+                                    | uP = c1 |> AABB.getPosition |> Math.Vector2.fromRecord
+                                }
+                        )
+                    )
+        )
+        objLayer
+        (aabb.compsExtracter w)
+        w.sprites
+        []
 
 
 update w =
@@ -235,10 +230,39 @@ update w =
     { w
         | projectile = Projectile.update { position = targetInRelSpace } w.projectile
     }
-        |> World.System.Physics.applyInput (vec2 3 8) Logic.Template.Input.spec aabb.spec
+        |> World.System.Control.jumper (vec2 3 8) Logic.Template.Input.spec aabb.spec
         |> aabb.system
-        |> World.System.AnimationChange.sideScroll aabb.spec Logic.Template.Component.Sprite.spec Logic.Template.Component.AnimationDict.spec
+        |> TimelineChange.sideScroll TimeLineDict.spec aabb.spec TimeLine.spec
+        --        |> World.System.AnimationChange.sideScroll aabb.spec Sprite.spec Logic.Template.Component.AnimationDict.spec
         |> Logic.Template.Camera.system Logic.Template.Camera.spec cameraStep
+        |> (\m ->
+                let
+                    cmd =
+                        --                          if m.frame == 60 then
+                        --                            SaveLoad.load Logic.Template.Component.Layer.spec
+                        --                                "./assets/demo.json"
+                        --                                world
+                        --                                read
+                        --                                |> Launcher.task
+                        --                                    (\r w_ ->
+                        --                                        case r of
+                        --                                            Ok newW ->
+                        --                                                { newW
+                        --                                                    | render = w_.render
+                        --                                                    , physics = w_.physics
+                        --                                                    , camera = w_.camera
+                        --                                                    , input = w_.input
+                        --                                                }
+                        --
+                        --                                            Err _ ->
+                        --                                                w_
+                        --                                    )
+                        --
+                        --                        else
+                        Cmd.none
+                in
+                ( m, cmd )
+           )
 
 
 aabb =
@@ -249,8 +273,7 @@ aabb =
     { spec = Logic.Template.Component.Physics.spec
     , empty = { empty | gravity = { x = 0, y = -0.5 } }
     , view = World.View.RenderSystem.debugPhysicsAABB
-    , system = World.System.Physics.aabb Logic.Template.Component.Physics.spec
-    , read = Logic.Template.SaveLoad.Physics.read Logic.Template.Component.Physics.spec
+    , system = World.System.Control.aabb Logic.Template.Component.Physics.spec
     , getPosition = AABB.getPosition
     , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
     }

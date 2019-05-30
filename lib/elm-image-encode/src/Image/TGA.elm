@@ -1,10 +1,9 @@
 module Image.TGA exposing (encode24, header)
 
 import Base64 as Base64
-import Bitwise exposing (and, shiftRightBy)
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as Encode exposing (Encoder, unsignedInt16, unsignedInt32, unsignedInt8)
-import Image exposing (ColorDepth(..), Options, Order(..), Pixels, defaultOptions)
+import Image exposing (ColorDepth(..), Options, Order(..), Pixels)
 
 
 
@@ -39,7 +38,7 @@ header w h dataSize =
     , unsignedInt16 BE 0x00 -- y origin
     , unsignedInt16 BE 0x02 -- width
     , unsignedInt16 BE 0x02 -- height
-    , unsignedInt8 0x18 --/* 32 bit bitmap */
+    , unsignedInt8 0x18 --/* 24 bit bitmap */
     , unsignedInt8 0x00
     , unsignedInt8 0x00
     , unsignedInt8 0xFF
