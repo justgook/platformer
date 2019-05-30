@@ -4,7 +4,7 @@
 <head>
     <title>Game</title>
     <meta charset="utf-8" />
-    <link rel="manifest" href="/manifest.json">
+<!--    <link rel="manifest" href="/manifest.json">-->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
@@ -26,43 +26,41 @@
 </script>
 <script src="./bundle.js"></script>
 <script>
-    // window.addEventListener("gamepadconnected", function(e) {
-    //   console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-    //           e.gamepad.index, e.gamepad.id,
-    //           e.gamepad.buttons.length, e.gamepad.axes.length);
-    // });
 
-    console.time("loading");
-    var app = Elm.Main.init(
-        {
-            flags: {
-                // devicePixelRatio: 0.1012658228,
-                devicePixelRatio: window.devicePixelRatio || 1,
-                levelUrl: "./assets/demo.json",
-                seed: Math.floor(Math.random() * 0xFFFFFFFF)
+    const levelUrl = "./assets/demo.json"
+    function start(w) {
+        var app = Elm.Main.init(
+            {
+                flags: {
+                    levelUrl: levelUrl,
+                    world: w
+                }
             }
-        }
-    );
-    // function toggleFullScreen() {
-    //     var doc = window.document;
-    //     var docEl = doc.documentElement;
-    //
-    //     var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-    //     var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-    //
-    //     if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-    //         requestFullScreen.call(docEl);
-    //     }
-    //     else {
-    //         cancelFullScreen.call(doc);
-    //     }
-    // }
+        );
+        app.ports.start.subscribe(function () {
+            console.timeEnd("loading");
+            document.body.className = "loaded";
+        });
+        // window.debugFrame = ()=> app.ports.delmeSubscriptions.send(null);
+    }
+    console.time("loading");
 
-    app.ports.start.subscribe(function (data) {
-        console.timeEnd("loading");
-        // document.body.addEventListener("click", toggleFullScreen);
-        document.body.className = "loaded";
-    });
+    // localStorage.clear();
+    var world = localStorage.getItem("world");
+
+    if (world === null) {
+        var build = Elm.Build.init({ flags: { levelUrl: levelUrl, } });
+        build.ports.bytes.subscribe(function (data) {
+            localStorage.setItem("world", data);
+            start(data);
+        });
+    }else {
+        start(world);
+    }
+
+
+
+
 </script>
 </body>
 
