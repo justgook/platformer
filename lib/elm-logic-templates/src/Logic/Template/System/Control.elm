@@ -1,4 +1,4 @@
-module World.System.Control exposing (aabb, jumper)
+module Logic.Template.System.Control exposing (aabb, bindCreate, bindSpecFirst, bindSpecSecond, jumper)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Logic.Entity

@@ -1,4 +1,4 @@
-module World.System.TimelineChange exposing (sideScroll)
+module Logic.Template.System.TimelineChange exposing (sideScroll)
 
 import Dict
 import Direction as Dir

@@ -1,4 +1,4 @@
-module World.View.RenderSystem exposing (debugPhysicsAABB)
+module Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
 
 import AltMath.Vector2 as AVec2
 import Logic.Template.Ellipse as Ellipse

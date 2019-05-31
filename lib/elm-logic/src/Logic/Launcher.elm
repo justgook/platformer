@@ -1,4 +1,4 @@
-port module Logic.Launcher exposing (Error(..), Launcher, World, document, task, worker)
+port module Logic.Launcher exposing (Document, Error(..), Launcher, World, document, task, worker)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
@@ -35,13 +35,15 @@ type alias Launcher flags world =
     Program flags (Model world) (Message world)
 
 
-document :
+type alias Document flags world =
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> ( World world, Cmd (Message world) )
     , view : World world -> List (VirtualDom.Node (World world -> World world))
     }
-    -> Launcher flags world
+
+
+document : Document flags world -> Launcher flags world
 document { init, update, view, subscriptions } =
     Browser.document
         { init = init_ init

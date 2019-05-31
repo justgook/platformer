@@ -1,4 +1,4 @@
-module Common exposing (OwnWorld, decoders, emptyWorld, encoders, read)
+module Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, emptyWorld, encoders, read)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Encode as E exposing (Encoder)
@@ -28,21 +28,22 @@ import Logic.Template.SaveLoad.TimeLineDict as TimeLineDict
 import Physic.AABB as AABB
 
 
-type alias OwnWorld =
-    { camera : Logic.Template.Camera.WithId (Trigger {})
-    , sprites : Logic.Component.Set Sprite
-    , physics : AABB.World Int
-    , input : Logic.Template.Input.InputSingleton
-    , projectile : Projectile
-    , render : RenderInfo
-    , onScreen : TwoButtonStick {}
-    , timelines : Logic.Component.Set TimeLine.Simple
-    , animations2 : Logic.Component.Set TimeLineDict
-    , layers : List Logic.Template.Component.Layer.Layer
-    }
+type alias PlatformerWorld =
+    Launcher.World
+        { camera : Logic.Template.Camera.WithId (Trigger {})
+        , sprites : Logic.Component.Set Sprite
+        , physics : AABB.World Int
+        , input : Logic.Template.Input.InputSingleton
+        , projectile : Projectile
+        , render : RenderInfo
+        , onScreen : TwoButtonStick {}
+        , timelines : Logic.Component.Set TimeLine.Simple
+        , animations2 : Logic.Component.Set TimeLineDict
+        , layers : List Logic.Template.Component.Layer.Layer
+        }
 
 
-emptyWorld : Launcher.World OwnWorld
+emptyWorld : PlatformerWorld
 emptyWorld =
     let
         physicsEmpty =
@@ -66,7 +67,7 @@ emptyWorld =
     }
 
 
-encoders : List (Launcher.World OwnWorld -> Encoder)
+encoders : List (PlatformerWorld -> Encoder)
 encoders =
     [ Sprite.encode Sprite.spec
     , Logic.Template.SaveLoad.Input.encode Logic.Template.Input.spec
@@ -78,7 +79,7 @@ encoders =
     ]
 
 
-decoders : GetTexture -> List (WorldDecoder (Launcher.World OwnWorld))
+decoders : GetTexture -> List (WorldDecoder PlatformerWorld)
 decoders getTexture =
     [ Sprite.decode Sprite.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Input.decode Logic.Template.Input.spec
@@ -90,7 +91,7 @@ decoders getTexture =
     ]
 
 
-read : List (Reader (Launcher.World OwnWorld))
+read : List (Reader PlatformerWorld)
 read =
     [ Sprite.read Sprite.spec
     , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec

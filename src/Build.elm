@@ -1,11 +1,8 @@
 port module Build exposing (init, main, update)
 
 import Base64
-import Common exposing (OwnWorld, emptyWorld, encoders, read)
 import Json.Decode as Decode exposing (Value)
-import Logic.Template.SaveLoad as SaveLoad
-import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
-import Logic.Template.SaveLoad.Layer exposing (lutCollector)
+import Logic.Template.Game.Platformer as Platformer
 import Task
 
 
@@ -34,14 +31,13 @@ init flags =
                 |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
                 |> Result.withDefault "default.json"
     in
-    SaveLoad.loadTiledAndEncode levelUrl emptyWorld read encoders lutCollector
-        |> ResourceTask.toTask
+    Platformer.encode levelUrl
         |> Task.map Tuple.first
         |> Task.attempt
             (\a ->
                 case a of
                     Ok good ->
-                        good |> Base64.fromBytes
+                        Base64.fromBytes good
 
                     Err _ ->
                         Nothing

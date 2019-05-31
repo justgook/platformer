@@ -1,4 +1,4 @@
-module World.System.AI exposing (system)
+module Logic.Template.System.AI exposing (system)
 
 --https://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
 
