@@ -4,7 +4,6 @@ const takeScreenShot = require("node-server-screenshot");
 const port = 3000;
 
 
-
 const server = http.createServer((req, res) => {
     if (req.url === '/') req.url = "/index.html";
     const path = __dirname + "/gh-pages" + req.url;
@@ -49,16 +48,16 @@ buildApp.ports.bytes.subscribe((b64string) => {
     console.log(buff);
     fs.writeFileSync("./gh-pages/demo.bin", buff);
     console.log("level file file created");
-    // takeScreenShot.fromURL("http://localhost:3000/screenshot.html", "gh-pages/preview.png",
-    //     {
-    //         show: false,
-    //         width: 1200,
-    //         height: 675
-    //     },
-    //     function () {
-    //         //an image of google.com has been saved at ./test.png
+    takeScreenShot.fromURL("http://localhost:3000/screenshot.html", "gh-pages/preview.png",
+        {
+            show: false,
+            width: 1200,
+            height: 675
+        },
+        function () {
+            //an image of google.com has been saved at ./test.png
             server.close()
-    //     });
+        });
 });
 
 
