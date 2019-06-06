@@ -27,4 +27,5 @@ gh-pages/*
 !gh-pages/manifest.json
 !gh-pages/style.css
 !gh-pages/script.js
+!gh-pages/.gitignore
 

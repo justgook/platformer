@@ -10,11 +10,13 @@ const info = {
     twitterName: "@justgook",
     favicon: "gh-pages/assets/favicon.png",
     image: "preview.png",
+    facebookId: "2333644500291007",
 };
 const socialTags_ = ({ facebook, twitter }) =>
     ({
         "meta": [
             // facebook
+            { "property": "fb:app_id", "content": facebook.facebookId },
             { "property": "og:type", "content": facebook.type },
             { "property": "og:type", "content": facebook.type },
             { "property": "og:url", "content": facebook.url },
@@ -39,7 +41,7 @@ const socialTags_ = ({ facebook, twitter }) =>
         ]
     });
 
-const buildSocialTags = ({ url, image, title, description, version, license, twitterName }) => socialTags_({
+const buildSocialTags = ({ url, image, title, description, version, license, twitterName, facebookId }) => socialTags_({
     facebook: {
         type: "website",
         url,
@@ -47,8 +49,8 @@ const buildSocialTags = ({ url, image, title, description, version, license, twi
         description,
         image: url + image,
         image_width: 1200,
-        image_height: 675
-
+        image_height: 675,
+        facebookId
     },
     twitter: {
         card: "summary_large_image",
@@ -109,7 +111,7 @@ module.exports = {
                 configuration: {
                     path: "/images",                                            // Path for overriding default icons path. `string`
                     appName: info.title,                                        // Your application's name. `string`
-                    appShortName: info.title,                                   // Your application's short_name. `string`. Optional. If not set, appName will be used
+                    appShortName: "AGE",                                        // Your application's short_name. `string`. Optional. If not set, appName will be used
                     appDescription: info.description,                           // Your application's description. `string`
                     developerName: "Romans Potasovs",                           // Your (or your developer's) name. `string`
                     developerURL: "https://github.com/justgook/",               // Your (or your developer's) URL. `string`
