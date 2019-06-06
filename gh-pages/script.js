@@ -100,13 +100,7 @@ function howlerWrapper(Howl) {
     window.customElements.define("howler-sound", HowlerWrapper);
 }
 
-// Real Stuff
-console.time("loading");
-requestAnimationFrame(function () {
-    howlerWrapper(Howl);
-    var app = Elm.Main.init();
-    app.ports.start.subscribe(function () {
-        console.timeEnd("loading");
-        document.body.className = "loaded";
-    });
-});
+if (window.Howl) {
+    howlerWrapper(window.Howl);
+}
+

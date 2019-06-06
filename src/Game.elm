@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module Game exposing (main)
 
 import Base64
 import Json.Decode as Decode exposing (Value)
@@ -17,7 +17,7 @@ main =
     --    Launcher.document { game | init = init }
     --    Launcher.document { game | init = debugInit }
     --    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
-    Launcher.document { game | init = \_ -> Platformer.run "/demo.bin" }
+    Launcher.document { game | init = init }
 
 
 init : Value -> Task.Task Launcher.Error Platformer.World
@@ -25,8 +25,8 @@ init flags =
     let
         levelUrl =
             flags
-                |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
-                |> Result.withDefault "default.json"
+                |> Decode.decodeValue (Decode.field "url" Decode.string)
+                |> Result.withDefault "default.bin"
 
         woldBytes =
             flags
@@ -35,7 +35,7 @@ init flags =
                 |> Maybe.andThen Base64.toBytes
     in
     Maybe.map Platformer.decode woldBytes
-        |> Maybe.withDefault (Platformer.load levelUrl)
+        |> Maybe.withDefault (Platformer.run levelUrl)
 
 
 debugInit : Value -> Task.Task Launcher.Error Platformer.World

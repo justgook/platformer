@@ -3,7 +3,7 @@
 
 <head>
 
-<!--    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />-->
+    <!--    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />-->
     <link rel="stylesheet" media="all" href="/style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.2/howler.min.js"></script>
     <posthtml-head-elements>
@@ -23,6 +23,16 @@
         if (redirect && redirect !== location.href) {
             history.replaceState(null, null, redirect);
         }
+
+        // Real Stuff
+        console.time("loading");
+        var app = Elm.Game.init({ flags: { url: "/demo.bin" } });
+        app.ports.start.subscribe(function () {
+            console.timeEnd("loading");
+            document.body.className = "loaded";
+        });
+
+
     })();
 </script>
 
