@@ -18,7 +18,6 @@ const socialTags_ = ({ facebook, twitter }) =>
             // facebook
             { "property": "fb:app_id", "content": facebook.facebookId },
             { "property": "og:type", "content": facebook.type },
-            { "property": "og:type", "content": facebook.type },
             { "property": "og:url", "content": facebook.url },
             { "property": "og:title", "content": facebook.title },
             { "property": "og:description", "content": facebook.description },

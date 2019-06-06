@@ -15,12 +15,9 @@ game =
 main : Launcher Value Platformer.World
 main =
     --    Launcher.document { game | init = init }
-    Launcher.document { game | init = debugInit }
-
-
-
---    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
---    Launcher.document { game | init = \_ -> Platformer.run "/demo.bin" }
+    --    Launcher.document { game | init = debugInit }
+    --    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
+    Launcher.document { game | init = \_ -> Platformer.run "/demo.bin" }
 
 
 init : Value -> Task.Task Launcher.Error Platformer.World
