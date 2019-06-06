@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Internal.Encode exposing (encoder, float, id, list, sizedString, xy, xyz)
+module Logic.Template.SaveLoad.Internal.Encode exposing (bool, encoder, float, id, list, sizedString, xy, xyz)
 
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as E exposing (Encoder)
@@ -12,6 +12,15 @@ encoder encoders w =
 float : Float -> Encoder
 float =
     E.float32 BE
+
+
+bool : Bool -> Encoder
+bool a =
+    if a then
+        E.unsignedInt8 1
+
+    else
+        E.unsignedInt8 0
 
 
 xy : { x : Float, y : Float } -> Encoder

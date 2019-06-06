@@ -1,4 +1,4 @@
-module Logic.Entity exposing (EntityID, create, fromDict, fromList, getComponent, mapComponent, mapComponentSet, setComponent, toDict, toList, with)
+module Logic.Entity exposing (EntityID, create, fromDict, fromList, getComponent, mapComponent, mapComponentSet, setComponent, spawnComponent, toDict, toList, with)
 
 import Array
 import Dict exposing (Dict)
@@ -21,7 +21,7 @@ with ( { get, set }, component ) ( mId, world ) =
     let
         updatedComponents =
             get world
-                |> setComponent mId component
+                |> spawnComponent mId component
 
         updatedWorld =
             set updatedComponents world
@@ -29,14 +29,21 @@ with ( { get, set }, component ) ( mId, world ) =
     ( mId, updatedWorld )
 
 
-setComponent : EntityID -> a -> Component.Set a -> Component.Set a
-setComponent index value components =
+spawnComponent : EntityID -> a -> Component.Set a -> Component.Set a
+spawnComponent index value components =
     if index - Array.length components < 0 then
         Array.set index (Just value) components
 
     else
         Array.append components (Array.repeat (index - Array.length components) Nothing)
             |> Array.push (Just value)
+
+
+{-| Set the component at a particular index. Returns an updated component Set. If the index is out of range, the Set is unaltered.
+-}
+setComponent : EntityID -> a -> Component.Set a -> Component.Set a
+setComponent index value components =
+    Array.set index (Just value) components
 
 
 getComponent : Int -> Component.Set comp -> Maybe comp
@@ -56,12 +63,12 @@ mapComponentSet f i comps =
 
 fromList : List ( EntityID, a ) -> Component.Set a
 fromList =
-    List.foldl (\( index, value ) components -> setComponent index value components) Component.empty
+    List.foldl (\( index, value ) components -> spawnComponent index value components) Component.empty
 
 
 fromDict : Dict EntityID a -> Component.Set a
 fromDict =
-    Dict.foldl (\index value components -> setComponent index value components) Component.empty
+    Dict.foldl (\index value components -> spawnComponent index value components) Component.empty
 
 
 toDict : Component.Set a -> Dict EntityID a

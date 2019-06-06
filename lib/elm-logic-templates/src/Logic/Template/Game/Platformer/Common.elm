@@ -1,4 +1,4 @@
-module Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, emptyWorld, encoders, read)
+module Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Encode as E exposing (Encoder)
@@ -10,12 +10,15 @@ import Logic.Template.Camera.Trigger exposing (Trigger)
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
+import Logic.Template.Component.SFX
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Component.TimeLine as TimeLine
 import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
-import Logic.Template.FX.Projectile as Projectile exposing (Projectile)
+import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
+import Logic.Template.Game.Platformer.Custom exposing (PlatformerWorldWith_)
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
 import Logic.Template.SaveLoad.Input
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
@@ -29,41 +32,34 @@ import Physic.AABB as AABB
 
 
 type alias PlatformerWorld =
-    Launcher.World
-        { camera : Logic.Template.Camera.WithId (Trigger {})
-        , sprites : Logic.Component.Set Sprite
-        , physics : AABB.World Int
-        , input : Logic.Template.Input.InputSingleton
-        , projectile : Projectile
-        , render : RenderInfo
-        , onScreen : TwoButtonStick {}
-        , timelines : Logic.Component.Set TimeLine.Simple
-        , animations2 : Logic.Component.Set TimeLineDict
-        , layers : List Logic.Template.Component.Layer.Layer
-        }
+    PlatformerWorldWith_ {}
 
 
-emptyWorld : PlatformerWorld
-emptyWorld =
+empty : PlatformerWorld
+empty =
     let
-        physicsEmpty =
+        physics =
             Logic.Template.Component.Physics.empty
+
+        audiosprite =
+            Logic.Template.Component.SFX.empty
     in
     { frame = 0
     , runtime_ = 0
     , flow = Flow.Running
 
     --    , flow = Flow.SlowMotion { frames = 160, fps = 1 }
-    , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = 0 }
+    , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = -1 }
     , sprites = Sprite.empty
     , input = Logic.Template.Input.empty
-    , physics = { physicsEmpty | gravity = { x = 0, y = -0.5 } }
+    , physics = { physics | gravity = { x = 0, y = -0.5 } }
     , projectile = Projectile.empty
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
     , timelines = TimeLine.empty
     , animations2 = TimeLineDict.empty
     , layers = Logic.Template.Component.Layer.empty
+    , sfx = audiosprite
     }
 
 
@@ -76,6 +72,8 @@ encoders =
     , RenderInfo.encode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.encode Logic.Template.Component.Layer.spec
     , Logic.Template.SaveLoad.Physics.encode Logic.Template.Component.Physics.spec
+    , Logic.Template.SaveLoad.Camera.encodeId Logic.Template.Camera.spec
+    , Logic.Template.SaveLoad.AudioSprite.encode Logic.Template.Component.SFX.spec
     ]
 
 
@@ -88,6 +86,8 @@ decoders getTexture =
     , RenderInfo.decode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.decode Logic.Template.Component.Layer.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Physics.decode Logic.Template.Component.Physics.spec
+    , Logic.Template.SaveLoad.Camera.decodeId Logic.Template.Camera.spec
+    , Logic.Template.SaveLoad.AudioSprite.decode Logic.Template.Component.SFX.spec
     ]
 
 
@@ -101,4 +101,5 @@ read =
     , TimeLine.read TimeLine.spec
     , TimeLineDict.read TimeLineDict.spec
     , Logic.Template.SaveLoad.Layer.read Logic.Template.Component.Layer.spec
+    , Logic.Template.SaveLoad.AudioSprite.read Logic.Template.Component.SFX.spec
     ]

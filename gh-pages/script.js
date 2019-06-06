@@ -1,63 +1,112 @@
+// https://dev.to/thepassle/web-components-from-zero-to-hero-4n4m
+// https://github.com/tonistiigi/audiosprite
+// https://github.com/goldfire/howler.js
+function howlerWrapper(Howl) {
+    const noop = function () {
+    };
 
-// document.body.addEventListener("click", toggleFullScreen);
+    // const events = ["load", "loaderror", "playerror", "play", "end", "pause", "stop", "mute", "volume", "rate", "seek", "fade", "unlock"];
 
-// function toggleFullScreen() {
-//     var doc = window.document;
-//     var docEl = doc.documentElement;
-//
-//     var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-//     var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-//
-//     if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-//         requestFullScreen.call(docEl);
-//     }
-//     else {
-//         cancelFullScreen.call(doc);
-//     }
-// }
+    const idToRemove = [];
 
-// window.addEventListener("gamepadconnected", function(e) {
-//   console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-//           e.gamepad.index, e.gamepad.id,
-//           e.gamepad.buttons.length, e.gamepad.axes.length);
-// });
+    class HowlerWrapper extends HTMLElement {
 
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    document.body.addEventListener(eventName, preventDefaults, false)
-});
 
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
+        constructor() {
+            // always call super() first
+            super();
+            this.sound = {
+                unload: noop,
+                on: noop,
+                loop: noop
+            };
+            this.config = { src: [], sprite: {} };
+            this.key = "0";
+            this.spriteName = "";
+            this.soundId = -1;
+            this.onFinish = this.onFinish.bind(this);
+            console.log("constructed!");
+        }
 
-document.body.addEventListener("drop", dropHandler, false);
+        connectedCallback() {
+            // console.log(this.sprite)
+            this.spriteName = this.getAttribute("sound-id");
+            this.key = this.getAttribute("data-key");
 
-function dropHandler(ev) {
-    console.log('File(s) dropped');
+            if (this.getAttribute("stop") !== "true") {
+                this.sound = new Howl({
+                    src: this.src,
+                    sprite: this.sprite
+                });
 
-    // Prevent default behavior (Prevent file from being opened)
-    ev.preventDefault();
+                this.sound.on("end", () => {
+                    if (!this.sound.loop(this.soundId)) {
+                        idToRemove.push(this.key);
+                        requestAnimationFrame(this.onFinish);
+                    }
+                });
 
-    if (ev.dataTransfer.items) {
-        // var reader = new FileReader();
-        // reader.onloadend = function() {
-        //     // var data = JSON.parse(this.result);
-        //     console.log(this.result);
-        // };
-        // reader.readAsText(event.dataTransfer.files[0]);
-        // Use DataTransferItemList interface to access the file(s)
-        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
-            // If dropped items aren't files, reject them
-            if (ev.dataTransfer.items[i].kind === 'file') {
-                var file = ev.dataTransfer.items[i].getAsFile();
-                console.log('... file[' + i + '].name = ' + file.name);
+                this.soundId = this.sound.play(this.spriteName);
+
+            }
+
+        }
+
+        disconnectedCallback() {
+            // this.sound.unload();
+            console.log("disconnected!");
+        }
+
+
+        attributeChangedCallback(name, oldVal, newVal) {
+            // console.log(`Attribute: ${name} changed!`);
+            if (name === "sound-id") {
+                this.spriteName = newVal;
+            } else if (name === "stop" && oldVal === "true" && newVal === "false") {
+                this.soundId = this.sound.play(this.spriteName);
+            } else if (name === "stop" && oldVal === "false" && newVal === "true") {
+                this.sound.stop(this.spriteName)
             }
         }
-    } else {
-        // Use DataTransfer interface to access the file(s)
-        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-            console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+
+        adoptedCallback() {
+            console.log("adopted!");
+        }
+
+        static get observedAttributes() {
+            return [
+                "config",
+                "stop",
+                "sound-id",
+                "offset",
+                "duration",
+                "loop"
+            ];
+        }
+
+
+        onFinish() {
+            if (idToRemove.length) {
+                this.dispatchEvent(new CustomEvent("finish",
+                    {
+                        composed: false,
+                        bubbles: false,
+                        detail: { keys: idToRemove.splice(0, idToRemove.length) }
+                    }));
+            }
         }
     }
+
+    window.customElements.define("howler-sound", HowlerWrapper);
 }
+
+// Real Stuff
+console.time("loading");
+requestAnimationFrame(function () {
+    howlerWrapper(Howl);
+    var app = Elm.Main.init();
+    app.ports.start.subscribe(function () {
+        console.timeEnd("loading");
+        document.body.className = "loaded";
+    });
+});

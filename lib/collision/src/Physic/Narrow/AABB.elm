@@ -14,6 +14,7 @@ module Physic.Narrow.AABB exposing
     , rect
     , response
     , setContact
+    , setMass
     , setVelocity
     , toBytes
     , toStatic
@@ -272,7 +273,7 @@ response body1 body2 =
 
     else if md.min.y == 0 then
         if v1.y > 0 then
-            ( None, Direction.south )
+            ( None, Direction.neither )
 
         else
             ( Y 0, Direction.south )
@@ -468,6 +469,22 @@ toStatic body =
 translate : Vec2 -> AABB comparable -> AABB comparable
 translate p body =
     updateGeneric__ (\o -> { o | p = Vec2.add o.p p }) body
+
+
+setMass : Float -> AABB comparable -> AABB comparable
+setMass mass body =
+    updateGeneric__
+        (\o ->
+            { o
+                | invMass =
+                    if mass > 0 then
+                        1 / mass
+
+                    else
+                        0
+            }
+        )
+        body
 
 
 getInvMass : AABB comparable -> Float

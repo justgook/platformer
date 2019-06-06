@@ -2,6 +2,8 @@
  * npm i -g jscodeshift
  * jscodeshift -t transform.js elm.js
  */
+const glslx = require('glslx').compile;
+
 module.exports = function(file, api, options) {
     const j = api.jscodeshift;
     const airity = new Map(); // Map(functionName, airity)
@@ -63,5 +65,16 @@ module.exports = function(file, api, options) {
                 path.node.arguments.shift();
             }
         })
+        // .find(j.Property, { key: { name: 'src' } })
+        // .replaceWith(nodePath => {
+        //     const { node } = nodePath;
+        //     // internal-only
+        //     if (node.value && node.value.value){
+        //         const newValue = glslx(node.value.value, { renaming: 'none', format: "json", });
+        //         if (newValue.log === "") { node.value.value =JSON.parse(newValue.output).shaders[0].contents; }
+        //     }
+        //
+        //     return node;
+        // })
         .toSource();
 };

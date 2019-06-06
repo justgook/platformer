@@ -17,7 +17,7 @@ type alias Model a =
         , animLUT : Texture
         , animLength : Int
         , time : Int
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
     }
 
 
@@ -47,7 +47,7 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 uv;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform sampler2D uAtlas;
         uniform vec2 uAtlasSize;
         uniform vec2 uTileSize;
@@ -90,7 +90,7 @@ fragmentShader =
 
             //gl_FragColor = texture2D(uAtlas, pixel);
             gl_FragColor = texture2D(uAtlas, pixel);
-            gl_FragColor.a *= float(gl_FragColor.rgb != transparentcolor);
+            gl_FragColor.a *= float(gl_FragColor.rgb != uTransparentColor);
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

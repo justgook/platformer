@@ -5,12 +5,21 @@
   "repository": "git@github.com:justgook/platformer.git",
   "license": "MIT",
   "scripts": {
-    "build": "foo=\"$(mktemp).js\" && elm make src/Main.elm --output=$foo && cat $foo | prepack "
+    "posthtml": "posthtml index.html --auto-off  -o output.html -c posthtml.config.js"
   },
   "devDependencies": {
+    "glslx": "0.1.26",
+    "htmlnano": "0.2.3",
     "jscodeshift": "0.6.4",
+    "node-server-screenshot": "0.2.1",
+    "posthtml-cli": "0.4.9",
+    "posthtml-favicons": "1.2.0",
+    "posthtml-head-elements": "0.5.1",
+    "posthtml-minifier": "0.1.0",
     "prepack": "0.2.54",
-    "uglify-js": "3.5.3"
+    "terser": "4.0.0",
+    "uglify-js": "3.6.0",
+    "xhr2": "0.2.0"
   },
   "dependencies": {}
 }

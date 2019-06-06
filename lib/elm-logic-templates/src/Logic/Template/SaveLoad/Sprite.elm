@@ -25,7 +25,7 @@ encode { get } world =
         |> E.list
             (\( id, item ) ->
                 E.sequence
-                    [ E.unsignedInt32 BE id
+                    [ E.id id
                     , E.xy (Vec2.toRecord item.uP)
                     , E.xy (Vec2.toRecord item.uDimension)
                     , E.float item.uIndex
@@ -34,7 +34,8 @@ encode { get } world =
                     , E.xy (Vec2.toRecord item.uAtlasSize)
                     , E.xy (Vec2.toRecord item.uTileSize)
                     , E.xy (Vec2.toRecord item.uMirror)
-                    , E.xyz (Vec3.toRecord item.transparentcolor)
+                    , E.xyz (Vec3.toRecord item.uTransparentColor)
+                    , E.id item.atlasFirstGid
                     ]
             )
 
@@ -44,8 +45,8 @@ decode spec_ getTexture =
     let
         decoder =
             D.succeed
-                (\transparentcolor uMirror uTileSize uAtlasSize uIndex uDimension uP id ->
-                    case getTexture Atlas (round uIndex) of
+                (\atlasFirstGid uTransparentColor uMirror uTileSize uAtlasSize uIndex uDimension uP id ->
+                    case getTexture Atlas atlasFirstGid of
                         Just uAtlas ->
                             D.succeed
                                 ( id
@@ -56,13 +57,15 @@ decode spec_ getTexture =
                                   , uAtlasSize = Vec2.fromRecord uAtlasSize
                                   , uTileSize = Vec2.fromRecord uTileSize
                                   , uMirror = Vec2.fromRecord uMirror
-                                  , transparentcolor = Vec3.fromRecord transparentcolor
+                                  , uTransparentColor = Vec3.fromRecord uTransparentColor
+                                  , atlasFirstGid = 0
                                   }
                                 )
 
                         Nothing ->
                             D.fail
                 )
+                |> D.andMap D.id
                 |> D.andMap D.xyz
                 |> D.andMap D.xy
                 |> D.andMap D.xy
@@ -70,11 +73,10 @@ decode spec_ getTexture =
                 |> D.andMap D.float
                 |> D.andMap D.xy
                 |> D.andMap D.xy
-                |> D.andMap (D.unsignedInt32 BE)
+                |> D.andMap D.id
                 |> D.andThen identity
     in
     D.list decoder
-        --        |> D.map (\list -> Singleton.update spec_ (\_ -> Entity.fromList list))
         |> D.map (\list -> spec_.set (Entity.fromList list))
 
 
@@ -108,7 +110,8 @@ read spec =
                                                                 , uAtlasSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
                                                                 , uTileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
                                                                 , uMirror = vec2 (boolToFloat fh) (boolToFloat fv)
-                                                                , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 t.transparentcolor)
+                                                                , uTransparentColor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 t.transparentcolor)
+                                                                , atlasFirstGid = t.firstgid
                                                             }
                                                     in
                                                     Entity.with ( spec, obj )

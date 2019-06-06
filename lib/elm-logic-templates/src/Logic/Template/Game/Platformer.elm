@@ -1,4 +1,4 @@
-module Logic.Template.Game.Platformer exposing (World, decode, encode, game, load)
+module Logic.Template.Game.Platformer exposing (World, decode, encode, game, load, run)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Browser.Dom as Browser
@@ -14,15 +14,17 @@ import Logic.Template.Camera.Trigger exposing (Trigger)
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
+import Logic.Template.Component.SFX as AudioSprite
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Component.TimeLine as TimeLine
 import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
-import Logic.Template.FX.Projectile as Projectile exposing (Projectile)
-import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, emptyWorld, encoders, read)
+import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
+import Logic.Template.GFX.Space
+import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
 import Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
-import Logic.Template.Internal exposing (pxToScreen)
+import Logic.Template.Internal exposing (fullscreenVertexShader, pxToScreen)
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
@@ -52,7 +54,7 @@ game =
 
 encode : String -> Task.Task Launcher.Error ( Bytes, PlatformerWorld )
 encode levelUrl =
-    SaveLoad.loadTiledAndEncode levelUrl emptyWorld read encoders lutCollector
+    SaveLoad.loadTiledAndEncode levelUrl empty read encoders lutCollector
         |> ResourceTask.toTask
 
 
@@ -60,7 +62,16 @@ decode : Bytes -> Task Launcher.Error (Launcher.World PlatformerWorld)
 decode bytes =
     let
         worldTask =
-            SaveLoad.loadBytes bytes emptyWorld decoders |> ResourceTask.toTask
+            SaveLoad.loadFromBytes bytes empty decoders |> ResourceTask.toTask
+    in
+    setInitResize worldTask
+
+
+run : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
+run levelUrl =
+    let
+        worldTask =
+            SaveLoad.loadBytes levelUrl empty decoders |> ResourceTask.toTask
     in
     setInitResize worldTask
 
@@ -69,7 +80,7 @@ load : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
 load levelUrl =
     let
         worldTask =
-            SaveLoad.loadTiled levelUrl emptyWorld read
+            SaveLoad.loadTiled levelUrl empty read
     in
     setInitResize worldTask
 
@@ -113,13 +124,27 @@ view w =
 
         updatedWorld =
             { w | render = RenderInfo.updateOffset newOffset w.render }
+
+        sfx =
+            AudioSprite.draw AudioSprite.spec w
+
+        --        space =
+        --            Logic.Template.GFX.Space.draw fullscreenVertexShader
+        --                ({ viewport = updatedWorld.render.fixed
+        --                 , px = w.render.px
+        --                 , offset = updatedWorld.render.offset
+        --                 , time = toFloat updatedWorld.frame
+        --                 }
+        --                )
     in
     [ Logic.Template.Component.Layer.draw (objRender updatedWorld) updatedWorld
         --        ++ aabb.view updatedWorld.render updatedWorld []
         ++ Projectile.draw fxUniforms
+        --        ++ [ space ]
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
     , OnScreenControl.twoButtonStick onscreenSpecExtend updatedWorld
     ]
+        |> (::) sfx
 
 
 webGLOption : List WebGL.Option
@@ -228,7 +253,7 @@ update w =
     { w
         | projectile = Projectile.update { position = targetInRelSpace } w.projectile
     }
-        |> Control.jumper (vec2 3 8) Logic.Template.Input.spec aabb.spec
+        |> Control.platformer (vec2 3 8) Logic.Template.Input.spec aabb.spec AudioSprite.spec
         |> aabb.system
         |> TimelineChange.sideScroll TimeLineDict.spec aabb.spec TimeLine.spec
         --        |> World.System.AnimationChange.sideScroll aabb.spec Sprite.spec Logic.Template.Component.AnimationDict.spec
@@ -271,7 +296,7 @@ aabb =
     { spec = Logic.Template.Component.Physics.spec
     , empty = { empty | gravity = { x = 0, y = -0.5 } }
     , view = debugPhysicsAABB
-    , system = Control.aabb Logic.Template.Component.Physics.spec
+    , system = Logic.Template.Component.Physics.system Logic.Template.Component.Physics.spec
     , getPosition = AABB.getPosition
     , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
     }

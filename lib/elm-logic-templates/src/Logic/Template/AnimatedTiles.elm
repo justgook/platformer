@@ -11,7 +11,7 @@ type alias Model a =
     { a
         | offset : Vec2
         , px : Float
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
         , uLut : Texture
         , uLutSize : Vec2
         , animLUT : Texture
@@ -41,7 +41,7 @@ fragmentShader =
         varying vec2 uv;
         uniform sampler2D uAtlas;
         uniform sampler2D uLut;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform vec2 uLutSize;
         uniform vec2 uAtlasSize;
         uniform float px;
@@ -90,7 +90,7 @@ fragmentShader =
             vec2 pixel = (floor(tile * uTileSize + fragmentOffsetPx) + 0.5) / uAtlasSize;
             gl_FragColor = texture2D(uAtlas, pixel);
 
-            gl_FragColor.a *= float(uIndex >= 0.) * float(gl_FragColor.rgb != transparentcolor);
+            gl_FragColor.a *= float(uIndex >= 0.) * float(gl_FragColor.rgb != uTransparentColor);
 
 //            gl_FragColor.rgb = vec3(1.,0., mod(floor(uv / px + 0.5), 2.));
 //            gl_FragColor.rgb *= gl_FragColor.a;

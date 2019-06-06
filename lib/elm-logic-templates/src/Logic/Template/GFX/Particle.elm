@@ -1,4 +1,4 @@
-module Logic.Template.FX.Particle exposing (Emitter, draw, simpleFragmentShader, update)
+module Logic.Template.GFX.Particle exposing (Emitter, draw, simpleFragmentShader, update)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector4 as Vec4 exposing (Vec4, vec4)

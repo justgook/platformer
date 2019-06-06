@@ -1,4 +1,17 @@
-module Physic.AABB exposing (Config, World, addBody, byId, clear, empty, getConfig, getIndexed, setById, setConfig, simulate, toList)
+module Physic.AABB exposing
+    ( Config
+    , World
+    , addBody
+    , byId
+    , clear
+    , empty
+    , getConfig
+    , getIndexed
+    , setById
+    , setConfig
+    , simulate
+    , toList
+    )
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Broad.Grid
@@ -72,15 +85,15 @@ addBody aabb ({ static, indexed } as engine) =
         insert aabb_ grid =
             Broad.Grid.insert (AABB.boundary aabb_) aabb_ grid
     in
-    if AABB.isStatic aabb then
-        { engine | static = insert aabb static }
+    case AABB.getIndex aabb of
+        Just index ->
+            { engine | indexed = Dict.insert index aabb indexed }
 
-    else
-        case AABB.getIndex aabb of
-            Just index ->
-                { engine | indexed = Dict.insert index aabb indexed }
+        Nothing ->
+            if AABB.isStatic aabb then
+                { engine | static = insert aabb static }
 
-            Nothing ->
+            else
                 engine
 
 

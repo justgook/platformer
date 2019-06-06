@@ -1,8 +1,15 @@
-module Logic.Template.SaveLoad.Camera exposing (read, readId)
+module Logic.Template.SaveLoad.Camera exposing (decodeId, encodeId, read, readId)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode exposing (Encoder)
 import Dict
+import Logic.Component.Singleton as Singleton
+import Logic.Template.Camera.Common
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
 import Parser exposing ((|.), (|=), Parser)
 import Set
@@ -36,6 +43,17 @@ readId spec_ =
                             ( entityID, world )
                 )
     }
+
+
+encodeId : Singleton.Spec (Logic.Template.Camera.Common.WithId a) world -> world -> Encoder
+encodeId { get } world =
+    E.id (get world).id
+
+
+decodeId : Singleton.Spec (Logic.Template.Camera.Common.WithId a) world -> WorldDecoder world
+decodeId spec_ =
+    D.id
+        |> D.map (\id -> Singleton.update spec_ (\info -> { info | id = id }))
 
 
 read spec_ =

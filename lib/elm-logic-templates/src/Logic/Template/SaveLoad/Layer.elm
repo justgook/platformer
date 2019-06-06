@@ -4,6 +4,7 @@ import Bytes exposing (Endianness(..))
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Image exposing (pixelInt24)
+import Image.BMP as BMP
 import Logic.Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
@@ -26,9 +27,6 @@ lutCollector { layers } t =
                 case layar of
                     Logic.Template.Component.Layer.Tiles { id, data, uLutSize } ->
                         let
-                            lut =
-                                E.encode (List.map pixelInt24 data |> E.sequence)
-
                             { x, y } =
                                 Vec2.toRecord uLutSize
 
@@ -37,8 +35,19 @@ lutCollector { layers } t =
 
                             h =
                                 round y
+
+                            imageOptions : Image.Options {}
+                            imageOptions =
+                                let
+                                    opt =
+                                        Image.defaultOptions
+                                in
+                                { opt | order = Image.RightDown }
+
+                            lut2 =
+                                BMP.pixelData imageOptions w h data
                         in
-                        TexturesManager.setLut id w h lut acc
+                        TexturesManager.setLut id w h lut2 acc
 
                     _ ->
                         acc
@@ -78,7 +87,7 @@ encode { get } world =
                 [ E.unsignedInt8 layerId
                 , E.unsignedInt32 BE info.id
                 , E.xy (Vec2.toRecord info.size)
-                , E.xyz (Vec3.toRecord info.transparentcolor)
+                , E.xyz (Vec3.toRecord info.uTransparentColor)
                 , E.xy (Vec2.toRecord info.scrollRatio)
                 ]
 
@@ -90,7 +99,7 @@ encode { get } world =
                 , E.xy (Vec2.toRecord info.uLutSize)
                 , E.xy (Vec2.toRecord info.uAtlasSize)
                 , E.xy (Vec2.toRecord info.uTileSize)
-                , E.xyz (Vec3.toRecord info.transparentcolor)
+                , E.xyz (Vec3.toRecord info.uTransparentColor)
                 , E.xy (Vec2.toRecord info.scrollRatio)
                 ]
     in
@@ -132,13 +141,13 @@ decode spec_ getTexture =
     let
         imageData =
             D.map4
-                (\id size transparentcolor scrollRatio ->
+                (\id size uTransparentColor scrollRatio ->
                     case getTexture Image id of
                         Just image ->
                             D.succeed
                                 { id = id
                                 , size = Vec2.fromRecord size
-                                , transparentcolor = Vec3.fromRecord transparentcolor
+                                , uTransparentColor = Vec3.fromRecord uTransparentColor
                                 , scrollRatio = Vec2.fromRecord scrollRatio
                                 , image = image
                                 }
@@ -154,14 +163,14 @@ decode spec_ getTexture =
 
         tiledData =
             D.succeed
-                (\scrollRatio transparentcolor uTileSize uAtlasSize uLutSize firstgid id ->
+                (\scrollRatio uTransparentColor uTileSize uAtlasSize uLutSize firstgid id ->
                     Maybe.map2
                         (\uAtlas uLut ->
                             D.succeed
                                 { uAtlasSize = uAtlasSize |> Vec2.fromRecord
                                 , uAtlas = uAtlas
                                 , uTileSize = uTileSize |> Vec2.fromRecord
-                                , transparentcolor = transparentcolor |> Vec3.fromRecord
+                                , uTransparentColor = uTransparentColor |> Vec3.fromRecord
                                 , scrollRatio = scrollRatio |> Vec2.fromRecord
                                 , uLutSize = uLutSize |> Vec2.fromRecord
                                 , uLut = uLut
@@ -251,10 +260,10 @@ wrapTileLayer layer =
 
 
 wrapImageLayer : ImageLayer.ImageLayer -> Logic.Template.Component.Layer.Layer
-wrapImageLayer { id, repeat, image, size, transparentcolor, scrollRatio } =
+wrapImageLayer { id, repeat, image, size, uTransparentColor, scrollRatio } =
     { image = image
     , size = size
-    , transparentcolor = transparentcolor
+    , uTransparentColor = uTransparentColor
     , scrollRatio = scrollRatio
     , id = id
     }

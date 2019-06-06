@@ -168,8 +168,12 @@ read spec =
                                     |> Maybe.map
                                         (\body_ ->
                                             let
+                                                setMass =
+                                                    (Util.properties info |> .float) "mass"
+                                                        |> Util.maybeDo AABB.setMass
+
                                                 result =
-                                                    addBody (setIndex mId body_) (spec.get world)
+                                                    addBody (setIndex mId body_ |> setMass) (spec.get world)
                                             in
                                             ( mId, spec.set result world )
                                         )

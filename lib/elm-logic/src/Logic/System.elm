@@ -12,6 +12,7 @@ module Logic.System exposing
     , foldl2
     , foldl3
     , foldl4
+    , indexedFoldl2
     , indexedFoldl3
     , start
     , step
@@ -66,10 +67,24 @@ foldl2 f comp1 comp2 acc_ =
                 |> Maybe.andThen
                     (\a ->
                         Array.get n comp2
-                            |> (Maybe.map >> Maybe.andThen)
-                                (\b ->
-                                    f a b acc
-                                )
+                            |> (Maybe.map >> Maybe.andThen) (\b -> f a b acc)
+                    )
+                |> Maybe.withDefault acc
+        )
+        acc_
+        comp1
+
+
+indexedFoldl2 : (Int -> comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc
+indexedFoldl2 f comp1 comp2 acc_ =
+    indexedFoldlArray
+        (\n value1 acc ->
+            value1
+                |> Maybe.andThen
+                    (\a ->
+                        (Maybe.map >> Maybe.andThen)
+                            (\b -> f n a b acc)
+                            (Array.get n comp2)
                     )
                 |> Maybe.withDefault acc
         )

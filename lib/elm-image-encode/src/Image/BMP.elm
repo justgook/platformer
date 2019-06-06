@@ -1,6 +1,6 @@
 module Image.BMP exposing
     ( encode24, encodeWith
-    , encodeBytesWith
+    , PixelData, encodeBytesWith, header, pixelData
     )
 
 {-|
@@ -23,7 +23,32 @@ import Image exposing (ColorDepth(..), Options, Order(..), Pixels, defaultOption
 
 
 encodeBytesWith : Options a -> Int -> Int -> Bytes -> Bytes
-encodeBytesWith { defaultColor, order, depth } w h bytes =
+encodeBytesWith opt w h bytes =
+    let
+        pixels_ =
+            pixelData_ opt w h bytes
+    in
+    Encode.sequence
+        [ Encode.sequence (header w h (Bytes.width pixels_))
+        , Encode.bytes pixels_
+        ]
+        |> Encode.encode
+
+
+type alias PixelData =
+    Bytes
+
+
+pixelData : Options a -> Int -> Int -> List Int -> PixelData
+pixelData opt w h data =
+    Encode.encode
+        (List.map pixelInt24 data
+            |> Encode.sequence
+        )
+        |> pixelData_ opt w h
+
+
+pixelData_ { defaultColor, order, depth } w h bytes =
     let
         reverseHorizontal =
             order == RightDown || order == RightUp
@@ -71,23 +96,16 @@ encodeBytesWith { defaultColor, order, depth } w h bytes =
                                 , pad
                                 ]
                     )
-
-        pixels_ =
-            Decode.decode (splitToList h rowCreate) bytes
-                |> Maybe.withDefault []
-                |> (if reverseVertical then
-                        List.reverse
-
-                    else
-                        identity
-                   )
-                |> Encode.sequence
-                |> Encode.encode
     in
-    Encode.sequence
-        [ Encode.sequence (header w h (Bytes.width pixels_))
-        , Encode.bytes pixels_
-        ]
+    Decode.decode (splitToList h rowCreate) bytes
+        |> Maybe.withDefault []
+        |> (if reverseVertical then
+                List.reverse
+
+            else
+                identity
+           )
+        |> Encode.sequence
         |> Encode.encode
 
 
@@ -153,7 +171,7 @@ header w h dataSize =
 
     -- 16 bytes -|- Size of the raw bitmap data (including padding)
     -- , [ 0x10, 0x00, 0x00, 0x00 ] |> List.map unsignedInt8
-    , unsignedInt32 LE 16
+    , unsignedInt32 LE dataSize
 
     -- 2835 pixels/metre horizontal  | Print resolution of the image, 72 DPI × 39.3701 inches per metre yields 2834.6472
     -- , [ 0x13, 0x0B, 0x00, 0x00 ] |> List.map unsignedInt8

@@ -29,7 +29,7 @@ type alias TilesData =
     , uAtlas : Texture
     , uAtlasSize : Vec2
     , uTileSize : Vec2
-    , transparentcolor : Vec3
+    , uTransparentColor : Vec3
     , scrollRatio : Vec2
 
     -- Encoding related
@@ -47,7 +47,7 @@ type alias AnimatedTilesData =
     , uAtlas : Texture
     , uAtlasSize : Vec2
     , uTileSize : Vec2
-    , transparentcolor : Vec3
+    , uTransparentColor : Vec3
     , scrollRatio : Vec2
 
     -- Encoding related
@@ -58,7 +58,7 @@ type alias AnimatedTilesData =
 type alias ImageData =
     { image : Texture
     , size : Vec2
-    , transparentcolor : Vec3
+    , uTransparentColor : Vec3
     , scrollRatio : Vec2
     , id : Int
     }
@@ -76,7 +76,7 @@ tilesData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , transparentcolor = individual.transparentcolor
+    , uTransparentColor = individual.uTransparentColor
     , scrollRatio = individual.scrollRatio
     , uAtlas = individual.uAtlas
     , uAtlasSize = individual.uAtlasSize
@@ -95,7 +95,7 @@ animatedTilesData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , transparentcolor = individual.transparentcolor
+    , uTransparentColor = individual.uTransparentColor
 
     --    , scrollRatio = individual.scrollRatio
     , uAtlas = individual.uAtlas
@@ -114,7 +114,7 @@ imageData common individual =
     { px = common.px
     , viewport = common.viewport
     , offset = common.offset
-    , transparentcolor = individual.transparentcolor
+    , uTransparentColor = individual.uTransparentColor
 
     --    , scrollRatio = individual.scrollRatio
     , image = individual.image

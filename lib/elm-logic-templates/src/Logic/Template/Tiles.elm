@@ -10,7 +10,7 @@ import WebGL.Texture exposing (Texture)
 type alias Model a =
     { a
         | px : Float
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
         , scrollRatio : Vec2
         , uAtlas : Texture
         , uAtlasSize : Vec2
@@ -39,7 +39,7 @@ precision mediump float;
 varying vec2 uv;
 uniform sampler2D uAtlas;
 uniform sampler2D uLut;
-uniform vec3 transparentcolor;
+uniform vec3 uTransparentColor;
 uniform vec2 uLutSize;
 uniform vec2 uAtlasSize;
 uniform float px;

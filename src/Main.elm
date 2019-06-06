@@ -14,7 +14,13 @@ game =
 
 main : Launcher Value Platformer.World
 main =
-    Launcher.document { game | init = init }
+    --    Launcher.document { game | init = init }
+    Launcher.document { game | init = debugInit }
+
+
+
+--    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
+--    Launcher.document { game | init = \_ -> Platformer.run "/demo.bin" }
 
 
 init : Value -> Task.Task Launcher.Error Platformer.World
@@ -37,14 +43,9 @@ init flags =
 
 debugInit : Value -> Task.Task Launcher.Error Platformer.World
 debugInit flags =
-    let
-        levelUrl =
-            flags
-                |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
-                |> Result.withDefault "default.json"
-    in
-    Platformer.encode levelUrl
+    Platformer.encode "./assets/demo.json"
         |> Task.andThen
             (\( b, w ) ->
                 Platformer.decode b
+             --                Task.succeed w
             )

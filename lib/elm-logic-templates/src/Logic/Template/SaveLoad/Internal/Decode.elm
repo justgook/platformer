@@ -1,5 +1,6 @@
 module Logic.Template.SaveLoad.Internal.Decode exposing
     ( andMap
+    , bool
     , float
     , id
     , list
@@ -43,6 +44,19 @@ andMap =
 float : Decoder Float
 float =
     D.float32 BE
+
+
+bool : Decoder Bool
+bool =
+    D.unsignedInt8
+        |> D.map
+            (\a ->
+                if a == 1 then
+                    True
+
+                else
+                    False
+            )
 
 
 xy : Decoder { x : Float, y : Float }

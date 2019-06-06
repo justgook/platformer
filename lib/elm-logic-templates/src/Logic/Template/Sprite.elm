@@ -14,7 +14,7 @@ type alias Model a =
         , uAtlasSize : Vec2
         , uTileSize : Vec2
         , uMirror : Vec2
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
     }
 
 
@@ -32,7 +32,7 @@ fragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 uv;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform sampler2D uAtlas;
         uniform vec2 uAtlasSize;
         uniform vec2 uTileSize;
@@ -68,7 +68,7 @@ fragmentShader =
             vec2 pixel = (floor(tile * uTileSize + fragmentOffsetPx) + 0.5) / uAtlasSize;
 
             gl_FragColor = texture2D(uAtlas, pixel);
-            gl_FragColor.a *= float(gl_FragColor.rgb != transparentcolor);
+            gl_FragColor.a *= float(gl_FragColor.rgb != uTransparentColor);
             gl_FragColor.rgb *= gl_FragColor.a;
         }
     |]

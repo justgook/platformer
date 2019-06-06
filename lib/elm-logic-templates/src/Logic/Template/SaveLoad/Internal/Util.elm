@@ -8,8 +8,10 @@ module Logic.Template.SaveLoad.Internal.Util exposing
     , getTilesetByGid
     , hexColor2Vec3
     , levelProps
+    , maybeDo
     , objFix
     , properties
+    , propertiesWithDefault
     , scrollRatio
     , tilesetById
     , tilesets
@@ -26,6 +28,16 @@ import Tiled.Level as Level exposing (Level)
 import Tiled.Object
 import Tiled.Properties exposing (Properties, Property(..))
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset(..))
+
+
+maybeDo : (a -> b -> b) -> Maybe a -> b -> b
+maybeDo f maybe b =
+    case maybe of
+        Just a ->
+            f a b
+
+        Nothing ->
+            b
 
 
 getTilesetByGid : List Tileset -> GetTileset
@@ -271,22 +283,22 @@ levelProps : Level -> PropertiesReader
 levelProps level =
     case level of
         Level.Orthogonal info ->
-            properties info
+            propertiesWithDefault info
 
         Level.Isometric info ->
-            properties info
+            propertiesWithDefault info
 
         Level.Staggered info ->
-            properties info
+            propertiesWithDefault info
 
         Level.Hexagonal info ->
-            properties info
+            propertiesWithDefault info
 
 
-properties : { a | properties : Properties } -> PropertiesReader
-properties dict =
+propertiesWithDefault : { a | properties : Properties } -> PropertiesReader
+propertiesWithDefault object =
     { bool =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropBool i ->
@@ -296,7 +308,7 @@ properties dict =
                         Nothing
             )
     , int =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropInt i ->
@@ -306,7 +318,7 @@ properties dict =
                         Nothing
             )
     , float =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropFloat i ->
@@ -316,7 +328,7 @@ properties dict =
                         Nothing
             )
     , string =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropString i ->
@@ -326,7 +338,7 @@ properties dict =
                         Nothing
             )
     , color =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropColor i ->
@@ -336,7 +348,7 @@ properties dict =
                         Nothing
             )
     , file =
-        propWrap dict.properties
+        propWrap object.properties
             (\r ->
                 case r of
                     PropFile i ->
@@ -348,10 +360,85 @@ properties dict =
     }
 
 
+properties object =
+    let
+        propWrap_ dict parser key =
+            Dict.get key dict
+                |> Maybe.andThen parser
+    in
+    { bool =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropBool i ->
+                        Just i
+
+                    _ ->
+                        Nothing
+            )
+    , int =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropInt i ->
+                        Just i
+
+                    _ ->
+                        Nothing
+            )
+    , float =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropFloat i ->
+                        Just i
+
+                    _ ->
+                        Nothing
+            )
+    , string =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropString i ->
+                        Just i
+
+                    _ ->
+                        Nothing
+            )
+    , color =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropColor i ->
+                        hexColor2Vec3 i
+
+                    _ ->
+                        Nothing
+            )
+    , file =
+        propWrap_ object.properties
+            (\r ->
+                case r of
+                    PropFile i ->
+                        Just i
+
+                    _ ->
+                        Nothing
+            )
+    }
+
+
+propWrap : Dict.Dict comparable v -> (v -> Maybe b) -> comparable -> b -> b
 propWrap dict parser key default =
     Dict.get key dict
         |> Maybe.andThen parser
         |> Maybe.withDefault default
+
+
+propWrap2 dict parser key =
+    Dict.get key dict
+        |> Maybe.andThen parser
 
 
 hexColor2Vec3 : String -> Maybe Vec3

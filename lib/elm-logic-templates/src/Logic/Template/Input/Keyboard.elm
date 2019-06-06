@@ -68,7 +68,7 @@ updateKeys { get, set } update keyChanged world pressed =
                                             { x, y } =
                                                 arrows comp pressed
                                         in
-                                        Entity.setComponent id
+                                        Entity.spawnComponent id
                                             { comp
                                                 | x = x
                                                 , y = y

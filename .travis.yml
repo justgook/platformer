@@ -14,13 +14,22 @@ cache:
 
 script:
   - elm-format --validate . && elm-test
-  - elm make ./src/Main.elm ./src/Build.elm --optimize --output=./gh-pages/bundle.js && jscodeshift -t transform.js ./gh-pages/bundle.js
+  - elm make ./src/Main.elm --optimize --output=./gh-pages/bundle.js
+  - elm make ./src/Build.elm --optimize --output=./gh-pages/encoder.js
+  - jscodeshift -t transform.js ./gh-pages/bundle.js
+  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters" --output=./gh-pages/bundle.js
+  - prepack ./gh-pages/bundle.js --inlineExpressions --out ./gh-pages/bundle.js
+  - terser ./gh-pages/bundle.js ./gh-pages/script.js --compress 'keep_fargs=false,unsafe_comps,unsafe' --mangle --output=./gh-pages/bundle.js
 
 
 after_success:
-  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe" | uglifyjs --mangle --output=./gh-pages/bundle.js
-#  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters" --output=./gh-pages/bundle.js && prepack ./gh-pages/bundle.js --inlineExpressions | uglifyjs --compress 'keep_fargs=false,unsafe_comps,unsafe' --mangle --output=./gh-pages/bundle.js
+  #  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe" | uglifyjs --mangle --output=./gh-pages/bundle.js
   - git clone -b assets --single-branch https://github.com/$TRAVIS_REPO_SLUG.git ./gh-pages/assets
+  - audiosprite --format howler2 --loop Background --output ./gh-pages/pack/audiosprite ./gh-pages/assets/sounds/*.wav ./gh-pages/assets/sounds/*.mp3 -u ./pack
+  - node build-assets.js
+  - mkdir -p ./gh-pages/images
+  - posthtml ./gh-pages/index.html -o ./gh-pages/index.html -c posthtml.config.js
+
 
 deploy:
   provider: pages

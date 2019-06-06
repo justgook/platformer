@@ -74,7 +74,7 @@ decode spec_ =
                                                        )
                                         in
                                         { acc
-                                            | comps = Entity.setComponent id comp acc.comps
+                                            | comps = Entity.spawnComponent id comp acc.comps
                                         }
                                     )
                                     info

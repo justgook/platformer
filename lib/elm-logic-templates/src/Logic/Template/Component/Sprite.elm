@@ -18,7 +18,10 @@ type alias Sprite =
     , uAtlasSize : Vec2
     , uTileSize : Vec2
     , uMirror : Vec2
-    , transparentcolor : Vec3
+    , uTransparentColor : Vec3
+
+    -- Encoding related
+    , atlasFirstGid : Int
     }
 
 
@@ -43,7 +46,8 @@ emptyComp uAtlas =
     , uAtlasSize = vec2 0 0
     , uTileSize = vec2 0 0
     , uMirror = vec2 0 0
-    , transparentcolor = vec3 1 0 1
+    , uTransparentColor = vec3 1 0 1
+    , atlasFirstGid = 0
     }
 
 
@@ -57,6 +61,6 @@ draw { absolute, px } info =
         , uTileSize = info.uTileSize
         , uIndex = info.uIndex
         , uMirror = info.uMirror
-        , transparentcolor = info.transparentcolor
+        , uTransparentColor = info.uTransparentColor
         , uAbsolute = absolute
         }

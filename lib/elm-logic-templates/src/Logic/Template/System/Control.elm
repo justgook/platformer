@@ -1,68 +1,82 @@
-module Logic.Template.System.Control exposing (aabb, bindCreate, bindSpecFirst, bindSpecSecond, jumper)
+module Logic.Template.System.Control exposing (platformer)
 
-import AltMath.Vector2 as Vec2 exposing (vec2)
-import Logic.Entity
-import Logic.System
-import Logic.Template.Input as Input
+import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import Logic.Component as Component
+import Logic.Component.Singleton as Singleton
+import Logic.Entity as Entity exposing (EntityID)
+import Logic.System exposing (System)
+import Logic.Template.Component.Physics as PhysicsComponent
+import Logic.Template.Component.SFX as AudioSprite exposing (AudioSprite)
+import Logic.Template.Input as Input exposing (InputSingleton)
 import Physic.AABB
-import Physic.Narrow.AABB as AABB
+import Physic.Narrow.AABB as AABB exposing (AABB)
 import Set
 
 
-aabb { get, set } ecs =
-    set (Physic.AABB.simulate 1 (get ecs)) ecs
-
-
-jumper force inputSpec_ physicsSpec ecs =
+platformer :
+    Vec2
+    -> Singleton.Spec InputSingleton world
+    -> Singleton.Spec PhysicsComponent.World world
+    -> Singleton.Spec AudioSprite world
+    -> System world
+platformer force inputSpec_ physicsSpec audioSpec world =
     let
         engine =
-            physicsSpec.get ecs
-
-        physicsComps =
-            engine |> Physic.AABB.getIndexed |> Logic.Entity.fromList
+            physicsSpec.get world
 
         inputSpec =
             Input.getComps inputSpec_
 
-        ( updatedPhysicsComps, _ ) =
-            Logic.System.step2
-                (\( body_, setBody ) ( key, _ ) acc ->
+        setBody : EntityID -> AABB Int -> { b | a : Component.Set (AABB Int) } -> { b | a : Component.Set (AABB Int) }
+        setBody index value acc_ =
+            { acc_ | a = Entity.setComponent index value acc_.a }
+
+        combined =
+            { a = engine |> Physic.AABB.getIndexed |> Entity.fromList
+            , b = inputSpec.get world
+            , c = audioSpec.get world
+            }
+
+        addSound =
+            AudioSprite.spawn { get = .c, set = \comps w -> { w | c = comps } }
+
+        result =
+            Logic.System.indexedFoldl2
+                (\i body_ key acc ->
                     case ( key.x, Set.member "Jump" key.action ) of
                         ( a, True ) ->
                             if .y (AABB.getContact body_) == -1 then
-                                setBody (AABB.setVelocity (vec2 (key.x * force.x) force.y) body_) acc
+                                acc
+                                    |> setBody i (AABB.setVelocity (vec2 (key.x * force.x) force.y) body_)
+                                    |> addSound (AudioSprite.sound "Jump")
 
                             else if a == 0 then
-                                setBody (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
+                                setBody i (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
 
                             else
-                                setBody (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
+                                setBody i (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
 
                         ( a, False ) ->
                             if a == 0 then
-                                setBody (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
+                                setBody i (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
 
                             else
-                                setBody (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
+                                setBody i (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
                 )
-                bindSpecFirst
-                (bindSpecSecond inputSpec)
-                (bindCreate physicsComps ecs)
+                combined.a
+                combined.b
+                combined
     in
-    physicsSpec.set { engine | indexed = updatedPhysicsComps |> Logic.Entity.toDict } ecs
+    world
+        |> applyIf (result.a /= combined.a) (physicsSpec.set { engine | indexed = result.a |> Entity.toDict })
+        --                |> applyIf (result.b /= combined.b) (spec2.set result.b)--Never Happens - it is just reading
+        |> applyIf (result.c /= combined.c) (audioSpec.set result.c)
 
 
-bindSpecFirst =
-    { get = Tuple.first
-    , set = \comps ( a, b ) -> ( comps, b )
-    }
+applyIf : Bool -> (a -> a) -> a -> a
+applyIf bool f world =
+    if bool then
+        f world
 
-
-bindSpecSecond spec =
-    { get = Tuple.second >> spec.get
-    , set = \comps ( a, world ) -> ( a, spec.set comps world )
-    }
-
-
-bindCreate a world =
-    ( a, world )
+    else
+        world

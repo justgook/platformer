@@ -1,4 +1,4 @@
-module Logic.Template.FX.P16 exposing (Particles, empty, points, render, updateShaderData, vertexShader)
+module Logic.Template.GFX.P16 exposing (Particles, empty, points, render, updateShaderData, vertexShader)
 
 import Math.Vector2 as Vec2 exposing (Vec2)
 import Math.Vector4 exposing (Vec4, vec4)

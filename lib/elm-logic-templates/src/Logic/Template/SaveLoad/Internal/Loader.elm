@@ -16,11 +16,12 @@ module Logic.Template.SaveLoad.Internal.Loader exposing
 
 import Base64
 import Bytes exposing (Bytes)
+import Bytes.Encode as E
 import Dict
 import Http
 import Image exposing (Order(..))
-import Image.BMP exposing (encodeBytesWith)
-import Json.Decode as Decode exposing (Decoder)
+import Image.BMP
+import Json.Decode as Decode exposing (Decoder, Value)
 import Logic.Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.ResourceTask exposing (CacheTask, ResourceTask)
 import Task
@@ -33,6 +34,7 @@ type CacheTiled
     = Texture_ WebGL.Texture.Texture
     | Tileset_ Tiled.Tileset.Tileset
     | Level_ Tiled.Level.Level
+    | Json_ Value
     | Bytes_ Bytes.Bytes
 
 
@@ -62,7 +64,7 @@ getTileset url firstgid =
                     Task.succeed ( r, d )
 
                 _ ->
-                    getJson (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
+                    getJson_ (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
         )
         >> Task.map
             (\( resp, d ) ->
@@ -116,8 +118,8 @@ getTexture url =
             (\( resp, d ) -> ( resp, { d | dict = Dict.insert url (Texture resp) d.dict } ))
 
 
-getLut : Int -> Int -> Int -> Bytes -> CacheTask CacheBytes -> ResourceTask WebGL.Texture.Texture CacheBytes
-getLut id w h bytes =
+getLut : Int -> Int -> Int -> Image.BMP.PixelData -> CacheTask CacheBytes -> ResourceTask WebGL.Texture.Texture CacheBytes
+getLut id w h pixels_ =
     let
         name =
             String.fromInt id |> (++) "____"
@@ -138,15 +140,17 @@ getLut id w h bytes =
                             in
                             { opt | order = RightDown }
 
-                        url =
-                            encodeBytesWith imageOptions w h bytes
+                        url2 =
+                            E.sequence
+                                [ E.sequence (Image.BMP.header w h (Bytes.width pixels_))
+                                , E.bytes pixels_
+                                ]
+                                |> E.encode
                                 |> Base64.fromBytes
                                 |> Maybe.withDefault ""
                                 |> (++) "data:image/bmp;base64,"
-
-                        --                                |> Debug.log ("loading LUT: " ++ name)
                     in
-                    url
+                    url2
                         |> WebGL.Texture.loadWith textureOption
                         |> Task.mapError (textureError name)
                         |> Task.map (\r -> ( r, d ))
@@ -220,7 +224,7 @@ getLevel url =
                     Task.succeed ( r, d )
 
                 _ ->
-                    getJson url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
+                    getJson_ url Tiled.Level.decode |> Task.map (\r -> ( r, d ))
         )
         >> Task.map
             (\( resp, d ) ->
@@ -237,8 +241,34 @@ getLevel url =
             )
 
 
-getJson : String -> Decoder a -> Task.Task Error a
-getJson url decoder =
+getJson : String -> CacheTask CacheTiled -> ResourceTask Value CacheTiled
+getJson url =
+    Task.andThen
+        (\d ->
+            case Dict.get url d.dict of
+                Just (Json_ r) ->
+                    Task.succeed ( r, d )
+
+                _ ->
+                    getJson_ (d.url ++ url) Decode.value |> Task.map (\r -> ( r, d ))
+        )
+        >> Task.map
+            (\( resp, d ) ->
+                let
+                    relUrl =
+                        String.split "/" url
+                            |> List.reverse
+                            |> List.drop 1
+                            |> (::) ""
+                            |> List.reverse
+                            |> String.join "/"
+                in
+                ( resp, { d | url = relUrl, dict = Dict.insert url (Json_ resp) d.dict } )
+            )
+
+
+getJson_ : String -> Decoder a -> Task.Task Error a
+getJson_ url decoder =
     Http.task
         { method = "GET"
         , headers = []

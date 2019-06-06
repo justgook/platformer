@@ -23,6 +23,8 @@ documentation.json
 gh-pages/*
 !gh-pages/404.html
 !gh-pages/index.html
+!gh-pages/screenshot.html
 !gh-pages/manifest.json
 !gh-pages/style.css
 !gh-pages/script.js
+

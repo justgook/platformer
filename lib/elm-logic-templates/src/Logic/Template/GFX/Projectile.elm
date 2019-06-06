@@ -1,8 +1,8 @@
-module Logic.Template.FX.Projectile exposing (Projectile, Setting, draw, empty, emptyWith, update, updateWith)
+module Logic.Template.GFX.Projectile exposing (Projectile, Setting, draw, empty, emptyWith, update, updateWith)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
-import Logic.Template.FX.P16 as P16
-import Logic.Template.FX.Particle as Particle exposing (Emitter)
+import Logic.Template.GFX.P16 as P16
+import Logic.Template.GFX.Particle as Particle exposing (Emitter)
 import Math.Vector4 as Vec4 exposing (Vec4, vec4)
 import Random
 import WebGL.Settings as WebGL

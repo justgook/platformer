@@ -1,4 +1,4 @@
-module Logic.Template.FX.P128 exposing (Particles, empty, points, render, updateShaderData, vertexShader)
+module Logic.Template.GFX.P128 exposing (Particles, empty, points, render, updateShaderData, vertexShader)
 
 import Math.Vector4 exposing (Vec4, vec4)
 import WebGL exposing (Mesh, Shader)

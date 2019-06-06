@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad exposing (loadBytes, loadTiled, loadTiledAndEncode)
+module Logic.Template.SaveLoad exposing (loadBytes, loadFromBytes, loadTiled, loadTiledAndEncode)
 
 import Bytes exposing (Bytes)
 import Bytes.Decode as D exposing (Decoder)
@@ -27,8 +27,16 @@ loadTiledResourceTask levelUrl empty readers =
         |> ResourceTask.andThen (SaveLoad.parse empty readers)
 
 
-loadBytes : Bytes.Bytes -> world -> (GetTexture -> List (Decoder (world -> world))) -> ResourceTask world Loader.CacheBytes
-loadBytes bytes world decoders =
+loadBytes : String -> world -> (GetTexture -> List (Decoder (world -> world))) -> ResourceTask world Loader.CacheBytes
+loadBytes levelUrl world decoders =
+    ResourceTask.init
+        |> Loader.getBytes levelUrl
+        |> ResourceTask.toTask
+        |> Task.andThen (\bytes -> loadFromBytes bytes world decoders)
+
+
+loadFromBytes : Bytes.Bytes -> world -> (GetTexture -> List (Decoder (world -> world))) -> ResourceTask world Loader.CacheBytes
+loadFromBytes bytes world decoders =
     case D.decode TexturesManager.decoder bytes of
         Just decodeTextures ->
             ResourceTask.init
@@ -39,6 +47,8 @@ loadBytes bytes world decoders =
                             get =
                                 TexturesManager.get loadedTextures
 
+                            --                            _ =
+                            --                                Debug.log "loadedTextures" loadedTextures
                             worldDecode =
                                 bytes
                                     |> D.decode

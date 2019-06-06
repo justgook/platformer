@@ -13,7 +13,7 @@ type alias Model a =
     { a
         | px : Float
         , offset : Vec2
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
         , image : Texture
         , size : Vec2
     }
@@ -64,7 +64,7 @@ fragmentShaderRepeat =
         precision mediump float;
         varying vec2 uv;
         uniform sampler2D image;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
@@ -88,7 +88,7 @@ fragmentShaderRepeatX =
         precision mediump float;
         varying vec2 uv;
         uniform sampler2D image;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
@@ -113,7 +113,7 @@ fragmentShaderRepeatY =
         precision mediump float;
         varying vec2 uv;
         uniform sampler2D image;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
@@ -138,7 +138,7 @@ fragmentShaderNoRepeat =
         precision mediump float;
         varying vec2 uv;
         uniform sampler2D image;
-        uniform vec3 transparentcolor;
+        uniform vec3 uTransparentColor;
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;

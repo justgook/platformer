@@ -21,7 +21,7 @@ type TileLayer
         , uAtlas : WebGL.Texture
         , uAtlasSize : Vec2
         , uTileSize : Vec2
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
         , scrollRatio : Vec2
 
         -- Encoding related
@@ -35,7 +35,7 @@ type TileLayer
         , uAtlas : WebGL.Texture
         , uAtlasSize : Vec2
         , uTileSize : Vec2
-        , transparentcolor : Vec3
+        , uTransparentColor : Vec3
         , scrollRatio : Vec2
         , animLUT : WebGL.Texture
         , animLength : Int
@@ -136,7 +136,7 @@ tileStaticLayerBuilder_ constructor layerData =
         (\( tileset, data ) ->
             let
                 layerProps =
-                    Util.properties layerData
+                    Util.propertiesWithDefault layerData
             in
             ResourceTask.map2
                 (\tileSetImage lut ->
@@ -146,7 +146,7 @@ tileStaticLayerBuilder_ constructor layerData =
                         , uAtlas = tileSetImage
                         , uAtlasSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                         , uTileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                        , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
+                        , uTransparentColor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
                         , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
 
                         -- Encoding related
@@ -176,7 +176,7 @@ tileAnimatedLayerBuilder_ constructor layerData =
         (\( ( tileset, anim ), data ) ->
             let
                 layerProps =
-                    Util.properties layerData
+                    Util.propertiesWithDefault layerData
 
                 animLutData =
                     animationFraming anim
@@ -199,7 +199,7 @@ tileAnimatedLayerBuilder_ constructor layerData =
                                                     , uAtlas = tileSetImage
                                                     , uAtlasSize = vec2 (toFloat tileset.imagewidth) (toFloat tileset.imageheight)
                                                     , uTileSize = vec2 (toFloat tileset.tilewidth) (toFloat tileset.tileheight)
-                                                    , transparentcolor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
+                                                    , uTransparentColor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 tileset.transparentcolor)
                                                     , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" layerData.properties == Nothing) layerProps
                                                     , animLUT = animLUT
                                                     , animLength = animLength

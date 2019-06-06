@@ -16,7 +16,7 @@ type alias ImageLayer =
     { image : Texture
     , id : Int
     , size : Vec2
-    , transparentcolor : Vec3
+    , uTransparentColor : Vec3
     , scrollRatio : Vec2
     , repeat : Repeat
     }
@@ -45,7 +45,7 @@ imageLayerNew : ImageData -> Loader.TaskTiled ImageLayer
 imageLayerNew imageData =
     let
         props =
-            Util.properties imageData
+            Util.propertiesWithDefault imageData
     in
     Loader.getTextureTiled imageData.image
         >> ResourceTask.map
@@ -57,7 +57,7 @@ imageLayerNew imageData =
                 { image = t
                 , id = imageData.id
                 , size = vec2 (toFloat width) (toFloat height)
-                , transparentcolor = props.color "transparentcolor" (vec3 1 0 1)
+                , uTransparentColor = props.color "uTransparentColor" (vec3 1 0 1)
                 , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" imageData.properties == Nothing) props
                 , repeat =
                     case props.string "repeat" "repeat" of
