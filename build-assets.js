@@ -48,16 +48,17 @@ buildApp.ports.bytes.subscribe((b64string) => {
     const buff = Buffer.from(b64string, 'base64');
     console.log(buff);
     fs.writeFileSync("./gh-pages/demo.bin", buff);
-    takeScreenShot.fromURL("http://localhost:3000/screenshot.html", "gh-pages/preview.png",
-        {
-            show: false,
-            width: 1200,
-            height: 675
-        },
-        function () {
-            //an image of google.com has been saved at ./test.png
+    console.log("level file file created");
+    // takeScreenShot.fromURL("http://localhost:3000/screenshot.html", "gh-pages/preview.png",
+    //     {
+    //         show: false,
+    //         width: 1200,
+    //         height: 675
+    //     },
+    //     function () {
+    //         //an image of google.com has been saved at ./test.png
             server.close()
-        });
+    //     });
 });
 
 
