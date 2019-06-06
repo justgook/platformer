@@ -8,6 +8,7 @@
     "posthtml": "posthtml index.html --auto-off  -o output.html -c posthtml.config.js"
   },
   "devDependencies": {
+    "audiosprite": "0.7.1",
     "glslx": "0.1.26",
     "htmlnano": "0.2.3",
     "jscodeshift": "0.6.4",
