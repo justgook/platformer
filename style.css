@@ -165,3 +165,7 @@ html {
 .button2:after {
     content: "A";
 }
+
+howler-sound {
+    display: none;
+}

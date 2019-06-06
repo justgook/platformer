@@ -2,19 +2,20 @@
 <html lang="en">
 
 <head>
-    <title>Game</title>
-    <meta charset="utf-8" />
-<!--    <link rel="manifest" href="/manifest.json">-->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+
+<!--    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />-->
     <link rel="stylesheet" media="all" href="/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.2/howler.min.js"></script>
+    <posthtml-head-elements>
+        <title>Game</title>
+        <meta charset="utf-8" />
+        <script src="./bundle.js"></script>
+        <script src="./script.js"></script>
+    </posthtml-head-elements>
 
 </head>
 
-
 <body class="loading">
-
 <script>
     (function () {
         var redirect = sessionStorage.redirect;
@@ -24,44 +25,7 @@
         }
     })();
 </script>
-<script src="./bundle.js"></script>
-<script>
 
-    const levelUrl = "./assets/demo.json"
-    function start(w) {
-        var app = Elm.Main.init(
-            {
-                flags: {
-                    levelUrl: levelUrl,
-                    world: w
-                }
-            }
-        );
-        app.ports.start.subscribe(function () {
-            console.timeEnd("loading");
-            document.body.className = "loaded";
-        });
-        // window.debugFrame = ()=> app.ports.delmeSubscriptions.send(null);
-    }
-    console.time("loading");
-
-    // localStorage.clear();
-    var world = localStorage.getItem("world");
-
-    if (world === null) {
-        var build = Elm.Build.init({ flags: { levelUrl: levelUrl, } });
-        build.ports.bytes.subscribe(function (data) {
-            localStorage.setItem("world", data);
-            start(data);
-        });
-    }else {
-        start(world);
-    }
-
-
-
-
-</script>
 </body>
 
 </html>
