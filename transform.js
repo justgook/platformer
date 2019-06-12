@@ -4,7 +4,7 @@
  */
 const glslx = require('glslx').compile;
 
-module.exports = function(file, api, options) {
+module.exports = function (file, api, options) {
     const j = api.jscodeshift;
     const airity = new Map(); // Map(functionName, airity)
     const tree = j(file.source);
@@ -65,16 +65,17 @@ module.exports = function(file, api, options) {
                 path.node.arguments.shift();
             }
         })
-        // .find(j.Property, { key: { name: 'src' } })
-        // .replaceWith(nodePath => {
-        //     const { node } = nodePath;
-        //     // internal-only
-        //     if (node.value && node.value.value){
-        //         const newValue = glslx(node.value.value, { renaming: 'none', format: "json", });
-        //         if (newValue.log === "") { node.value.value =JSON.parse(newValue.output).shaders[0].contents; }
-        //     }
-        //
-        //     return node;
-        // })
+        .find(j.Literal)
+        .filter((path) => path.value && path.value.value && path.value.value.length > 100)
+        .replaceWith(nodePath => {
+            const { node } = nodePath;
+
+            const newValue = glslx(node.value, { renaming: 'none', format: "json", });
+            if (newValue.log === "") {
+                node.value = JSON.parse(newValue.output).shaders[0].contents;
+            }
+
+            return node;
+        })
         .toSource();
 };

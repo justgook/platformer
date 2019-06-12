@@ -4,27 +4,25 @@ import AltMath.Vector2 as Vec2 exposing (vec2)
 import Browser.Dom as Browser
 import Browser.Events as Events
 import Bytes exposing (Bytes)
-import Logic.Component.Singleton
+import Logic.Component.Singleton as Singleton
 import Logic.Entity
 import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.System as System
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
 import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.AnimationsDict as TimeLineDict2
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX as AudioSprite
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
-import Logic.Template.Component.TimeLine as TimeLine
-import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
-import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
-import Logic.Template.GFX.Space
+import Logic.Template.Component.TimeLine as TimeLine2
 import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
 import Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
-import Logic.Template.Internal exposing (fullscreenVertexShader, pxToScreen)
+import Logic.Template.Internal exposing (pxToScreen)
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
@@ -37,6 +35,13 @@ import Physic.Narrow.AABB as AABB
 import Set
 import Task exposing (Task)
 import WebGL
+
+
+
+--ASSETS!!
+--https://gumroad.com/l/IDwxw
+--https://forums.tigsource.com/index.php?topic=14166.0
+--https://www.deviantart.com/madgharr -- super micro characters
 
 
 type alias World =
@@ -107,26 +112,21 @@ subscriptions w =
 
 view w =
     let
-        { renderable } =
-            w.projectile
-
-        fxUniforms =
-            { renderable
-                | aspectRatio = toFloat w.render.screen.width / toFloat w.render.screen.height
-                , viewportOffset =
-                    w.camera.viewportOffset
-                        |> Vec2.scale w.render.px
-                        |> Math.Vector2.fromRecord
-            }
-
-        newOffset =
-            pxToScreen w.render.px w.camera.viewportOffset
-
-        updatedWorld =
-            { w | render = RenderInfo.updateOffset newOffset w.render }
-
+        --        { renderable } =
+        --            w.projectile
+        --        fxUniforms =
+        --            { renderable
+        --                | aspectRatio = toFloat w.render.screen.width / toFloat w.render.screen.height
+        --                , viewportOffset =
+        --                    w.camera.viewportOffset
+        --                        |> Vec2.scale w.render.px
+        --                        |> Math.Vector2.fromRecord
+        --            }
+        --        _ =
+        --            w.render
+        --                |> Debug.log "hello"
         sfx =
-            AudioSprite.draw AudioSprite.spec w
+            ""
 
         --        space =
         --            Logic.Template.GFX.Space.draw fullscreenVertexShader
@@ -137,14 +137,14 @@ view w =
         --                 }
         --                )
     in
-    [ Logic.Template.Component.Layer.draw (objRender updatedWorld) updatedWorld
+    [ Logic.Template.Component.Layer.draw (objRender w) w
         --        ++ aabb.view updatedWorld.render updatedWorld []
-        ++ Projectile.draw fxUniforms
+        --        ++ Projectile.draw fxUniforms
         --        ++ [ space ]
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
-    , OnScreenControl.twoButtonStick onscreenSpecExtend updatedWorld
+    , OnScreenControl.twoButtonStick onscreenSpecExtend w
     ]
-        |> (::) sfx
+        |> (::) (AudioSprite.draw AudioSprite.spec w)
 
 
 webGLOption : List WebGL.Option
@@ -156,7 +156,7 @@ webGLOption =
 
 
 onscreenSpecExtend :
-    Logic.Component.Singleton.Spec (TwoButtonStick {})
+    Singleton.Spec (TwoButtonStick {})
         { world
             | onScreen : TwoButtonStick {}
             , input : Logic.Template.Input.InputSingleton
@@ -181,7 +181,7 @@ onscreenSpecExtend =
                     setXY (OnScreenControl.dir8 comp.center comp.cursor)
             in
             OnScreenControl.spec.set comp w
-                |> Logic.Component.Singleton.update (Logic.Template.Input.getComps Logic.Template.Input.spec)
+                |> Singleton.update (Logic.Template.Input.getComps Logic.Template.Input.spec)
                     (Logic.Entity.mapComponentSet (\key -> componentUpdaterInternal { key | action = jump key.action }) w.camera.id)
     }
 
@@ -195,19 +195,27 @@ objRender w ( _, objLayer ) =
                         w.render
                         (case Logic.Entity.getComponent i w.timelines of
                             Just t ->
-                                { sprite
+                                let
+                                    testSprite =
+                                        { sprite
+                                            | uTileUV = TimeLine2.get w.frame t
+                                            , uMirror = t.uMirror
+                                        }
+                                in
+                                { testSprite
                                     | uP =
                                         c1
                                             |> AABB.getPosition
                                             |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
                                             |> Math.Vector2.fromRecord
-                                    , uIndex = TimeLine.get w.frame t
-                                    , uMirror = t.uMirror
                                 }
 
                             Nothing ->
                                 { sprite
-                                    | uP = c1 |> AABB.getPosition |> Math.Vector2.fromRecord
+                                    | uP =
+                                        c1
+                                            |> AABB.getPosition
+                                            |> Math.Vector2.fromRecord
                                 }
                         )
                     )
@@ -249,15 +257,18 @@ update w =
         cameraStep =
             Logic.Template.Camera.Trigger.yTrigger 3 contactForCamera target
                 >> Logic.Template.Camera.PositionLocking.xLock target
+
+        newOffset =
+            pxToScreen w.render.px w.camera.viewportOffset
+
+        updatedWorld =
+            { w | render = RenderInfo.updateOffset newOffset w.render }
     in
-    { w
-        | projectile = Projectile.update { position = targetInRelSpace } w.projectile
-    }
+    updatedWorld
         |> Control.platformer (vec2 3 8) Logic.Template.Input.spec aabb.spec AudioSprite.spec
         |> aabb.system
-        |> TimelineChange.sideScroll TimeLineDict.spec aabb.spec TimeLine.spec
-        --        |> World.System.AnimationChange.sideScroll aabb.spec Sprite.spec Logic.Template.Component.AnimationDict.spec
-        |> Logic.Template.Camera.system Logic.Template.Camera.spec cameraStep
+        |> TimelineChange.sideScroll TimeLineDict2.spec aabb.spec TimeLine2.spec
+        |> Singleton.update Logic.Template.Camera.spec cameraStep
         |> (\m ->
                 let
                     cmd =

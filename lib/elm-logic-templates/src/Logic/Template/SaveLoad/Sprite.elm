@@ -1,6 +1,5 @@
 module Logic.Template.SaveLoad.Sprite exposing (decode, encode, read)
 
-import Bytes exposing (Endianness(..))
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Logic.Component exposing (Spec)
@@ -16,6 +15,7 @@ import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTex
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (boolToFloat, hexColor2Vec3)
 import Math.Vector2 as Vec2 exposing (vec2)
 import Math.Vector3 as Vec3 exposing (vec3)
+import Math.Vector4 as Vec4
 import Tiled.Tileset
 
 
@@ -27,15 +27,11 @@ encode { get } world =
                 E.sequence
                     [ E.id id
                     , E.xy (Vec2.toRecord item.uP)
-                    , E.xy (Vec2.toRecord item.uDimension)
-                    , E.float item.uIndex
-
-                    -- uAtlas
                     , E.xy (Vec2.toRecord item.uAtlasSize)
-                    , E.xy (Vec2.toRecord item.uTileSize)
                     , E.xy (Vec2.toRecord item.uMirror)
                     , E.xyz (Vec3.toRecord item.uTransparentColor)
                     , E.id item.atlasFirstGid
+                    , E.xyzw (Vec4.toRecord item.uTileUV)
                     ]
             )
 
@@ -45,32 +41,28 @@ decode spec_ getTexture =
     let
         decoder =
             D.succeed
-                (\atlasFirstGid uTransparentColor uMirror uTileSize uAtlasSize uIndex uDimension uP id ->
+                (\uTileUV atlasFirstGid uTransparentColor uMirror uAtlasSize uP id ->
                     case getTexture Atlas atlasFirstGid of
                         Just uAtlas ->
                             D.succeed
                                 ( id
                                 , { uP = Vec2.fromRecord uP
-                                  , uDimension = Vec2.fromRecord uDimension
-                                  , uIndex = uIndex
                                   , uAtlas = uAtlas
                                   , uAtlasSize = Vec2.fromRecord uAtlasSize
-                                  , uTileSize = Vec2.fromRecord uTileSize
                                   , uMirror = Vec2.fromRecord uMirror
                                   , uTransparentColor = Vec3.fromRecord uTransparentColor
                                   , atlasFirstGid = 0
+                                  , uTileUV = uTileUV |> Vec4.fromRecord
                                   }
                                 )
 
                         Nothing ->
                             D.fail
                 )
+                |> D.andMap D.xyzw
                 |> D.andMap D.id
                 |> D.andMap D.xyz
                 |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.float
                 |> D.andMap D.xy
                 |> D.andMap D.xy
                 |> D.andMap D.id
@@ -85,7 +77,7 @@ read spec =
     { defaultRead
         | objectTile =
             Async
-                (\{ x, y, width, height, gid, fh, fv, getTilesetByGid } ->
+                (\{ x, y, gid, fh, fv, getTilesetByGid } ->
                     getTilesetByGid gid
                         >> ResourceTask.andThen
                             (\t_ ->
@@ -102,16 +94,22 @@ read spec =
                                                         obj_ =
                                                             emptyComp tileSetImage
 
+                                                        grid =
+                                                            { x = t.imagewidth // t.tilewidth
+                                                            , y = t.imageheight // t.tileheight
+                                                            }
+
+                                                        tileUV =
+                                                            Util.tileUV t uIndex
+
                                                         obj =
                                                             { obj_
                                                                 | uP = vec2 x y
-                                                                , uDimension = vec2 width height
-                                                                , uIndex = toFloat uIndex
                                                                 , uAtlasSize = vec2 (toFloat t.imagewidth) (toFloat t.imageheight)
-                                                                , uTileSize = vec2 (toFloat t.tilewidth) (toFloat t.tileheight)
                                                                 , uMirror = vec2 (boolToFloat fh) (boolToFloat fv)
                                                                 , uTransparentColor = Maybe.withDefault (vec3 1 0 1) (hexColor2Vec3 t.transparentcolor)
                                                                 , atlasFirstGid = t.firstgid
+                                                                , uTileUV = tileUV
                                                             }
                                                     in
                                                     Entity.with ( spec, obj )

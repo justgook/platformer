@@ -40,9 +40,18 @@ init flags =
 
 debugInit : Value -> Task.Task Launcher.Error Platformer.World
 debugInit flags =
+    --    Platformer.encode "./ThomasLean/level.json"
     Platformer.encode "./assets/demo.json"
+        --    Platformer.encoadde "./elm-europe/slides2.json"
         |> Task.andThen
             (\( b, w ) ->
+                --                let
+                --                    _ =
+                --                        Base64.fromBytes
+                --                            b
+                --
+                --                    --                            |> Debug.log "Base64.toBytes"
+                --                in
                 Platformer.decode b
              --                Task.succeed w
             )

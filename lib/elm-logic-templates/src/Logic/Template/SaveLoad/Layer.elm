@@ -3,18 +3,18 @@ module Logic.Template.SaveLoad.Layer exposing (decode, encode, lutCollector, obj
 import Bytes exposing (Endianness(..))
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
-import Image exposing (pixelInt24)
+import Image
 import Image.BMP as BMP
 import Logic.Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.Template.Component.Layer exposing (Layer)
+import Logic.Template.SaveLoad.ImageLayer as ImageLayer
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (DecoderWithTexture, Selector(..))
-import Logic.Template.SaveLoad.Layer.ImageLayer as ImageLayer
-import Logic.Template.SaveLoad.Layer.TileLayer as TileLayer exposing (TileLayer(..))
+import Logic.Template.SaveLoad.TileLayer as TileLayer exposing (TileLayer(..))
 import Math.Vector2 as Vec2
 import Math.Vector3 as Vec3
 

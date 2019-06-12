@@ -1,14 +1,15 @@
-module Logic.Template.Component.TimeLine exposing (Frame, Simple, empty, emptyComp, get, spec)
+module Logic.Template.Component.TimeLine exposing (Frame, NotSimple, TileUV, empty, emptyComp, get, spec)
 
 import Logic.Component exposing (Set, Spec)
-import Logic.Template.Internal exposing (Timeline)
+import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree(..))
 import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector4 exposing (Vec4)
 
 
-type alias Simple =
-    { start : Int
-    , timeline : Timeline Float
-    , uMirror : Vec2 -- = vec2 0 0
+spec : Spec NotSimple { world | timelines : Set NotSimple }
+spec =
+    { get = .timelines
+    , set = \comps world -> { world | timelines = comps }
     }
 
 
@@ -16,34 +17,34 @@ type alias Frame =
     Int
 
 
-get : Frame -> Simple -> Float
-get i l =
-    l |> .timeline |> Logic.Template.Internal.get (i - l.start)
+type alias TileUV =
+    Vec4
 
 
-spec : Spec Simple { world | timelines : Set Simple }
-spec =
-    { get = .timelines
-    , set = \comps world -> { world | timelines = comps }
+type alias NotSimple =
+    { start : Int
+    , timeline : RangeTree TileUV
+    , uMirror : Vec2
     }
 
 
-empty : Set Simple
+empty : Set NotSimple
 empty =
     Logic.Component.empty
 
 
-emptyComp : List Float -> Simple
-emptyComp l =
-    case l of
-        x :: xs ->
-            { start = 0
-            , timeline = Logic.Template.Internal.timeline x xs
-            , uMirror = vec2 0 0
-            }
+emptyComp tree =
+    { start = 0
+    , timeline = tree
+    , uMirror = vec2 0 0
+    }
 
-        [] ->
-            { start = 0
-            , timeline = Logic.Template.Internal.timeline 0 []
-            , uMirror = vec2 0 0
-            }
+
+get : Frame -> NotSimple -> TileUV
+get frame notSimple =
+    case notSimple.timeline of
+        Value _ v ->
+            v
+
+        Node frame_ _ _ ->
+            RangeTree.get (modBy frame_ frame) notSimple.timeline

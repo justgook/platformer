@@ -8,6 +8,7 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     , sizedString
     , xy
     , xyz
+    , xyzw
     )
 
 import Bytes exposing (Bytes, Endianness(..))
@@ -69,6 +70,15 @@ xy =
 xyz : Decoder { x : Float, y : Float, z : Float }
 xyz =
     D.map3 (\x y z -> { x = x, y = y, z = z })
+        float
+        float
+        float
+
+
+xyzw : Decoder { x : Float, y : Float, z : Float, w : Float }
+xyzw =
+    D.map4 (\x y z w -> { x = x, y = y, z = z, w = w })
+        float
         float
         float
         float

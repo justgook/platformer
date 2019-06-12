@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Layer.ImageLayer exposing (ImageLayer, Repeat(..), read)
+module Logic.Template.SaveLoad.ImageLayer exposing (ImageLayer, Repeat(..), read)
 
 import Dict
 import Logic.Component.Singleton as Singleton

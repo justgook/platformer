@@ -1,4 +1,4 @@
-module Logic.Template.Internal exposing (FullScreenVertexShaderModel, Plate, Points(..), TileVertexShaderModel, Timeline, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader, timeline, toList)
+module Logic.Template.Internal exposing (FullScreenVertexShaderModel, Plate, Points(..), TileVertexShaderModel, Timeline, clipPlate, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader, tileVertexShader2, timeline, toList)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
 import Array exposing (Array)
@@ -26,9 +26,19 @@ pxToScreen px p =
 plate : Mesh Plate
 plate =
     WebGL.triangleStrip
-        [ Plate (Vector2.vec2 0 0)
-        , Plate (Vector2.vec2 0 1)
+        [ Plate (Vector2.vec2 0 1)
+        , Plate (Vector2.vec2 1 1)
+        , Plate (Vector2.vec2 0 0)
         , Plate (Vector2.vec2 1 0)
+        ]
+
+
+clipPlate : Mesh Plate
+clipPlate =
+    WebGL.triangleStrip
+        [ Plate (Vector2.vec2 -1 -1)
+        , Plate (Vector2.vec2 -1 1)
+        , Plate (Vector2.vec2 1 -1)
         , Plate (Vector2.vec2 1 1)
         ]
 
@@ -59,6 +69,27 @@ tileVertexShader =
             vec2 sized = vec2(aP * uDimension);
             vec2 center = uDimension * 0.5;
             gl_Position = uAbsolute * vec4(sized + uP - center, 0, 1.0);
+        }
+    |]
+
+
+tileVertexShader2 =
+    [glsl|
+        precision mediump float;
+        attribute vec2 aP;
+        varying vec2 uv;
+        uniform mat4 uAbsolute;
+        uniform vec2 uP;
+        uniform vec2 uAtlasSize;
+        uniform vec4 uTileUV;
+        uniform vec2 uMirror;
+        uniform float px;
+        void main () {
+            uv = uTileUV.xy + (aP * uTileUV.zw) * (1. - uMirror * 2.);
+            vec2 uDimension = uTileUV.zw * px;
+            vec2 sized = vec2(aP * uDimension);
+            vec2 uP_ = uP * px;
+            gl_Position = uAbsolute * vec4(sized + uP_, 0, 1.0);
         }
     |]
 

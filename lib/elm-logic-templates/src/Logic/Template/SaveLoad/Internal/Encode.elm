@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Internal.Encode exposing (bool, encoder, float, id, list, sizedString, xy, xyz)
+module Logic.Template.SaveLoad.Internal.Encode exposing (bool, encoder, float, id, list, sizedString, xy, xyz, xyzw)
 
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as E exposing (Encoder)
@@ -34,6 +34,16 @@ xyz { x, y, z } =
         [ float x
         , float y
         , float z
+        ]
+
+
+xyzw : { x : Float, y : Float, z : Float, w : Float } -> Encoder
+xyzw { x, y, z, w } =
+    E.sequence
+        [ float x
+        , float y
+        , float z
+        , float w
         ]
 
 

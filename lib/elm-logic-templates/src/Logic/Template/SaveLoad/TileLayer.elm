@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Layer.TileLayer exposing (TileLayer(..), read)
+module Logic.Template.SaveLoad.TileLayer exposing (TileLayer(..), read)
 
 import Dict exposing (Dict)
 import Image exposing (Order(..))

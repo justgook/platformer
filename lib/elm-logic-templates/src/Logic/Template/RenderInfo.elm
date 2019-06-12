@@ -50,14 +50,21 @@ read { get, set } =
                     let
                         renderInfo =
                             get world
+
+                        prop =
+                            levelProps level
+
+                        x =
+                            prop.float "offset.x" 0
+
+                        y =
+                            prop.float "offset.y" 0
+
+                        px =
+                            1 / prop.float "pixelsPerUnit" 0.1
                     in
                     ( entityID
-                    , set
-                        { renderInfo
-                            | px =
-                                levelProps level |> (\prop -> 1 / prop.float "pixelsPerUnit" 0.1)
-                        }
-                        world
+                    , set (updateOffset (Vec2.fromRecord { x = x, y = y }) { renderInfo | px = px }) world
                     )
                 )
     }

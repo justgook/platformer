@@ -2,22 +2,20 @@ module Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Encode as E exposing (Encoder)
-import Logic.Component
 import Logic.GameFlow as Flow
-import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.Template.Camera
-import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Component.TimeLine as TimeLine
-import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
 import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Game.Platformer.Custom exposing (PlatformerWorldWith_)
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
 import Logic.Template.SaveLoad.Input
@@ -27,8 +25,6 @@ import Logic.Template.SaveLoad.Layer
 import Logic.Template.SaveLoad.Physics
 import Logic.Template.SaveLoad.Sprite as Sprite
 import Logic.Template.SaveLoad.TimeLine as TimeLine
-import Logic.Template.SaveLoad.TimeLineDict as TimeLineDict
-import Physic.AABB as AABB
 
 
 type alias PlatformerWorld =
@@ -57,7 +53,7 @@ empty =
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
     , timelines = TimeLine.empty
-    , animations2 = TimeLineDict.empty
+    , animations = AnimationsDict.empty
     , layers = Logic.Template.Component.Layer.empty
     , sfx = audiosprite
     }
@@ -68,7 +64,7 @@ encoders =
     [ Sprite.encode Sprite.spec
     , Logic.Template.SaveLoad.Input.encode Logic.Template.Input.spec
     , TimeLine.encode TimeLine.spec
-    , TimeLineDict.encode TimeLineDict.spec
+    , AnimationsDict.encode TimeLine.encodeItem AnimationsDict.spec
     , RenderInfo.encode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.encode Logic.Template.Component.Layer.spec
     , Logic.Template.SaveLoad.Physics.encode Logic.Template.Component.Physics.spec
@@ -82,7 +78,7 @@ decoders getTexture =
     [ Sprite.decode Sprite.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Input.decode Logic.Template.Input.spec
     , TimeLine.decode TimeLine.spec
-    , TimeLineDict.decode TimeLineDict.spec
+    , AnimationsDict.decode TimeLine.decodeItem AnimationsDict.spec
     , RenderInfo.decode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.decode Logic.Template.Component.Layer.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Physics.decode Logic.Template.Component.Physics.spec
@@ -99,7 +95,7 @@ read =
     , RenderInfo.read RenderInfo.spec
     , Logic.Template.SaveLoad.Physics.read Logic.Template.Component.Physics.spec
     , TimeLine.read TimeLine.spec
-    , TimeLineDict.read TimeLineDict.spec
+    , AnimationsDict.read TimeLine.fromTileset AnimationsDict.spec
     , Logic.Template.SaveLoad.Layer.read Logic.Template.Component.Layer.spec
     , Logic.Template.SaveLoad.AudioSprite.read Logic.Template.Component.SFX.spec
     ]

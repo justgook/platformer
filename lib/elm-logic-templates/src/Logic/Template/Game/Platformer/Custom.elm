@@ -6,13 +6,13 @@ import Logic.GameFlow as Flow
 import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.Template.Camera
 import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Component.TimeLine as TimeLine
-import Logic.Template.Component.TimeLineDict as TimeLineDict exposing (TimeLineDict)
 import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
@@ -29,8 +29,8 @@ type alias PlatformerWorldWith_ a =
             , projectile : Projectile
             , render : RenderInfo
             , onScreen : TwoButtonStick {}
-            , timelines : Logic.Component.Set TimeLine.Simple
-            , animations2 : Logic.Component.Set TimeLineDict
+            , timelines : Logic.Component.Set TimeLine.NotSimple
+            , animations : Logic.Component.Set (TimeLineDict3 TimeLine.NotSimple)
             , layers : List Logic.Template.Component.Layer.Layer
             , sfx : Logic.Template.Component.SFX.AudioSprite
         }
@@ -59,7 +59,7 @@ emptyWith a =
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
     , timelines = TimeLine.empty
-    , animations2 = TimeLineDict.empty
+    , animations = AnimationsDict.empty
     , layers = Logic.Template.Component.Layer.empty
     , sfx = Logic.Template.Component.SFX.empty
     , custom = a

@@ -1,4 +1,4 @@
-module Logic.Template.Camera exposing (Camera, WithId, spec, system)
+module Logic.Template.Camera exposing (Camera, WithId, spec)
 
 {-| <http://www.gamasutra.com/blogs/ItayKeren/20150511/243083/Scroll_Back_The_Theory_and_Practice_of_Cameras_in_SideScrollers.php>
 
@@ -65,7 +65,3 @@ spec =
     { get = .camera
     , set = \comps world -> { world | camera = comps }
     }
-
-
-system { get, set } step world =
-    set (step (get world)) world
