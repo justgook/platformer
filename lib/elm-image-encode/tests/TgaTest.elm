@@ -14,7 +14,7 @@ suite =
                 \_ ->
                     [ 0xFF, 0xFF, 0xFF00, 0x0F00 ]
                         |> TGA.encode24 20 20
-                        |> Expect.equal "data:image/TGA;base64,Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAA/wAA/wAAAAAA/wAADwAAAA=="
+                        |> Expect.equal "data:image/tga;base64,AAACAAAAAAAAAAAAAgACABgAAP8AAA8A/wAA/wAA"
 
             --            , test "Encode 24bit different order" <|
             --                \_ ->

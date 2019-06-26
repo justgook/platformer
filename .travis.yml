@@ -27,9 +27,9 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sleep 3; fi
 
 script:
-  - elm-format --validate . && elm-test tests lib/elm-logic-templates/tests
-  - elm make ./src/Game.elm --optimize --output=./gh-pages/bundle.js
-  - elm make ./src/Build.elm --optimize --output=./gh-pages/encoder.js
+  - elm-format --validate . && elm-test && elm-test lib/elm-tiled && elm-test lib/elm-image-encode && elm-test lib/elm-logic-templates
+  - elm make ./examples/Game.elm --optimize --output=./gh-pages/bundle.js
+  - elm make ./examples/Build.elm --optimize --output=./gh-pages/encoder.js
   - jscodeshift -t transform.js ./gh-pages/bundle.js
   - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters" --output=./gh-pages/bundle.js
   - prepack ./gh-pages/bundle.js --inlineExpressions --out ./gh-pages/bundle.js

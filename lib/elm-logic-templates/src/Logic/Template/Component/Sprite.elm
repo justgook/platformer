@@ -2,6 +2,7 @@ module Logic.Template.Component.Sprite exposing (Sprite, draw, empty, emptyComp,
 
 import Logic.Component exposing (Set, Spec)
 import Logic.Template.Internal exposing (tileVertexShader2)
+import Logic.Template.SaveLoad.Internal.Util exposing (TileUV)
 import Logic.Template.Sprite
 import Math.Matrix4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -13,16 +14,13 @@ import WebGL.Texture exposing (Texture)
 
 type alias Sprite =
     { uP : Vec2
-
-    --    , uDimension : Vec2
-    --    , uIndex : Float
     , uAtlas : Texture
     , uAtlasSize : Vec2
 
     --    , uTileSize : Vec2
     , uMirror : Vec2
     , uTransparentColor : Vec3
-    , uTileUV : Vec4
+    , uTileUV : TileUV
 
     -- Encoding related
     , atlasFirstGid : Int

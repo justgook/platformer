@@ -1,5 +1,6 @@
 module Logic.Template.SaveLoad.Internal.Util exposing
-    ( animation
+    ( TileUV
+    , animation
     , animationFraming
     , boolToFloat
     , common
@@ -25,7 +26,7 @@ import Logic.Template.SaveLoad.Internal.Loader exposing (GetTileset, getTileset)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
-import Math.Vector4 as Vec4
+import Math.Vector4 as Vec4 exposing (Vec4)
 import Tiled.Level as Level exposing (Level)
 import Tiled.Object
 import Tiled.Properties exposing (Properties, Property(..))
@@ -188,6 +189,11 @@ animationFraming anim =
             )
 
 
+type alias TileUV =
+    Vec4
+
+
+tileUV : EmbeddedTileData -> Int -> TileUV
 tileUV t uIndex =
     let
         grid =

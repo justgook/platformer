@@ -1,21 +1,21 @@
 module Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
 
-import AltMath.Vector2 as AVec2
+import AltMath.Vector2 as AVec2 exposing (Vec2)
+import Collision.Physic.AABB
+import Collision.Physic.Narrow.AABB
 import Logic.Template.Ellipse as Ellipse
-import Logic.Template.Internal exposing (TileVertexShaderModel, pxToScreen, tileVertexShader)
+import Logic.Template.Internal exposing (TileVertexShaderModel, tileVertexShader)
 import Logic.Template.Rectangle as Rectangle
 import Math.Matrix4 exposing (Mat4)
-import Math.Vector2 exposing (vec2)
+import Math.Vector2 as Vector2 exposing (vec2)
 import Math.Vector4 exposing (vec4)
-import Physic.AABB
-import Physic.Narrow.AABB
 import WebGL
 
 
 debugPhysicsAABB common ecs acc =
     ecs.physics
-        |> Physic.AABB.toList
-        |> List.map (Physic.Narrow.AABB.debuInfo (fromPhysics common))
+        |> Collision.Physic.AABB.toList
+        |> List.map (Collision.Physic.Narrow.AABB.debuInfo (fromPhysics common))
         |> (++) acc
 
 
@@ -28,6 +28,12 @@ fromPhysics :
         , rectangle : AVec2.Vec2 -> Float -> Float -> WebGL.Entity
         }
 fromPhysics renderInfo =
+    let
+        pxToScreen : Float -> Vec2 -> Vector2.Vec2
+        pxToScreen px p =
+            AVec2.scale px p
+                |> Vector2.fromRecord
+    in
     { circle =
         \p r ->
             { height = r * 2

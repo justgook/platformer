@@ -1,4 +1,4 @@
-module Physic.Constraint exposing (copyFrom)
+module Collision.Physic.Constraint exposing (copyFrom)
 
 
 copyFrom =

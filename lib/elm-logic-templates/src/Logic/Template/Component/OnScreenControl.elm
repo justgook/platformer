@@ -1,8 +1,11 @@
-module Logic.Template.Component.OnScreenControl exposing (Stick, TwoButtonStick, dir8, empty, emptyTwoButtonStick, spec, stick, twoButtonStick)
+module Logic.Template.Component.OnScreenControl exposing (Stick, TwoButtonStick, dir8, empty, emptyTwoButtonStick, onscreenSpecExtend, spec, stick, twoButtonStick)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
-import Logic.Component.Singleton as Component exposing (Spec)
+import Logic.Component
+import Logic.Component.Singleton as Singleton exposing (Spec)
+import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.OnScreenControl exposing (EventConfig, stickWith)
+import Set
 import VirtualDom exposing (Handler(..), attribute, style)
 
 
@@ -118,12 +121,41 @@ spec =
     }
 
 
+onscreenSpecExtend :
+    Spec (TwoButtonStick a) world
+    -> Logic.Component.Spec { b | action : Set.Set String, x : Float, y : Float } world
+    -> EntityID
+    -> Spec (TwoButtonStick a) world
+onscreenSpecExtend onScreenSpec inputSpec entityID =
+    { get = onScreenSpec.get
+    , set =
+        \comp w ->
+            let
+                jump =
+                    if comp.button2.active then
+                        Set.insert "Fire"
+
+                    else
+                        Set.remove "Fire"
+
+                setXY { x, y } a =
+                    { a | x = x, y = y }
+
+                componentUpdaterInternal =
+                    setXY (dir8 comp.center comp.cursor)
+            in
+            onScreenSpec.set comp w
+                |> Singleton.update inputSpec
+                    (Entity.mapComponentSet (\key -> componentUpdaterInternal { key | action = jump key.action }) entityID)
+    }
+
+
 touchConfig : Spec (Stick a) world -> EventConfig (world -> world)
 touchConfig spec_ =
-    { down = ( "touchstart", \x y -> Component.update spec_ (\data -> { data | center = vec2 x y, cursor = vec2 x y, active = True }) )
-    , move = ( "touchmove", \x y -> Component.update spec_ (\data -> { data | cursor = vec2 x y }) )
-    , leave = ( "touchcancel", Component.update spec_ (\data -> { data | active = False, cursor = data.center }) )
-    , up = ( "touchend", Component.update spec_ (\data -> { data | active = False, cursor = data.center }) )
+    { down = ( "touchstart", \x y -> Singleton.update spec_ (\data -> { data | center = vec2 x y, cursor = vec2 x y, active = True }) )
+    , move = ( "touchmove", \x y -> Singleton.update spec_ (\data -> { data | cursor = vec2 x y }) )
+    , leave = ( "touchcancel", Singleton.update spec_ (\data -> { data | active = False, cursor = data.center }) )
+    , up = ( "touchend", Singleton.update spec_ (\data -> { data | active = False, cursor = data.center }) )
     }
 
 
@@ -136,10 +168,10 @@ touchButtonConfig spec_ =
         inActive data =
             { data | active = False }
     in
-    { down = ( "touchstart", \x y -> Component.update spec_ (active x y) )
+    { down = ( "touchstart", \x y -> Singleton.update spec_ (active x y) )
     , move = ( "touchmove", \_ _ -> identity )
-    , leave = ( "touchcancel", Component.update spec_ inActive )
-    , up = ( "touchend", Component.update spec_ inActive )
+    , leave = ( "touchcancel", Singleton.update spec_ inActive )
+    , up = ( "touchend", Singleton.update spec_ inActive )
     }
 
 

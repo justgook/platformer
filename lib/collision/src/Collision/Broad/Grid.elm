@@ -1,4 +1,4 @@
-module Broad.Grid exposing
+module Collision.Broad.Grid exposing
     ( Grid
     , NewConfig
     , draw
@@ -14,10 +14,10 @@ module Broad.Grid exposing
     , toList
     )
 
-import Broad exposing (Boundary)
 import Bytes exposing (Endianness(..))
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
+import Collision.Broad exposing (Boundary)
 import Dict exposing (Dict)
 
 
@@ -59,7 +59,7 @@ toBytes eItem grid =
     E.sequence [ config, items ]
 
 
-fromBytes : Decoder ( Broad.Boundary, a1 ) -> Decoder (Grid a1)
+fromBytes : Decoder ( Collision.Broad.Boundary, a1 ) -> Decoder (Grid a1)
 fromBytes dItem =
     let
         list decoder =

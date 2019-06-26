@@ -1,4 +1,4 @@
-module Logic.Entity exposing (EntityID, create, fromDict, fromList, getComponent, mapComponent, mapComponentSet, setComponent, spawnComponent, toDict, toList, with)
+module Logic.Entity exposing (EntityID, create, fromDict, fromList, getComponent, mapComponent, mapComponentSet, removeComponent, removeFor, setComponent, spawnComponent, toDict, toList, with)
 
 import Array
 import Dict exposing (Dict)
@@ -11,22 +11,32 @@ type alias EntityID =
     Int
 
 
-create : Int -> world -> ( EntityID, world )
+create : EntityID -> world -> ( EntityID, world )
 create id world =
     ( id, world )
 
 
+removeComponent : EntityID -> Component.Set a -> Component.Set a
+removeComponent entityID components =
+    Array.set entityID Nothing components
+
+
+removeFor : Component.Spec comp world -> ( EntityID, world ) -> ( EntityID, world )
+removeFor spec ( entityID, world ) =
+    ( entityID, spec.set (Array.set entityID Nothing (spec.get world)) world )
+
+
 with : ( Component.Spec comp world, comp ) -> ( EntityID, world ) -> ( EntityID, world )
-with ( { get, set }, component ) ( mId, world ) =
+with ( { get, set }, component ) ( entityID, world ) =
     let
         updatedComponents =
             get world
-                |> spawnComponent mId component
+                |> spawnComponent entityID component
 
         updatedWorld =
             set updatedComponents world
     in
-    ( mId, updatedWorld )
+    ( entityID, updatedWorld )
 
 
 spawnComponent : EntityID -> a -> Component.Set a -> Component.Set a
@@ -51,12 +61,12 @@ getComponent i =
     Array.get i >> Maybe.withDefault Nothing
 
 
-mapComponent : (Maybe comp -> Maybe comp) -> Int -> Component.Set comp -> Component.Set comp
+mapComponent : (Maybe comp -> Maybe comp) -> EntityID -> Component.Set comp -> Component.Set comp
 mapComponent f i comps =
     Array.set i (f (getComponent i comps)) comps
 
 
-mapComponentSet : (comp -> comp) -> Int -> Component.Set comp -> Component.Set comp
+mapComponentSet : (comp -> comp) -> EntityID -> Component.Set comp -> Component.Set comp
 mapComponentSet f i comps =
     Array.set i (getComponent i comps |> Maybe.map f) comps
 

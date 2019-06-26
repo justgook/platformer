@@ -1,24 +1,21 @@
-module Logic.Template.Component.TimeLine exposing (Frame, NotSimple, TileUV, empty, emptyComp, get, spec)
+module Logic.Template.Component.FrameChange exposing (Frame, NotSimple, empty, emptyComp, get, spec)
 
 import Logic.Component exposing (Set, Spec)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree(..))
+import Logic.Template.SaveLoad.Internal.Util exposing (TileUV)
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector4 exposing (Vec4)
 
 
-spec : Spec NotSimple { world | timelines : Set NotSimple }
+spec : Spec NotSimple { world | animation : Set NotSimple }
 spec =
-    { get = .timelines
-    , set = \comps world -> { world | timelines = comps }
+    { get = .animation
+    , set = \comps world -> { world | animation = comps }
     }
 
 
 type alias Frame =
     Int
-
-
-type alias TileUV =
-    Vec4
 
 
 type alias NotSimple =

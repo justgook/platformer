@@ -1,6 +1,6 @@
 module Logic.Template.Image exposing (Model, draw, drawNo, drawX, drawY)
 
---import Logic.Template.Component.Layer.Common exposing (vertexShader)
+--import Logic.Template.IdSource.Layer.Common exposing (vertexShader)
 
 import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
@@ -76,6 +76,7 @@ fragmentShaderRepeat =
             vec2 pixel = (floor(uv / px
 //            + viewportOffset * scrollRatio
             ) + 0.5 ) / size;
+//            fract(pixel)
             gl_FragColor = texture2D(image, mod(pixel, 1.0));
             gl_FragColor.rgb *= gl_FragColor.a;
         }

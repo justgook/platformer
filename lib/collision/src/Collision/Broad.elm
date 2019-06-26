@@ -1,4 +1,4 @@
-module Broad exposing (Boundary)
+module Collision.Broad exposing (Boundary)
 
 
 type alias Boundary =

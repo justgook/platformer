@@ -1,9 +1,13 @@
-module Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
+module Logic.Template.Game.Presentation.Common exposing (PresentationWorld, decoders, empty, encoders, read)
 
-import AltMath.Vector2 as Vec2 exposing (vec2)
+import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Bytes.Encode as E exposing (Encoder)
+import Collision.Physic.AABB as AABB
+import Logic.Component
 import Logic.GameFlow as Flow
+import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.Template.Camera
+import Logic.Template.Camera.Trigger exposing (Trigger)
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
 import Logic.Template.Component.FrameChange as TimeLine
 import Logic.Template.Component.Layer
@@ -12,7 +16,7 @@ import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
-import Logic.Template.Game.Platformer.Custom exposing (PlatformerWorldWith_)
+import Logic.Template.Game.Presentation.Content2 as Content
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
@@ -27,11 +31,32 @@ import Logic.Template.SaveLoad.Physics
 import Logic.Template.SaveLoad.Sprite as Sprite
 
 
-type alias PlatformerWorld =
-    PlatformerWorldWith_ {}
+type alias PresentationWorld =
+    Launcher.World
+        { camera : Logic.Template.Camera.WithId (Trigger {})
+        , sprites : Logic.Component.Set Sprite
+        , physics : AABB.World Int
+        , input : Logic.Template.Input.InputSingleton
+        , projectile : Projectile
+        , render : RenderInfo
+        , onScreen : TwoButtonStick {}
+        , animation : Logic.Component.Set TimeLine.NotSimple
+        , animations : Logic.Component.Set (TimeLineDict3 TimeLine.NotSimple)
+        , layers : List Logic.Template.Component.Layer.Layer
+        , sfx : Logic.Template.Component.SFX.AudioSprite
+        , slideStops : SlideStops
+        , slideOpacity : Float
+        }
 
 
-empty : PlatformerWorld
+type alias SlideStops =
+    { prev : List Vec2
+    , target : Vec2
+    , next : List Vec2
+    }
+
+
+empty : PresentationWorld
 empty =
     let
         physics =
@@ -39,16 +64,20 @@ empty =
 
         audiosprite =
             Logic.Template.Component.SFX.empty
+
+        slidePos i =
+            Content.dimension.x * 0.5 + Content.startPoint.x + (Content.dimension.x + Content.space) * toFloat i
+
+        slideStopsNext =
+            List.indexedMap (\i _ -> vec2 (slidePos i) 61) Content.all
     in
     { frame = 0
     , runtime_ = 0
     , flow = Flow.Running
-
-    --    , flow = Flow.SlowMotion { frames = 160, fps = 1 }
     , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = -1 }
     , sprites = Sprite.empty
     , input = Logic.Template.Input.empty
-    , physics = { physics | gravity = { x = 0, y = -0.5 } }
+    , physics = { physics | gravity = { x = 0, y = -1.5 } }
     , projectile = Projectile.empty
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
@@ -56,10 +85,16 @@ empty =
     , animations = AnimationsDict.empty
     , layers = Logic.Template.Component.Layer.empty
     , sfx = audiosprite
+    , slideStops =
+        { prev = []
+        , target = vec2 289 61
+        , next = slideStopsNext
+        }
+    , slideOpacity = 1
     }
 
 
-encoders : List (PlatformerWorld -> Encoder)
+encoders : List (PresentationWorld -> Encoder)
 encoders =
     [ Sprite.encode Sprite.spec
     , Logic.Template.SaveLoad.Input.encode Logic.Template.Input.spec
@@ -73,7 +108,7 @@ encoders =
     ]
 
 
-decoders : GetTexture -> List (WorldDecoder PlatformerWorld)
+decoders : GetTexture -> List (WorldDecoder PresentationWorld)
 decoders getTexture =
     [ Sprite.decode Sprite.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Input.decode Logic.Template.Input.spec
@@ -87,7 +122,7 @@ decoders getTexture =
     ]
 
 
-read : List (Reader PlatformerWorld)
+read : List (Reader PresentationWorld)
 read =
     [ Sprite.read Sprite.spec
     , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec

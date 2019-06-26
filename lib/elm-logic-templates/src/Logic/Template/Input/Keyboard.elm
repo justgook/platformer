@@ -3,8 +3,10 @@ module Logic.Template.Input.Keyboard exposing (sub)
 import Array
 import Browser.Events
 import Dict
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
+import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
+import Logic.Template.Input exposing (InputSingleton)
 import Set exposing (Set)
 
 
@@ -23,6 +25,11 @@ onKeyUp =
     onKeyChange Set.remove
 
 
+onKeyChange :
+    (String -> Set.Set String -> Set.Set String)
+    -> Singleton.Spec InputSingleton world
+    -> world
+    -> Decoder world
 onKeyChange update spec world =
     let
         input =
@@ -37,8 +44,8 @@ onKeyChange update spec world =
             )
 
 
+isRegistered : { a | registered : Dict.Dict comparable v } -> comparable -> Decoder comparable
 isRegistered input key =
-    --TODO maybe get rid of it and extend more updateKeys to fail in Maybe..
     if Dict.member key input.registered then
         Decode.succeed key
 

@@ -1,4 +1,11 @@
-module Logic.Template.Game.Platformer exposing (World, decode, encode, game, load, run)
+module Logic.Template.Game.Presentation exposing
+    ( World
+    , decode
+    , encode
+    , game
+    , load
+    , run
+    )
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Browser.Dom as Browser
@@ -12,26 +19,26 @@ import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.System as System
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
-import Logic.Template.Camera.Trigger exposing (Trigger)
 import Logic.Template.Component.AnimationsDict as TimeLineDict2
 import Logic.Template.Component.FrameChange as TimeLine2
 import Logic.Template.Component.Layer
-import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX as AudioSprite
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
-import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
-import Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
+import Logic.Template.Game.Presentation.Common exposing (PresentationWorld, decoders, empty, encoders, read)
+import Logic.Template.Game.Presentation.Content2 as Content
+import Logic.Template.Game.Presentation.Slide as Slide
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Layer exposing (lutCollector)
-import Logic.Template.System.Control as Control
+import Logic.Template.System.SlideStop exposing (SlideStops, applyInput)
 import Logic.Template.System.TimelineChange as TimelineChange
 import Math.Vector2
 import Task exposing (Task)
+import VirtualDom
 import WebGL
 
 
@@ -43,10 +50,10 @@ import WebGL
 
 
 type alias World =
-    PlatformerWorld
+    PresentationWorld
 
 
-game : Launcher.Document flags PlatformerWorld
+game : Launcher.Document flags PresentationWorld
 game =
     { update = update
     , view = view
@@ -55,13 +62,13 @@ game =
     }
 
 
-encode : String -> Task.Task Launcher.Error ( Bytes, PlatformerWorld )
+encode : String -> Task.Task Launcher.Error ( Bytes, PresentationWorld )
 encode levelUrl =
     SaveLoad.loadTiledAndEncode levelUrl empty read encoders lutCollector
         |> ResourceTask.toTask
 
 
-decode : Bytes -> Task Launcher.Error (Launcher.World PlatformerWorld)
+decode : Bytes -> Task Launcher.Error (Launcher.World PresentationWorld)
 decode bytes =
     let
         worldTask =
@@ -70,7 +77,7 @@ decode bytes =
     setInitResize worldTask
 
 
-run : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
+run : String -> Task Launcher.Error (Launcher.World PresentationWorld)
 run levelUrl =
     let
         worldTask =
@@ -79,7 +86,7 @@ run levelUrl =
     setInitResize worldTask
 
 
-load : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
+load : String -> Task Launcher.Error (Launcher.World PresentationWorld)
 load levelUrl =
     let
         worldTask =
@@ -103,45 +110,30 @@ subscriptions w =
         ]
 
 
-
--- Not works with intellij elm plugin
---view : List (VirtualDom.Attribute msg) -> Launcher.World OwnWorld -> List (VirtualDom.Node msg)
-
-
 view w =
     let
-        --        { renderable } =
-        --            w.projectile
-        --        fxUniforms =
-        --            { renderable
-        --                | aspectRatio = toFloat w.render.screen.width / toFloat w.render.screen.height
-        --                , viewportOffset =
-        --                    w.camera.viewportOffset
-        --                        |> Vec2.scale w.render.px
-        --                        |> Math.Vector2.fromRecord
-        --            }
-        --        _ =
-        --            w.render
-        --                |> Debug.log "hello"
-        --        space =
-        --            Logic.Template.GFX.Space.draw fullscreenVertexShader
-        --                ({ viewport = updatedWorld.render.fixed
-        --                 , px = w.render.px
-        --                 , offset = updatedWorld.render.offset
-        --                 , time = toFloat updatedWorld.frame
-        --                 }
-        --                )
         playerEntityID =
             w.camera.id
+
+        style =
+            RenderInfo.canvas w.render
     in
     [ Logic.Template.Component.Layer.draw (objRender w) w
-        --        ++ aabb.view w.render w []
-        --        ++ Projectile.draw fxUniforms
-        --        ++ [ space ]
-        |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
-    , OnScreenControl.twoButtonStick (OnScreenControl.onscreenSpecExtend OnScreenControl.spec (Logic.Template.Input.toComps Logic.Template.Input.spec) playerEntityID) w
+        |> WebGL.toHtmlWith webGLOption style
     ]
+        ++ slides w.slideOpacity style w
         |> (::) (AudioSprite.draw AudioSprite.spec w)
+
+
+slides opacity style_ ecs =
+    let
+        px =
+            toFloat ecs.render.screen.width / ecs.render.virtualScreen.width
+
+        style =
+            style_ ++ [ VirtualDom.style "opacity" <| String.fromFloat opacity ]
+    in
+    [ List.map (\a -> a ecs.camera px) Content.all |> Slide.view style ]
 
 
 webGLOption : List WebGL.Option
@@ -194,32 +186,14 @@ objRender w ( _, objLayer ) =
 
 update w =
     let
-        pixelsPerUnit =
-            1.0 / w.render.px
-
         target_ =
             getPosById w.camera.id w
 
         target =
-            target_
-                |> (\a -> Vec2.sub a (getCenter w))
-
-        contactForCamera =
-            aabb.spec.get w
-                |> AABB.byId w.camera.id
-                |> Maybe.map (AABB.getContact >> .y)
-                |> Maybe.andThen
-                    (\a ->
-                        if a == -1 then
-                            Just target.y
-
-                        else
-                            Nothing
-                    )
+            target_ |> (\a -> Vec2.sub a (getCenter w))
 
         cameraStep =
-            Logic.Template.Camera.Trigger.yTrigger 3 contactForCamera target
-                >> Logic.Template.Camera.PositionLocking.xLock target
+            Logic.Template.Camera.PositionLocking.lock target
 
         newOffset =
             Math.Vector2.fromRecord w.camera.viewportOffset
@@ -228,10 +202,14 @@ update w =
             { w | render = RenderInfo.updateOffset newOffset w.render }
 
         moveJump =
-            vec2 3 8
+            vec2 13 8
+
+        inputSpec_ =
+            Logic.Template.Input.toComps Logic.Template.Input.spec
     in
     updatedWorld
-        |> Control.platformer moveJump Logic.Template.Input.spec aabb.spec AudioSprite.spec
+        |> Logic.Template.System.SlideStop.applyInput inputSpec_ aabb.spec
+        --        |> Control.platformer moveJump Logic.Template.Input.spec aabb.spec AudioSprite.spec
         |> aabb.system
         |> TimelineChange.sideScroll TimeLineDict2.spec aabb.spec TimeLine2.spec
         |> Singleton.update Logic.Template.Camera.spec cameraStep
@@ -245,7 +223,6 @@ aabb =
     in
     { spec = Logic.Template.Component.Physics.spec
     , empty = { empty | gravity = { x = 0, y = -0.5 } }
-    , view = debugPhysicsAABB
     , system = Logic.Template.Component.Physics.system Logic.Template.Component.Physics.spec
     , getPosition = AABB.getPosition
     , compsExtracter = \ecs -> ecs.physics |> AABB.getIndexed |> Logic.Entity.fromList
@@ -268,5 +245,5 @@ getCenter w =
             1.0 / w.render.px
     in
     { x = 0.5 / w.render.px * aspectRatio
-    , y = 0.5 / w.render.px
+    , y = 0.1 / w.render.px --0.5 / w.render.px
     }

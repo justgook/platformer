@@ -1,4 +1,4 @@
-module Physic.Util exposing (normal, rotateClockwise, scalarProjection)
+module Collision.Physic.Util exposing (normal, rotateClockwise, scalarProjection)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 

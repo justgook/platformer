@@ -16,8 +16,11 @@ main : Launcher Value Platformer.World
 main =
     --    Launcher.document { game | init = init }
     --    Launcher.document { game | init = debugInit }
-    --    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
-    Launcher.document { game | init = init }
+    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
+
+
+
+--    Launcher.document { game | init = init }
 
 
 init : Value -> Task.Task Launcher.Error Platformer.World
@@ -40,8 +43,8 @@ init flags =
 
 debugInit : Value -> Task.Task Launcher.Error Platformer.World
 debugInit flags =
-    --    Platformer.encode "./ThomasLean/level.json"
-    Platformer.encode "./assets/demo.json"
+    Platformer.encode "./ThomasLean/level.json"
+        --    Platformer.encode "./assets/demo.json"
         --    Platformer.encoadde "./elm-europe/slides2.json"
         |> Task.andThen
             (\( b, w ) ->

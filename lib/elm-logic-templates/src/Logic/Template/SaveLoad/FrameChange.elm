@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.TimeLine exposing (decode, decodeItem, durationToFrame, encode, encodeItem, fromTileset, read)
+module Logic.Template.SaveLoad.FrameChange exposing (decode, decodeItem, durationToFrame, encode, encodeItem, fromTileset, read)
 
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
@@ -6,14 +6,14 @@ import Logic.Component as Component exposing (Spec)
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.Component.TimeLine as TimeLine2 exposing (NotSimple, TileUV)
+import Logic.Template.Component.FrameChange as FrameChange exposing (NotSimple)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
-import Logic.Template.SaveLoad.Internal.Util as Util
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (TileUV, boolToFloat)
 import Math.Vector2 as Vec2
 import Math.Vector4 as Vec4 exposing (vec4)
 import Tiled.Tileset
@@ -24,7 +24,7 @@ read spec =
     { defaultRead
         | objectTile =
             Async
-                (\{ gid, getTilesetByGid } ->
+                (\{ gid, getTilesetByGid, fh, fv } ->
                     getTilesetByGid gid
                         >> ResourceTask.andThen
                             (\t_ ->
@@ -35,8 +35,11 @@ read spec =
                                                 case animationFraming t (gid - t.firstgid) of
                                                     Just timeline ->
                                                         let
+                                                            obj_ =
+                                                                FrameChange.emptyComp timeline
+
                                                             obj =
-                                                                TimeLine2.emptyComp timeline
+                                                                { obj_ | uMirror = Vec2.vec2 (boolToFloat fh) (boolToFloat fv) }
                                                         in
                                                         Entity.with ( spec, obj ) ( entityID, world )
 
@@ -95,7 +98,7 @@ decodeItem =
                 [] ->
                     RangeTree.fromList 0 (vec4 0 0 0 0) []
             )
-                |> TimeLine2.emptyComp
+                |> FrameChange.emptyComp
                 |> (\a -> { a | uMirror = Vec2.fromRecord uMirror })
         )
         (D.list
@@ -110,7 +113,7 @@ durationToFrame duration =
 
 fromTileset t uIndex =
     animationFraming t uIndex
-        |> Maybe.map TimeLine2.emptyComp
+        |> Maybe.map FrameChange.emptyComp
 
 
 animationFraming : Tiled.Tileset.EmbeddedTileData -> Int -> Maybe (RangeTree TileUV)

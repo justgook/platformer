@@ -34,6 +34,10 @@ type alias RenderInfo =
         { width : Int
         , height : Int
         }
+    , virtualScreen :
+        { width : Float
+        , height : Float
+        }
     }
 
 
@@ -54,14 +58,14 @@ read { get, set } =
                         prop =
                             levelProps level
 
+                        px =
+                            1 / prop.float "pixelsPerUnit" 0.1
+
                         x =
                             prop.float "offset.x" 0
 
                         y =
                             prop.float "offset.y" 0
-
-                        px =
-                            1 / prop.float "pixelsPerUnit" 0.1
                     in
                     ( entityID
                     , set (updateOffset (Vec2.fromRecord { x = x, y = y }) { renderInfo | px = px }) world
@@ -106,7 +110,11 @@ applyOffsetVec v =
     applyOffset (Vec2.toRecord v)
 
 
-updateOffset newOffset info =
+updateOffset newOffset_ info =
+    let
+        newOffset =
+            newOffset_ |> Vec2.scale info.px
+    in
     { info
         | offset = newOffset
         , absolute = applyOffsetVec newOffset info.fixed
@@ -115,7 +123,7 @@ updateOffset newOffset info =
 
 resize { get, set } world w h =
     let
-        renderInfo =
+        render =
             get world
 
         aspectRatio =
@@ -123,15 +131,19 @@ resize { get, set } world w h =
 
         fixed =
             Mat4.makeOrtho2D 0 aspectRatio 0 1
+
+        virtualHeight =
+            1 / render.px
+
+        virtualWidth =
+            toFloat w / toFloat h / render.px
     in
     set
-        { renderInfo
+        { render
             | fixed = fixed
-            , absolute = applyOffsetVec renderInfo.offset fixed
-            , screen =
-                { width = w
-                , height = h
-                }
+            , absolute = applyOffsetVec render.offset fixed
+            , screen = { width = w, height = h }
+            , virtualScreen = { width = virtualWidth, height = virtualHeight }
         }
         world
 
@@ -184,6 +196,10 @@ empty =
     , absolute = Mat4.identity
     , offset = vec2 0 0
     , screen =
+        { width = 1
+        , height = 1
+        }
+    , virtualScreen =
         { width = 1
         , height = 1
         }

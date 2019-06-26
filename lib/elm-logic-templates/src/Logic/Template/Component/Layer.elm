@@ -5,6 +5,7 @@ import Logic.Component.Singleton as Singleton
 import Logic.Template.AnimatedTiles as AnimatedTiles
 import Logic.Template.Image as Image
 import Logic.Template.Internal exposing (FullScreenVertexShaderModel, TileVertexShaderModel, fullscreenVertexShader)
+import Logic.Template.RenderInfo as RenderInfo
 import Logic.Template.Tiles as Tiles
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2)
@@ -111,9 +112,21 @@ animatedTilesData common individual =
 
 imageData : Common -> ImageData -> FullScreenVertexShaderModel (Image.Model {})
 imageData common individual =
+    let
+        scrollRatio =
+            individual.scrollRatio
+                |> Vec2.toRecord
+
+        { x, y } =
+            common.offset
+                |> Vec2.toRecord
+
+        newOffset =
+            { x = x * scrollRatio.x, y = y * scrollRatio.y }
+    in
     { px = common.px
     , viewport = common.viewport
-    , offset = common.offset
+    , offset = newOffset |> Vec2.fromRecord
     , uTransparentColor = individual.uTransparentColor
 
     --    , scrollRatio = individual.scrollRatio
