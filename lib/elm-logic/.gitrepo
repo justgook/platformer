@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:justgook/elm-game-logic.git
 	branch = master
-	commit = 4d75f0f289ae059e645d70d489c335130726b071
+	commit = 2c5a49b4ab0e1445dd64a78bf95ff407cda47d89
 	method = merge
 	cmdver = 0.4.0
-	parent = dad6881258a5c8cba073c40a82662f29a0e39fd3
+	parent = c1c3a07e6a85f3ce37b5706c2731f98123ccf673
