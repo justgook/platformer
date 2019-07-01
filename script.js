@@ -76,14 +76,7 @@ function howlerWrapper(Howl) {
         }
 
         static get observedAttributes() {
-            return [
-                "config",
-                "stop",
-                "sound-id",
-                "offset",
-                "duration",
-                "loop"
-            ];
+            return ["stop", "sound-id"];
         }
 
 
@@ -105,4 +98,3 @@ function howlerWrapper(Howl) {
 if (window.Howl) {
     howlerWrapper(window.Howl);
 }
-
