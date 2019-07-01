@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:z0lv/elm-tiled.git
 	branch = master
-	commit = d00e3685a8d63b46d9867f9160d75c43832e4865
-	parent = d702692d321d0abb5b34427171d50e6420d8a008
+	commit = d00264bd088fe9a6397dfa80a9e970f8c4854116
+	parent = 7107d922a7571492cb9d13636ab2f9429bde3d02
 	method = merge
 	cmdver = 0.4.0
