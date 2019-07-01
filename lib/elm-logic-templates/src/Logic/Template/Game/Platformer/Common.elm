@@ -5,12 +5,12 @@ import Bytes.Encode as E exposing (Encoder)
 import Logic.GameFlow as Flow
 import Logic.Template.Camera
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
+import Logic.Template.Component.FrameChange as TimeLine
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
-import Logic.Template.Component.TimeLine as TimeLine
 import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Game.Platformer.Custom exposing (PlatformerWorldWith_)
 import Logic.Template.Input
@@ -18,13 +18,13 @@ import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
+import Logic.Template.SaveLoad.FrameChange as TimeLine
 import Logic.Template.SaveLoad.Input
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
 import Logic.Template.SaveLoad.Layer
 import Logic.Template.SaveLoad.Physics
 import Logic.Template.SaveLoad.Sprite as Sprite
-import Logic.Template.SaveLoad.TimeLine as TimeLine
 
 
 type alias PlatformerWorld =
@@ -52,7 +52,7 @@ empty =
     , projectile = Projectile.empty
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
-    , timelines = TimeLine.empty
+    , animation = TimeLine.empty
     , animations = AnimationsDict.empty
     , layers = Logic.Template.Component.Layer.empty
     , sfx = audiosprite

@@ -3,6 +3,7 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     , Read(..)
     , Reader
     , RectangleData
+    , TileArg
     , TileDataWith
     , combine
     , combineListInTask

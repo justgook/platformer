@@ -37,9 +37,16 @@ composeBAA f g b a =
     f b (g b a)
 
 
+
+--andMap : Decoder a -> Decoder (a -> b) -> Decoder b
+--andMap =
+--    D.map2 (|>)
+--
+
+
 andMap : Decoder a -> Decoder (a -> b) -> Decoder b
-andMap =
-    D.map2 (|>)
+andMap argument function =
+    D.map2 (<|) function argument
 
 
 float : Decoder Float

@@ -95,9 +95,8 @@ fillAnimation f spec t acc all =
     case Dict.toList all of
         ( k, v ) :: _ ->
             case ( Parser.run parseName k, v ) of
-                ( Ok ( _, Neither, _ ), _ ) ->
-                    fillAnimation f spec t acc (Dict.remove k all)
-
+                --                ( Ok ( _, Neither, _ ), _ ) ->
+                --                    fillAnimation f spec t acc (Dict.remove k all)
                 ( Ok ( name, dir, Id ), PropInt index ) ->
                     (f t index
                         |> Maybe.map ResourceTask.succeed
@@ -181,7 +180,7 @@ parseName =
         --anim.(name).(direction).(id|tileset)
         var =
             Parser.variable
-                { start = Char.isAlphaNum
+                { start = \c -> Char.isAlphaNum c || c == '_'
                 , inner = \c -> Char.isAlphaNum c || c == '_'
                 , reserved = Set.empty
                 }

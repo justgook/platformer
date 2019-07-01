@@ -4,6 +4,8 @@ import AltMath.Vector2 as Vec2 exposing (vec2)
 import Browser.Dom as Browser
 import Browser.Events as Events
 import Bytes exposing (Bytes)
+import Collision.Physic.AABB as AABB
+import Collision.Physic.Narrow.AABB as AABB
 import Logic.Component.Singleton as Singleton
 import Logic.Entity
 import Logic.Launcher as Launcher exposing (Launcher)
@@ -12,17 +14,16 @@ import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
 import Logic.Template.Camera.Trigger exposing (Trigger)
 import Logic.Template.Component.AnimationsDict as TimeLineDict2
+import Logic.Template.Component.FrameChange as TimeLine2
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX as AudioSprite
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
-import Logic.Template.Component.TimeLine as TimeLine2
 import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
 import Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
 import Logic.Template.Input
 import Logic.Template.Input.Keyboard as Keyboard
-import Logic.Template.Internal exposing (pxToScreen)
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
@@ -30,9 +31,6 @@ import Logic.Template.SaveLoad.Layer exposing (lutCollector)
 import Logic.Template.System.Control as Control
 import Logic.Template.System.TimelineChange as TimelineChange
 import Math.Vector2
-import Physic.AABB as AABB
-import Physic.Narrow.AABB as AABB
-import Set
 import Task exposing (Task)
 import WebGL
 
@@ -125,9 +123,6 @@ view w =
         --        _ =
         --            w.render
         --                |> Debug.log "hello"
-        sfx =
-            ""
-
         --        space =
         --            Logic.Template.GFX.Space.draw fullscreenVertexShader
         --                ({ viewport = updatedWorld.render.fixed
@@ -136,13 +131,15 @@ view w =
         --                 , time = toFloat updatedWorld.frame
         --                 }
         --                )
+        playerEntityID =
+            w.camera.id
     in
     [ Logic.Template.Component.Layer.draw (objRender w) w
-        --        ++ aabb.view updatedWorld.render updatedWorld []
+        --        ++ aabb.view w.render w []
         --        ++ Projectile.draw fxUniforms
         --        ++ [ space ]
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
-    , OnScreenControl.twoButtonStick onscreenSpecExtend w
+    , OnScreenControl.twoButtonStick (OnScreenControl.onscreenSpecExtend OnScreenControl.spec (Logic.Template.Input.toComps Logic.Template.Input.spec) playerEntityID) w
     ]
         |> (::) (AudioSprite.draw AudioSprite.spec w)
 
@@ -155,37 +152,6 @@ webGLOption =
     ]
 
 
-onscreenSpecExtend :
-    Singleton.Spec (TwoButtonStick {})
-        { world
-            | onScreen : TwoButtonStick {}
-            , input : Logic.Template.Input.InputSingleton
-            , camera : Logic.Template.Camera.WithId (Trigger {})
-        }
-onscreenSpecExtend =
-    { get = OnScreenControl.spec.get
-    , set =
-        \comp w ->
-            let
-                jump =
-                    if comp.button2.active then
-                        Set.insert "Jump"
-
-                    else
-                        Set.remove "Jump"
-
-                setXY { x, y } a =
-                    { a | x = x, y = y }
-
-                componentUpdaterInternal =
-                    setXY (OnScreenControl.dir8 comp.center comp.cursor)
-            in
-            OnScreenControl.spec.set comp w
-                |> Singleton.update (Logic.Template.Input.getComps Logic.Template.Input.spec)
-                    (Logic.Entity.mapComponentSet (\key -> componentUpdaterInternal { key | action = jump key.action }) w.camera.id)
-    }
-
-
 objRender w ( _, objLayer ) =
     System.indexedFoldl3
         (\i _ c1 sprite acc ->
@@ -193,7 +159,7 @@ objRender w ( _, objLayer ) =
                 |> (::)
                     (Sprite.draw
                         w.render
-                        (case Logic.Entity.getComponent i w.timelines of
+                        (case Logic.Entity.getComponent i w.animation of
                             Just t ->
                                 let
                                     testSprite =
@@ -238,9 +204,6 @@ update w =
             target_
                 |> (\a -> Vec2.sub a (getCenter w))
 
-        targetInRelSpace =
-            Vec2.vec2 (target_.x / pixelsPerUnit / 2) (target_.y / pixelsPerUnit / 2)
-
         contactForCamera =
             aabb.spec.get w
                 |> AABB.byId w.camera.id
@@ -259,44 +222,20 @@ update w =
                 >> Logic.Template.Camera.PositionLocking.xLock target
 
         newOffset =
-            pxToScreen w.render.px w.camera.viewportOffset
+            Math.Vector2.fromRecord w.camera.viewportOffset
 
         updatedWorld =
             { w | render = RenderInfo.updateOffset newOffset w.render }
+
+        moveJump =
+            vec2 3 8
     in
     updatedWorld
-        |> Control.platformer (vec2 3 8) Logic.Template.Input.spec aabb.spec AudioSprite.spec
+        |> Control.platformer moveJump Logic.Template.Input.spec aabb.spec AudioSprite.spec
         |> aabb.system
         |> TimelineChange.sideScroll TimeLineDict2.spec aabb.spec TimeLine2.spec
         |> Singleton.update Logic.Template.Camera.spec cameraStep
-        |> (\m ->
-                let
-                    cmd =
-                        --                          if m.frame == 60 then
-                        --                            SaveLoad.load Logic.Template.Component.Layer.spec
-                        --                                "./assets/demo.json"
-                        --                                world
-                        --                                read
-                        --                                |> Launcher.task
-                        --                                    (\r w_ ->
-                        --                                        case r of
-                        --                                            Ok newW ->
-                        --                                                { newW
-                        --                                                    | render = w_.render
-                        --                                                    , physics = w_.physics
-                        --                                                    , camera = w_.camera
-                        --                                                    , input = w_.input
-                        --                                                }
-                        --
-                        --                                            Err _ ->
-                        --                                                w_
-                        --                                    )
-                        --
-                        --                        else
-                        Cmd.none
-                in
-                ( m, cmd )
-           )
+        |> (\m -> ( m, Cmd.none ))
 
 
 aabb =

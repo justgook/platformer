@@ -1,16 +1,9 @@
-module Tiled.Read.Example exposing (dimensions, positions)
+module Tiled.Read.Example exposing (dimensions)
 
 import AltMath.Vector2 exposing (Vec2, vec2)
 import Logic.Component
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
-
-
-positions : Logic.Component.Spec Vec2 world -> Reader world
-positions spec =
-    { defaultRead
-        | objectTile = Sync (\{ x, y } -> Entity.with ( spec, vec2 x y ))
-    }
 
 
 dimensions : Logic.Component.Spec Vec2 world -> Reader world

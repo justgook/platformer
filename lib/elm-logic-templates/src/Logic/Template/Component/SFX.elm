@@ -201,13 +201,7 @@ onend spec_ =
             (Json.Decode.at [ "detail", "keys" ] (Json.Decode.list Json.Decode.string)
                 |> Json.Decode.map
                     (\keys ->
-                        { message =
-                            Singleton.update spec_
-                                (\c ->
-                                    { c
-                                        | idSource = Set.fromList keys |> Set.union c.idSource
-                                    }
-                                )
+                        { message = Singleton.update spec_ (\c -> { c | idSource = Set.fromList keys |> Set.union c.idSource })
                         , stopPropagation = True
                         , preventDefault = True
                         }

@@ -57,7 +57,7 @@ type alias AnimatedTilesData =
 
 type alias ImageData =
     { image : Texture
-    , size : Vec2
+    , uSize : Vec2
     , uTransparentColor : Vec3
     , scrollRatio : Vec2
     , id : Int
@@ -111,14 +111,26 @@ animatedTilesData common individual =
 
 imageData : Common -> ImageData -> FullScreenVertexShaderModel (Image.Model {})
 imageData common individual =
+    let
+        scrollRatio =
+            individual.scrollRatio
+                |> Vec2.toRecord
+
+        { x, y } =
+            common.offset
+                |> Vec2.toRecord
+
+        newOffset =
+            { x = x * scrollRatio.x, y = y * scrollRatio.y }
+    in
     { px = common.px
     , viewport = common.viewport
-    , offset = common.offset
+    , offset = newOffset |> Vec2.fromRecord
     , uTransparentColor = individual.uTransparentColor
 
     --    , scrollRatio = individual.scrollRatio
     , image = individual.image
-    , size = individual.size
+    , uSize = individual.uSize
     }
 
 

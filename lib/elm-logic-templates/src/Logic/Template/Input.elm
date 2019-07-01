@@ -1,4 +1,4 @@
-module Logic.Template.Input exposing (Input, InputSingleton, empty, emptyComp, getComps, spec)
+module Logic.Template.Input exposing (Input, InputSingleton, empty, emptyComp, spec, toComps)
 
 import Dict exposing (Dict)
 import Logic.Component exposing (Set, Spec)
@@ -52,7 +52,7 @@ spec =
     }
 
 
-getComps spec_ =
+toComps spec_ =
     { get = spec_.get >> .comps
     , set =
         \comps world ->

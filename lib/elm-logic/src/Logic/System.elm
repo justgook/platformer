@@ -6,12 +6,14 @@ module Logic.System exposing
     , TupleSystem
     , UnfinishedSystem
     , andMap
+    , applyIf
     , end
     , endCustom
     , foldl
     , foldl2
     , foldl3
     , foldl4
+    , indexedFoldl
     , indexedFoldl2
     , indexedFoldl3
     , start
@@ -23,6 +25,7 @@ module Logic.System exposing
 
 import Array
 import Logic.Component as Component
+import Logic.Entity exposing (EntityID)
 import Logic.Internal exposing (indexedFoldlArray, indexedMap2)
 
 
@@ -49,11 +52,19 @@ type UnfinishedSystem world acc next func
 
 foldl : (comp1 -> acc -> acc) -> Component.Set comp1 -> acc -> acc
 foldl f comp1 acc_ =
+    Array.foldl
+        (\value1 acc ->
+            value1 |> Maybe.map (\a -> f a acc) |> Maybe.withDefault acc
+        )
+        acc_
+        comp1
+
+
+indexedFoldl : (EntityID -> comp1 -> acc -> acc) -> Component.Set comp1 -> acc -> acc
+indexedFoldl f comp1 acc_ =
     indexedFoldlArray
-        (\n value1 acc ->
-            value1
-                |> Maybe.map (\a -> f a acc)
-                |> Maybe.withDefault acc
+        (\i value1 acc ->
+            value1 |> Maybe.map (\a -> f i a acc) |> Maybe.withDefault acc
         )
         acc_
         comp1
@@ -115,7 +126,7 @@ foldl3 f comp1 comp2 comp3 acc_ =
         comp1
 
 
-indexedFoldl3 : (Int -> comp1 -> comp2 -> comp3 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> Component.Set comp3 -> acc -> acc
+indexedFoldl3 : (EntityID -> comp1 -> comp2 -> comp3 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> Component.Set comp3 -> acc -> acc
 indexedFoldl3 f comp1 comp2 comp3 acc_ =
     indexedFoldlArray
         (\n value1 acc ->

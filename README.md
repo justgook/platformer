@@ -36,12 +36,19 @@
 
 
 ## Custom Object properties
-  1. `onKey[event.key]` - `Move.south` | `Move.west` | `Move.east` | `Move.north`
+  1. `onKey[event.key]` - `string` - `Move.south` | `Move.west` | `Move.east` | `Move.north` | `Fire` | `Jump` or any other that supported by system
+  1. `ammo.(name).(id|tileset)` - `int`:
+        1. `name` - `string` - (default `_`) - any name to reference in `Fire` action
+        1. `id`  - `int` - (default `0`) - relative tile id
+        1. `tilset` - (default `0`) - `firstgid` of tileset to which **id** is relative
+
   1. **NOT IMPLEMENTED** `atomove.x` - `float` - auto move by horizontal axis
   1. **NOT IMPLEMENTED** `atomove.y` - `float` - auto move by vertical axis
   1. **NOT IMPLEMENTED** `cameraOffset` - `Vec2` of `%, float(px)`
   1. **NOT IMPLEMENTED** `onHit.[ID].loadLevel` - `filename`
   1. **NOT IMPLEMENTED** `onClick.[ID].loadLevel` - `filename`
+### Physics
+  1. `mass` - `float` - (default `1`) - 
 ### Animactions
 
   **NOT IMPLEMENTED**

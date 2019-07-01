@@ -1,4 +1,4 @@
-module Physic.Material exposing (Material, bounciness, frictionDynamicDynamic, frictionDynamicStatic)
+module Collision.Physic.Material exposing (Material, bounciness, frictionDynamicDynamic, frictionDynamicStatic)
 
 
 type alias Material =

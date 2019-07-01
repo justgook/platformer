@@ -1,4 +1,23 @@
-module Logic.Template.Internal exposing (FullScreenVertexShaderModel, Plate, Points(..), TileVertexShaderModel, Timeline, clipPlate, entitySettings, fullscreenVertexShader, get, plate, points, pxToScreen, remap, tileVertexShader, tileVertexShader2, timeline, toList)
+module Logic.Template.Internal exposing
+    ( FullScreenVertexShaderModel
+    , Plate
+    , Points(..)
+    , TileVertexShaderModel
+    , Timeline
+    , clipPlate
+    , entitySettings
+    , fullscreenVertexShader
+    , get
+    , plate
+    ,  points
+       --    , pxToScreen
+
+    , remap
+    , tileVertexShader
+    , tileVertexShader2
+    , timeline
+    , toList
+    )
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
 import Array exposing (Array)
@@ -15,12 +34,6 @@ entitySettings =
     , Blend.add Blend.srcAlpha Blend.oneMinusSrcAlpha
     , WebGL.colorMask True True True False
     ]
-
-
-pxToScreen : Float -> Vec2 -> Vector2.Vec2
-pxToScreen px p =
-    Vec2.scale px p
-        |> Vector2.fromRecord
 
 
 plate : Mesh Plate

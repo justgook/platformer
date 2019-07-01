@@ -14,17 +14,17 @@ suite =
                 \_ ->
                     [ 0xFF, 0xFF, 0xFF00, 0x0F00 ]
                         |> BMP.encode24 2 2
-                        |> Expect.equal "data:image/bmp;base64,Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAA/wAA/wAAAAAA/wAADwAAAA=="
+                        |> Expect.equal "data:image/bmp;base64,Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAAAA8AAP8AAAD/AAD/AAAAAA=="
             , test "Encode 24bit different order" <|
                 \_ ->
                     [ 0xFF, 0xFF, 0xFF00, 0x0F00 ]
                         |> BMP.encodeWith { defaultOptions | order = RightUp } 2 2
-                        |> Expect.equal "data:image/bmp;base64,Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAA/wAA/wAAAAAA/wAADwAAAA=="
+                        |> Expect.equal "data:image/bmp;base64,Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAAAA8AAP8AAAD/AAD/AAAAAA=="
             , test "Encode 24bit with additional bytes" <|
                 \_ ->
                     [ 0xFF, 0xFF, 0xFF00, 0x0F00, 0x0F00, 0x0F00 ]
                         |> BMP.encode24 3 2
-                        |> Expect.equal "data:image/bmp;base64,Qk1OAAAAAAAAADYAAAAoAAAAAwAAAAIAAAABABgAAAAAABAAAAATCwAAEwsAAAAAAAAAAAAA/wAA/wAAAP8AAAAAAA8AAA8AAA8AAAAA"
+                        |> Expect.equal "data:image/bmp;base64,Qk1OAAAAAAAAADYAAAAoAAAAAwAAAAIAAAABABgAAAAAABgAAAATCwAAEwsAAAAAAAAAAAAAAA8AAA8AAA8AAAAAAP8A/wAA/wAAAAAA"
 
             --            , test "Encode 24bit with default color" <|
             --                \_ ->

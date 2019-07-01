@@ -1,4 +1,4 @@
-module Physic.Narrow.Common exposing (Generic, Options, defaultOptions, empty)
+module Collision.Physic.Narrow.Common exposing (Generic, Options, defaultOptions, empty)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 

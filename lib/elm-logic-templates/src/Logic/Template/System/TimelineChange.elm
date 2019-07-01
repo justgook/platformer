@@ -1,11 +1,42 @@
-module Logic.Template.System.TimelineChange exposing (sideScroll)
+module Logic.Template.System.TimelineChange exposing (sideScroll, topDown)
 
+import Collision.Physic.AABB
+import Collision.Physic.Narrow.AABB
 import Dict
 import Direction as Dir
 import Logic.Entity
 import Logic.System as System
-import Physic.AABB
-import Physic.Narrow.AABB
+
+
+topDown inputSpec animDictSpec timelineSpec ecs =
+    System.step3
+        (\( input, _ ) ( obj_, setObj ) ( ( current, anim ), setAnim ) acc ->
+            let
+                key =
+                    ( "walk", { x = input.x, y = 0 } |> Dir.fromRecord |> Dir.toInt )
+            in
+            if key == current then
+                acc
+
+            else
+                case ( obj_, Dict.get key anim ) of
+                    ( obj, Just a ) ->
+                        acc
+                            |> setObj
+                                { obj
+                                    | timeline = a.timeline
+                                    , uMirror = a.uMirror
+                                    , start = ecs.frame
+                                }
+                            |> setAnim ( key, anim )
+
+                    _ ->
+                        acc
+        )
+        inputSpec
+        timelineSpec
+        animDictSpec
+        ecs
 
 
 sideScroll animSpec physicsSpec objSpec ecs =
@@ -14,17 +45,17 @@ sideScroll animSpec physicsSpec objSpec ecs =
             physicsSpec.get ecs
 
         physicsComps =
-            engine |> Physic.AABB.getIndexed |> Logic.Entity.fromList
+            engine |> Collision.Physic.AABB.getIndexed |> Logic.Entity.fromList
 
         ( _, newEcs ) =
             System.step3
                 (\( body, _ ) ( obj_, setObj ) ( ( ( _, dir_ ) as current, anim ), setAnim ) acc ->
                     let
                         velocity =
-                            Physic.Narrow.AABB.getVelocity body
+                            Collision.Physic.Narrow.AABB.getVelocity body
 
                         contact =
-                            Physic.Narrow.AABB.getContact body
+                            Collision.Physic.Narrow.AABB.getContact body
 
                         dir =
                             { velocity | y = 0 } |> Dir.fromRecord |> Dir.toInt

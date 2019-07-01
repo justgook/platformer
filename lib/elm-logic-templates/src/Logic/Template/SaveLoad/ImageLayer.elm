@@ -15,7 +15,7 @@ import WebGL.Texture exposing (Texture)
 type alias ImageLayer =
     { image : Texture
     , id : Int
-    , size : Vec2
+    , uSize : Vec2
     , uTransparentColor : Vec3
     , scrollRatio : Vec2
     , repeat : Repeat
@@ -56,7 +56,7 @@ imageLayerNew imageData =
                 in
                 { image = t
                 , id = imageData.id
-                , size = vec2 (toFloat width) (toFloat height)
+                , uSize = vec2 (toFloat width) (toFloat height)
                 , uTransparentColor = props.color "uTransparentColor" (vec3 1 0 1)
                 , scrollRatio = Util.scrollRatio (Dict.get "scrollRatio" imageData.properties == Nothing) props
                 , repeat =

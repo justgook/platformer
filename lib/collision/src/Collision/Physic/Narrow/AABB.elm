@@ -1,4 +1,4 @@
-module Physic.Narrow.AABB exposing
+module Collision.Physic.Narrow.AABB exposing
     ( AABB
     , Collision(..)
     , applyVelocity
@@ -26,13 +26,13 @@ module Physic.Narrow.AABB exposing
     )
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
-import Broad exposing (Boundary)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
+import Collision.Broad exposing (Boundary)
+import Collision.Physic.Narrow.Common as Generic exposing (Generic, Options, defaultOptions)
 import Direction
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Physic.Narrow.Common as Generic exposing (Generic, Options, defaultOptions)
 
 
 type AABB comparable

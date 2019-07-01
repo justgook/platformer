@@ -82,18 +82,18 @@ read spec =
 encode : Singleton.Spec (List Layer) world -> world -> Encoder
 encode { get } world =
     let
-        imageData layerId info =
+        imageData layerType info =
             E.sequence
-                [ E.unsignedInt8 layerId
-                , E.unsignedInt32 BE info.id
-                , E.xy (Vec2.toRecord info.size)
+                [ E.unsignedInt8 layerType
+                , E.id info.id
                 , E.xyz (Vec3.toRecord info.uTransparentColor)
                 , E.xy (Vec2.toRecord info.scrollRatio)
+                , E.xy (Vec2.toRecord info.uSize)
                 ]
 
-        tilesData layerId info =
+        tilesData layerType info =
             E.sequence
-                [ E.unsignedInt8 layerId
+                [ E.unsignedInt8 layerType
                 , E.id info.id
                 , E.id info.firstgid
                 , E.xy (Vec2.toRecord info.uLutSize)
@@ -141,12 +141,12 @@ decode spec_ getTexture =
     let
         imageData =
             D.map4
-                (\id size uTransparentColor scrollRatio ->
+                (\id uTransparentColor scrollRatio uSize ->
                     case getTexture Image id of
                         Just image ->
                             D.succeed
                                 { id = id
-                                , size = Vec2.fromRecord size
+                                , uSize = Vec2.fromRecord uSize
                                 , uTransparentColor = Vec3.fromRecord uTransparentColor
                                 , scrollRatio = Vec2.fromRecord scrollRatio
                                 , image = image
@@ -155,15 +155,15 @@ decode spec_ getTexture =
                         Nothing ->
                             D.fail
                 )
-                (D.unsignedInt32 BE)
-                D.xy
+                D.id
                 D.xyz
+                D.xy
                 D.xy
                 |> D.andThen identity
 
         tiledData =
             D.succeed
-                (\scrollRatio uTransparentColor uTileSize uAtlasSize uLutSize firstgid id ->
+                (\id firstgid uLutSize uAtlasSize uTileSize uTransparentColor scrollRatio ->
                     Maybe.map2
                         (\uAtlas uLut ->
                             D.succeed
@@ -185,23 +185,20 @@ decode spec_ getTexture =
                         (getTexture Lut id)
                         |> Maybe.withDefault D.fail
                 )
+                |> D.andMap D.id
+                |> D.andMap D.id
+                |> D.andMap D.xy
+                |> D.andMap D.xy
                 |> D.andMap D.xy
                 |> D.andMap D.xyz
                 |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.id
-                |> D.andMap D.id
                 |> D.andThen identity
 
-        --
-        --                |> D.andMap D.xy
-        --
         decoder =
             D.unsignedInt8
                 |> D.andThen
-                    (\layerId ->
-                        case layerId of
+                    (\layerType ->
+                        case layerType of
                             0 ->
                                 D.list (D.map (\i -> ( i, () )) D.id)
                                     |> D.map (\l -> Logic.Template.Component.Layer.Object ( 0, Entity.fromList l ))
@@ -260,9 +257,9 @@ wrapTileLayer layer =
 
 
 wrapImageLayer : ImageLayer.ImageLayer -> Logic.Template.Component.Layer.Layer
-wrapImageLayer { id, repeat, image, size, uTransparentColor, scrollRatio } =
+wrapImageLayer { id, repeat, image, uSize, uTransparentColor, scrollRatio } =
     { image = image
-    , size = size
+    , uSize = uSize
     , uTransparentColor = uTransparentColor
     , scrollRatio = scrollRatio
     , id = id

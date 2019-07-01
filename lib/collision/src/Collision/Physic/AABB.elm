@@ -1,4 +1,4 @@
-module Physic.AABB exposing
+module Collision.Physic.AABB exposing
     ( Config
     , World
     , addBody
@@ -14,14 +14,14 @@ module Physic.AABB exposing
     )
 
 import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
-import Broad.Grid
+import Collision.Broad.Grid
+import Collision.Physic.Narrow.AABB as AABB exposing (AABB)
 import Dict exposing (Dict)
-import Physic.Narrow.AABB as AABB exposing (AABB)
 import Set
 
 
 type alias World comparable =
-    { static : Broad.Grid.Grid (AABB comparable)
+    { static : Collision.Broad.Grid.Grid (AABB comparable)
     , gravity : Vec2
 
     --    , enableSleeping : Bool
@@ -35,13 +35,13 @@ type alias Config =
 
     --    , enableSleeping : Bool
     --    , timScale : Float
-    , grid : Broad.Grid.NewConfig
+    , grid : Collision.Broad.Grid.NewConfig
     }
 
 
 empty : World comparable
 empty =
-    { static = Broad.Grid.empty
+    { static = Collision.Broad.Grid.empty
     , gravity = vec2 0 -1
 
     --    , enableSleeping = False
@@ -56,14 +56,14 @@ getConfig world =
 
     --    , enableSleeping = world.enableSleeping
     --    , timScale = world.timScale
-    , grid = Broad.Grid.getConfig world.static
+    , grid = Collision.Broad.Grid.getConfig world.static
     }
 
 
 setConfig : Config -> World comparable -> World comparable
 setConfig config world =
     { world
-        | static = Broad.Grid.setConfig config.grid world.static
+        | static = Collision.Broad.Grid.setConfig config.grid world.static
         , gravity = config.gravity
 
         --        , enableSleeping = config.enableSleeping
@@ -74,16 +74,16 @@ setConfig config world =
 clear : World comparable -> World comparable
 clear world =
     { world
-        | static = Broad.Grid.optimize AABB.union world.static
+        | static = Collision.Broad.Grid.optimize AABB.union world.static
     }
 
 
 addBody : AABB comparable -> World comparable -> World comparable
 addBody aabb ({ static, indexed } as engine) =
     let
-        insert : AABB comparable -> Broad.Grid.Grid (AABB comparable) -> Broad.Grid.Grid (AABB comparable)
+        insert : AABB comparable -> Collision.Broad.Grid.Grid (AABB comparable) -> Collision.Broad.Grid.Grid (AABB comparable)
         insert aabb_ grid =
-            Broad.Grid.insert (AABB.boundary aabb_) aabb_ grid
+            Collision.Broad.Grid.insert (AABB.boundary aabb_) aabb_ grid
     in
     case AABB.getIndex aabb of
         Just index ->
@@ -114,7 +114,7 @@ setById id value ({ indexed } as world) =
 
 toList : World comparable -> List (AABB comparable)
 toList world =
-    Dict.values world.indexed ++ Broad.Grid.toList world.static
+    Dict.values world.indexed ++ Collision.Broad.Grid.toList world.static
 
 
 dragForce c velocity =
@@ -126,7 +126,7 @@ simulate dt ({ indexed, static, gravity } as world) =
         --http://buildnewgames.com/gamephysics/ -- add Velocity Verlet
         --        acceleration = force / mass
         step =
-            Broad.Grid.getConfig static |> .cell
+            Collision.Broad.Grid.getConfig static |> .cell
 
         newIndexed =
             Dict.map
@@ -208,7 +208,7 @@ move withAccelerationObj obj step grid left tested prevResponse contact =
                         |> AABB.boundary
 
                 targets =
-                    Broad.Grid.query boundary grid
+                    Collision.Broad.Grid.query boundary grid
 
                 --                        |> Debug.log "targets"
             in
