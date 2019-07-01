@@ -5,7 +5,6 @@ import Logic.Component.Singleton as Singleton
 import Logic.Template.AnimatedTiles as AnimatedTiles
 import Logic.Template.Image as Image
 import Logic.Template.Internal exposing (FullScreenVertexShaderModel, TileVertexShaderModel, fullscreenVertexShader)
-import Logic.Template.RenderInfo as RenderInfo
 import Logic.Template.Tiles as Tiles
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2)
@@ -58,7 +57,7 @@ type alias AnimatedTilesData =
 
 type alias ImageData =
     { image : Texture
-    , size : Vec2
+    , uSize : Vec2
     , uTransparentColor : Vec3
     , scrollRatio : Vec2
     , id : Int
@@ -131,7 +130,7 @@ imageData common individual =
 
     --    , scrollRatio = individual.scrollRatio
     , image = individual.image
-    , size = individual.size
+    , uSize = individual.uSize
     }
 
 

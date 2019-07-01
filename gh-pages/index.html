@@ -19,23 +19,20 @@
 
 <body class="loading">
 <script>
-    (function () {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect !== location.href) {
-            history.replaceState(null, null, redirect);
-        }
 
-        // Real Stuff
-        console.time("loading");
-        var app = Object.values(Elm)[0].init({ flags: { url: "/demo.bin" } });
-        app.ports.start.subscribe(function () {
-            console.timeEnd("loading");
-            document.body.className = "loaded";
-        });
+    var redirect = sessionStorage.redirect;
+    delete sessionStorage.redirect;
+    if (redirect && redirect !== location.href) {
+        history.replaceState(null, null, redirect);
+    }
 
-
-    })();
+    // Real Stuff
+    console.time("loading");
+    var app = Object.values(Elm)[0].init({ flags: { url: "/demo.bin" } });
+    app.ports.start.subscribe(function () {
+        console.timeEnd("loading");
+        document.body.className = "loaded";
+    });
 </script>
 <!--<kbd>Ctrl</kbd> + <kbd>F</kbd>-->
 </body>

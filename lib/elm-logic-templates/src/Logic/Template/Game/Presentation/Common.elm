@@ -37,7 +37,6 @@ type alias PresentationWorld =
         , sprites : Logic.Component.Set Sprite
         , physics : AABB.World Int
         , input : Logic.Template.Input.InputSingleton
-        , projectile : Projectile
         , render : RenderInfo
         , onScreen : TwoButtonStick {}
         , animation : Logic.Component.Set TimeLine.NotSimple
@@ -78,7 +77,6 @@ empty =
     , sprites = Sprite.empty
     , input = Logic.Template.Input.empty
     , physics = { physics | gravity = { x = 0, y = -1.5 } }
-    , projectile = Projectile.empty
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick
     , animation = TimeLine.empty

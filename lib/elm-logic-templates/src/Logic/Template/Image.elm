@@ -15,7 +15,7 @@ type alias Model a =
         , offset : Vec2
         , uTransparentColor : Vec3
         , image : Texture
-        , size : Vec2
+        , uSize : Vec2
     }
 
 
@@ -68,14 +68,14 @@ fragmentShaderRepeat =
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
-        uniform vec2 size;
+        uniform vec2 uSize;
 
         void main () {
             //(2i + 1)/(2N) Pixel center
 //            vec2 pixel = (floor(uv * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
             vec2 pixel = (floor(uv / px
 //            + viewportOffset * scrollRatio
-            ) + 0.5 ) / size;
+            ) + 0.5 ) / uSize;
 //            fract(pixel)
             gl_FragColor = texture2D(image, mod(pixel, 1.0));
             gl_FragColor.rgb *= gl_FragColor.a;
@@ -93,14 +93,14 @@ fragmentShaderRepeatX =
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
-        uniform vec2 size;
+        uniform vec2 uSize;
 
         void main () {
             //(2i + 1)/(2N) Pixel center
 //            vec2 pixel = (floor(uv * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
             vec2 pixel = (floor(uv / px
 //            + viewportOffset * scrollRatio
-            ) + 0.5 ) / size;
+            ) + 0.5 ) / uSize;
             gl_FragColor = texture2D(image, mod(pixel, 1.0));
             gl_FragColor.a *= float(pixel.y <= 1.0);
             gl_FragColor.rgb *= gl_FragColor.a;
@@ -118,14 +118,14 @@ fragmentShaderRepeatY =
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
-        uniform vec2 size;
+        uniform vec2 uSize;
 
         void main () {
             //(2i + 1)/(2N) Pixel center
 //            vec2 pixel = (floor(uv * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
             vec2 pixel = (floor(uv / px
 //            + viewportOffset * scrollRatio
-            ) + 0.5 ) / size;
+            ) + 0.5 ) / uSize;
             gl_FragColor = texture2D(image, mod(pixel, 1.0));
             gl_FragColor.a *= float(pixel.x <= 1.0);
             gl_FragColor.rgb *= gl_FragColor.a;
@@ -143,14 +143,14 @@ fragmentShaderNoRepeat =
         uniform float px;
         uniform vec2 offset;
 //        uniform vec2 scrollRatio;
-        uniform vec2 size;
+        uniform vec2 uSize;
 
         void main () {
             //(2i + 1)/(2N) Pixel center
 //            vec2 pixel = (floor(uv * pixelsPerUnit + viewportOffset * scrollRatio) + 0.5 ) / size;
             vec2 pixel = (floor(uv / px
 //            + viewportOffset * scrollRatio
-            ) + 0.5 ) / size;
+            ) + 0.5 ) / uSize;
             gl_FragColor = texture2D(image, pixel);
             gl_FragColor.a *= float(pixel.x <= 1.0) * float(pixel.y <= 1.0);
             gl_FragColor.rgb *= gl_FragColor.a;

@@ -42,7 +42,7 @@ after_success:
   - mkdir -p ./gh-pages/images
   - posthtml ./gh-pages/index.html -o ./gh-pages/index.html -c posthtml.config.js
   - audiosprite --format howler2 --loop Background --output ./gh-pages/pack/audiosprite ./gh-pages/assets/sounds/*.wav ./gh-pages/assets/sounds/*.mp3 -u ./pack
-  - node build-assets.js
+  - node build-assets.js assets/demo.json
 
 
 

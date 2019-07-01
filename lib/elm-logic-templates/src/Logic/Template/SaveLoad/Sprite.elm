@@ -42,7 +42,7 @@ decode spec_ getTexture =
     let
         decoder =
             D.succeed
-                (\uTileUV atlasFirstGid uTransparentColor uMirror uAtlasSize uP id ->
+                (\id uP uAtlasSize uMirror uTransparentColor atlasFirstGid uTileUV ->
                     case getTexture Atlas atlasFirstGid of
                         Just uAtlas ->
                             D.succeed
@@ -60,13 +60,13 @@ decode spec_ getTexture =
                         Nothing ->
                             D.fail
                 )
-                |> D.andMap D.xyzw
                 |> D.andMap D.id
+                |> D.andMap D.xy
+                |> D.andMap D.xy
+                |> D.andMap D.xy
                 |> D.andMap D.xyz
-                |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.xy
                 |> D.andMap D.id
+                |> D.andMap D.xyzw
                 |> D.andThen identity
     in
     D.list decoder

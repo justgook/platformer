@@ -34,9 +34,11 @@ all =
     , webGL
     , tea
     , tileLayer
-    , spaceShader
+
+    --    , spaceShader
     , soundComponent
-    , animationComponent
+
+    --    , animationComponent
     , decodeKeyboard
     , virtualGamepad
     , collision
@@ -53,7 +55,7 @@ all =
 epilogue : Content msg
 epilogue =
     [ section [ class "aligncenter" ]
-        [ h1 [] [ text "Epilogue" ]
+        [ h1 [] [ text "Questions || Suggestions" ]
         ]
     ]
 
@@ -66,6 +68,7 @@ whatNext =
             [ li [] [ text "Isometric render" ]
             , li [] [ text "3D render" ]
             , li [] [ text "Multiplayer (ports - WS / WebRTC)" ]
+            , li [] [ text "Tests?.. elm-webdriver" ]
             ]
         ]
     ]
@@ -105,8 +108,9 @@ libraries =
         , ul []
             [ li [] [ text "Tiled Json Encode & Decode" ]
             , li [] [ text "Game Logic ECS" ]
+            , li [] [ text "*Game Logic Templates" ]
             , li [] [ text "Image BMP Encode" ]
-            , li [] [ text "Collision" ]
+            , li [] [ text "2D Collision" ]
             ]
         ]
     ]
@@ -210,6 +214,7 @@ tileLayer : Content msg
 tileLayer =
     [ section []
         [ h1 [] [ text "Tile Layer" ]
+        , h1 [] [ text "or Batch Rendering" ]
         , div [ style "display" "flex", style "padding-top" "1em" ]
             [ img
                 [ src "/2019/spelunky0.png"
@@ -292,7 +297,7 @@ technologies =
         [ h1 [] [ text "Technologies" ]
         , ul []
             [ li [] [ text "Level Editor - JSON, XML, ", u "Tiled" ]
-            , li [] [ text "Game logic - ", u "ECS", text ", Scene tree, Entities" ]
+            , li [] [ text "Game logic - ", u "ECS", text ", Scene tree, Actors" ]
             , li [] [ text "Render - HTML, SVG, Canvas, ", u "WebGL" ]
             ]
         ]
