@@ -1,10 +1,10 @@
-port module Logic.Launcher exposing (Document, Error(..), Launcher, World, document, task, worker)
+module Logic.Launcher exposing (Document, Error(..), Launcher, World, document, task, worker)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Logic.GameFlow
 import Task exposing (Task)
-import VirtualDom
+import Html exposing (Html)
 
 
 type Error
@@ -28,8 +28,6 @@ type Model world
     | Fail Error
 
 
-port start : () -> Cmd msg
-
 
 type alias Launcher flags world =
     Program flags (Model world) (Message world)
@@ -39,7 +37,7 @@ type alias Document flags world =
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
     , update : World world -> ( World world, Cmd (Message world) )
-    , view : World world -> List (VirtualDom.Node (World world -> World world))
+    , view : World world -> List (Html (World world -> World world))
     }
 
 
@@ -156,11 +154,11 @@ updateWrapper update ( w, cmd ) =
 
 view_ :
     (World world
-     -> List (VirtualDom.Node (World world -> World world))
+     -> List (Html (World world -> World world))
     )
     -> Model world
     ->
-        { body : List (VirtualDom.Node (Message world))
+        { body : List (Html (Message world))
         , title : String
         }
 view_ view model =
@@ -169,7 +167,7 @@ view_ view model =
             { title = "Success"
             , body =
                 view world
-                    |> List.map (VirtualDom.map Event)
+                    |> List.map (Html.map Event)
             }
 
         Loading ->

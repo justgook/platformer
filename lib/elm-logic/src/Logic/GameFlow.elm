@@ -1,6 +1,8 @@
 module Logic.GameFlow exposing (GameFlow(..), Model, update, updateWith)
 
-
+{-|
+@docs GameFlow, Model, update, updateWith
+-}
 type alias Model a =
     { a
         | frame : Int
