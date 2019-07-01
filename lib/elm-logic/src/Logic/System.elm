@@ -1,27 +1,37 @@
 module Logic.System exposing
-    ( SetsReducer2
-    , SetsReducer3
-    , SetsReducer4
-    , System
-    , TupleSystem
-    , UnfinishedSystem
-    , andMap
+    ( System
+    , step, step2, step3, step4
+    , foldl, foldl2, foldl3, foldl4
+    , indexedFoldl, indexedFoldl2, indexedFoldl3
     , applyIf
-    , end
-    , endCustom
-    , foldl
-    , foldl2
-    , foldl3
-    , foldl4
-    , indexedFoldl
-    , indexedFoldl2
-    , indexedFoldl3
-    , start
-    , step
-    , step2
-    , step3
-    , step4
+    , UnfinishedSystem, start, andMap, end, endCustom
+    , SetsReducer2, SetsReducer3, SetsReducer4
     )
+
+{-| Main logic driver is `System` that is what used to step each game-loop and update `World`
+
+@docs System
+@docs step, step2, step3, step4
+
+@docs foldl, foldl2, foldl3, foldl4
+@docs indexedFoldl, indexedFoldl2, indexedFoldl3
+
+
+# Util
+
+@docs applyIf
+
+
+# Custom Systems
+
+@docs UnfinishedSystem, start, andMap, end, endCustom
+
+
+# Helper types
+
+@docs SetsReducer2, SetsReducer3, SetsReducer4
+
+-}
 
 import Array
 import Logic.Component as Component
@@ -29,14 +39,12 @@ import Logic.Entity exposing (EntityID)
 import Logic.Internal exposing (indexedFoldlArray, indexedMap2)
 
 
+{-| -}
 type alias System world =
     world -> world
 
 
-type alias TupleSystem world acc =
-    ( world, acc ) -> ( world, acc )
-
-
+{-| -}
 type UnfinishedSystem world acc next func
     = UnfinishedSystem
         { acc : next -> acc
@@ -50,6 +58,7 @@ type UnfinishedSystem world acc next func
         }
 
 
+{-| -}
 foldl : (comp1 -> acc -> acc) -> Component.Set comp1 -> acc -> acc
 foldl f comp1 acc_ =
     Array.foldl
@@ -60,6 +69,7 @@ foldl f comp1 acc_ =
         comp1
 
 
+{-| -}
 indexedFoldl : (EntityID -> comp1 -> acc -> acc) -> Component.Set comp1 -> acc -> acc
 indexedFoldl f comp1 acc_ =
     indexedFoldlArray
@@ -70,6 +80,7 @@ indexedFoldl f comp1 acc_ =
         comp1
 
 
+{-| -}
 foldl2 : (comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc
 foldl2 f comp1 comp2 acc_ =
     indexedFoldlArray
@@ -86,6 +97,7 @@ foldl2 f comp1 comp2 acc_ =
         comp1
 
 
+{-| -}
 indexedFoldl2 : (Int -> comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc
 indexedFoldl2 f comp1 comp2 acc_ =
     indexedFoldlArray
@@ -103,6 +115,7 @@ indexedFoldl2 f comp1 comp2 acc_ =
         comp1
 
 
+{-| -}
 foldl3 : (comp1 -> comp2 -> comp3 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> Component.Set comp3 -> acc -> acc
 foldl3 f comp1 comp2 comp3 acc_ =
     indexedFoldlArray
@@ -126,6 +139,7 @@ foldl3 f comp1 comp2 comp3 acc_ =
         comp1
 
 
+{-| -}
 indexedFoldl3 : (EntityID -> comp1 -> comp2 -> comp3 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> Component.Set comp3 -> acc -> acc
 indexedFoldl3 f comp1 comp2 comp3 acc_ =
     indexedFoldlArray
@@ -149,6 +163,7 @@ indexedFoldl3 f comp1 comp2 comp3 acc_ =
         comp1
 
 
+{-| -}
 foldl4 :
     (comp1 -> comp2 -> comp3 -> comp4 -> acc -> acc)
     -> Component.Set comp1
@@ -217,6 +232,7 @@ start f spec world =
         }
 
 
+{-| -}
 andMap :
     Component.Spec comp world
     -> UnfinishedSystem world acc ( Component.Set comp, next ) (( comp, comp -> acc -> acc ) -> newFunc)
@@ -261,6 +277,7 @@ andMap spec (UnfinishedSystem { world, acc, apply, arrayFunction, itemsFromAcc }
         }
 
 
+{-| -}
 end : UnfinishedSystem world acc () (acc -> acc) -> world
 end (UnfinishedSystem { world, acc, arrayFunction, apply }) =
     Array.foldl
@@ -273,6 +290,7 @@ end (UnfinishedSystem { world, acc, arrayFunction, apply }) =
         |> apply world
 
 
+{-| -}
 endCustom : custom -> UnfinishedSystem world acc () (( acc, custom ) -> ( acc, custom )) -> ( world, custom )
 endCustom custom (UnfinishedSystem { world, acc, arrayFunction, apply }) =
     Array.foldl
@@ -285,11 +303,14 @@ endCustom custom (UnfinishedSystem { world, acc, arrayFunction, apply }) =
         |> Tuple.mapFirst (apply world)
 
 
+{-| single component mapping, same as List.map - only for `Component.Set` inside `World`
+-}
 step : (comp -> comp) -> Component.Spec comp world -> System world
 step f { get, set } world =
     set (get world |> Array.map (Maybe.map f)) world
 
 
+{-| -}
 type alias SetsReducer2 a b acc =
     ( a, a -> acc -> acc )
     -> ( b, b -> acc -> acc )
@@ -297,6 +318,14 @@ type alias SetsReducer2 a b acc =
     -> acc
 
 
+{-| Example:
+
+    system : Logic.Component.Spec Velocity world -> Logic.Component.Spec Position world -> System world
+       system =
+           Logic.System.step2
+               (\( velocity, _ ) ( pos, setPos ) -> setPos (Vec2.add velocity pos))
+
+-}
 step2 :
     SetsReducer2 a b { a : Component.Set a, b : Component.Set b }
     -> Component.Spec a world
@@ -335,6 +364,7 @@ step2 f spec1 spec2 world =
         |> applyIf (result.b /= combined.b) (spec2.set result.b)
 
 
+{-| -}
 applyIf : Bool -> (a -> a) -> a -> a
 applyIf bool f world =
     if bool then
@@ -344,6 +374,7 @@ applyIf bool f world =
         world
 
 
+{-| -}
 type alias SetsReducer3 a b c acc =
     ( a, a -> acc -> acc )
     -> ( b, b -> acc -> acc )
@@ -352,6 +383,8 @@ type alias SetsReducer3 a b c acc =
     -> acc
 
 
+{-| same as [`step2`](#step2) only with 3 components
+-}
 step3 :
     SetsReducer3 a b c { a : Component.Set a, b : Component.Set b, c : Component.Set c }
     -> Component.Spec a world
@@ -399,6 +432,7 @@ step3 f spec1 spec2 spec3 world =
         |> applyIf (result.c /= combined.c) (spec3.set result.c)
 
 
+{-| -}
 type alias SetsReducer4 a b c d acc =
     ( a, a -> acc -> acc )
     -> ( b, b -> acc -> acc )
@@ -408,6 +442,8 @@ type alias SetsReducer4 a b c d acc =
     -> acc
 
 
+{-| same as [`step2`](#step2) only with 4 components
+-}
 step4 :
     SetsReducer4 a b c d { a : Component.Set a, b : Component.Set b, c : Component.Set c, d : Component.Set d }
     -> Component.Spec a world

@@ -1,7 +1,13 @@
-module Logic.GameFlow exposing (GameFlow(..), Model, update, updateWith)
+module Logic.GameFlow exposing (GameFlow(..), update, Model, updateWith, ExtendedModel)
 
 {-|
-@docs GameFlow, Model, update, updateWith
+
+@docs GameFlow, update, Model, updateWith, ExtendedModel
+
+-}
+
+
+{-| Extendable Model to run inside update
 -}
 type alias Model a =
     { a
@@ -11,6 +17,13 @@ type alias Model a =
     }
 
 
+{-| game flow for update function
+
+1.  `Running` - runs in normal way 60FPS
+2.  `Pause` - game is stopped, and no `Systems` is running
+3.  `SlowMotion { frames = 60, fps = 20 }` - will run game **20FPS** for next **60** frames (3s)
+
+-}
 type GameFlow
     = Running
     | Pause
@@ -22,10 +35,13 @@ default =
     { fps = 60 }
 
 
+{-| -}
 type alias ExtendedModel a b =
     ( Model a, b )
 
 
+{-| same as update, but instead of Model, takes tuple, to make same output as default Elm update function
+-}
 updateWith : (ExtendedModel a b -> ExtendedModel a b) -> Float -> ExtendedModel a b -> ExtendedModel a b
 updateWith systems delta (( world, _ ) as model) =
     let
@@ -63,6 +79,7 @@ updateWith systems delta (( world, _ ) as model) =
            )
 
 
+{-| -}
 update : (Model a -> Model a) -> Float -> Model a -> Model a
 update systems delta model =
     let

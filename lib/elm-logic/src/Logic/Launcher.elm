@@ -1,16 +1,30 @@
-module Logic.Launcher exposing (Document, Error(..), Launcher, World, document, task, worker)
+module Logic.Launcher exposing
+    ( document
+    , Document, Error(..), Launcher, World, task, worker
+    )
+
+{-|
+
+@docs document
+@docs Document, Error, Launcher, World, task, worker
+
+-}
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
+import Html exposing (Html)
 import Logic.GameFlow
 import Task exposing (Task)
-import Html exposing (Html)
 
 
+{-| Error type to hold all error of game init
+-}
 type Error
     = Error Int String
 
 
+{-| just alias to `Logic.GameFlow.Model world`
+-}
 type alias World world =
     Logic.GameFlow.Model world
 
@@ -28,11 +42,19 @@ type Model world
     | Fail Error
 
 
-
+{-| -}
 type alias Launcher flags world =
     Program flags (Model world) (Message world)
 
 
+{-| difference from `Browser.document`:
+
+1.  `init` takes as argument flags and returns Task, that results in world or fail (90% of games any way need get some data to start, images, level data, connection, etc.)
+2.  `subscriptions` instead of returning msg - should return new `World`
+3.  `update` have no `Msg` input
+4.  `view` instead of `Msg` event have to return function
+
+-}
 type alias Document flags world =
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
@@ -41,6 +63,8 @@ type alias Document flags world =
     }
 
 
+{-| Main entry point, but have few difference from `Browser.document`
+-}
 document : Document flags world -> Launcher flags world
 document { init, update, view, subscriptions } =
     Browser.document
@@ -51,6 +75,8 @@ document { init, update, view, subscriptions } =
         }
 
 
+{-| Main entry point, but have few difference from `Platform.worker`
+-}
 worker :
     { init : flags -> Task.Task Error (World world)
     , subscriptions : World world -> Sub (World world)
@@ -65,6 +91,8 @@ worker { init, update, subscriptions } =
         }
 
 
+{-| Helper function, that allow convert `Task` into Cmd - for loading new `World` after `init`
+-}
 task : (Result x a -> World world -> World world) -> Task.Task x a -> Cmd (Message world)
 task f t =
     Task.attempt (f >> Event) t
@@ -135,7 +163,7 @@ update_ update msg model =
             ( Succeed (f world), Cmd.none )
 
         ( Resource (Succeed world), Loading ) ->
-            ( Succeed world, start () )
+            ( Succeed world, Cmd.none )
 
         ( Resource resource, _ ) ->
             ( resource, Cmd.none )

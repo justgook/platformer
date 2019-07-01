@@ -16,9 +16,7 @@
     "dependencies": {
         "elm/browser": "1.0.1 <= v < 2.0.0",
         "elm/core": "1.0.2 <= v < 2.0.0",
-        "elm/html": "1.0.0 <= v < 2.0.0",
-        "elm-explorations/benchmark": "1.0.1 <= v < 2.0.0",
-        "elm-explorations/linear-algebra": "1.0.3 <= v < 2.0.0"
+        "elm/html": "1.0.0 <= v < 2.0.0"
     },
     "test-dependencies": {
         "elm-explorations/test": "1.0.0 <= v < 2.0.0"
