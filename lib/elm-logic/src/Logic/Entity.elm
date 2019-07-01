@@ -92,7 +92,7 @@ with ( { get, set }, component ) ( entityID, world ) =
     ( entityID, updatedWorld )
 
 
-{-| Safe way to create component, same as setComponent, only if index is out of range Component.Set will be stretched
+{-| Safe way to create component, same as setComponent, only if index is out of range Component.Set will be stretched\\
 -}
 spawnComponent : EntityID -> a -> Component.Set a -> Component.Set a
 spawnComponent index value components =
