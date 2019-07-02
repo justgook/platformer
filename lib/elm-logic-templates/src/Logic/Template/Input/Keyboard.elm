@@ -72,14 +72,17 @@ updateKeys { get, set } update keyChanged world pressed =
                                 |> Maybe.map
                                     (\comp ->
                                         let
+                                            actionSet =
+                                                update action comp.action
+
                                             { x, y } =
-                                                arrows comp pressed
+                                                arrows2 keyNames actionSet
                                         in
                                         Entity.spawnComponent id
                                             { comp
                                                 | x = x
                                                 , y = y
-                                                , action = update action comp.action
+                                                , action = actionSet
                                             }
                                             input.comps
                                     )
@@ -92,21 +95,32 @@ updateKeys { get, set } update keyChanged world pressed =
         Decode.succeed (set { updatedInput | pressed = pressed } world)
 
 
-arrows : { a | down : comparable, left : comparable, right : comparable, up : comparable } -> Set comparable -> { x : Float, y : Float }
-arrows { up, right, down, left } keys =
+keyNames : { down : String, left : String, right : String, up : String }
+keyNames =
+    { left = "Move.west"
+    , right = "Move.east"
+    , down = "Move.south"
+    , up = "Move.north"
+    }
+
+
+arrows2 : { a | down : String, left : String, right : String, up : String } -> Set String -> { x : Float, y : Float }
+arrows2 config actions =
     let
+        key =
+            { up = Set.member config.up actions |> boolToFloat
+            , right = Set.member config.right actions |> boolToFloat
+            , down = Set.member config.down actions |> boolToFloat
+            , left = Set.member config.left actions |> boolToFloat
+            }
+
         x =
-            keyToInt right keys - keyToInt left keys
+            key.right - key.left
 
         y =
-            keyToInt up keys - keyToInt down keys
+            key.up - key.down
     in
     { x = x, y = y }
-
-
-keyToInt : comparable -> Set comparable -> Float
-keyToInt key =
-    Set.member key >> boolToFloat
 
 
 boolToFloat : Bool -> Float

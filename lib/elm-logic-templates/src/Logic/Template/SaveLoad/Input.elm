@@ -50,28 +50,11 @@ decode spec_ =
                         let
                             newInfo =
                                 List.foldl
-                                    (\( key, ( id, action ) ) acc ->
+                                    (\( _, ( id, _ ) ) acc ->
                                         let
                                             comp =
                                                 Entity.getComponent id acc.comps
                                                     |> Maybe.withDefault emptyComp
-                                                    |> (\c ->
-                                                            case action of
-                                                                "Move.south" ->
-                                                                    { c | down = key }
-
-                                                                "Move.west" ->
-                                                                    { c | left = key }
-
-                                                                "Move.east" ->
-                                                                    { c | right = key }
-
-                                                                "Move.north" ->
-                                                                    { c | up = key }
-
-                                                                _ ->
-                                                                    c
-                                                       )
                                         in
                                         { acc
                                             | comps = Entity.spawnComponent id comp acc.comps
@@ -131,18 +114,6 @@ read spec =
                     Maybe.withDefault emptyComp comp_
             in
             case dir of
-                PropString "Move.south" ->
-                    ( Just { comp | down = key }, Dict.insert key ( entityId, "Move.south" ) registered_ )
-
-                PropString "Move.west" ->
-                    ( Just { comp | left = key }, Dict.insert key ( entityId, "Move.west" ) registered_ )
-
-                PropString "Move.east" ->
-                    ( Just { comp | right = key }, Dict.insert key ( entityId, "Move.east" ) registered_ )
-
-                PropString "Move.north" ->
-                    ( Just { comp | up = key }, Dict.insert key ( entityId, "Move.north" ) registered_ )
-
                 PropString other ->
                     ( Just comp, Dict.insert key ( entityId, other ) registered_ )
 

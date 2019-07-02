@@ -10,10 +10,6 @@ import Set
 type alias Input =
     { x : Float
     , y : Float
-    , down : String
-    , left : String
-    , right : String
-    , up : String
     , action : Set.Set String
     }
 
@@ -29,10 +25,6 @@ emptyComp : Input
 emptyComp =
     { x = 0
     , y = 0
-    , down = ""
-    , left = ""
-    , right = ""
-    , up = ""
     , action = Set.empty
     }
 
