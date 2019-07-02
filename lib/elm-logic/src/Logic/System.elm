@@ -98,7 +98,7 @@ foldl2 f comp1 comp2 acc_ =
 
 
 {-| -}
-indexedFoldl2 : (Int -> comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc
+indexedFoldl2 : (EntityID -> comp1 -> comp2 -> acc -> acc) -> Component.Set comp1 -> Component.Set comp2 -> acc -> acc
 indexedFoldl2 f comp1 comp2 acc_ =
     indexedFoldlArray
         (\n value1 acc ->
@@ -198,7 +198,7 @@ foldl4 f comp1 comp2 comp3 comp4 acc_ =
         comp1
 
 
-{-| 3 times slower then `foldN`
+{-| 3 times slower than `foldN`
 -}
 start :
     (( comp, acc -> ( Array.Array (Maybe acc), next ) -> ( Array.Array (Maybe acc), next ) ) -> func)

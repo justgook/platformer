@@ -15,7 +15,7 @@ type alias Set comp =
     Array (Maybe comp)
 
 
-{-| Component specification, how to get `Component.Set` from and world, and set back into world (used by Systems)
+{-| Component specification, how to get `Component.Set` from world and set back into world (mainly used by Systems)
 -}
 type alias Spec comp world =
     { get : world -> Set comp

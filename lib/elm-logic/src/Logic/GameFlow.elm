@@ -21,7 +21,7 @@ type alias Model a =
 
 1.  `Running` - runs in normal way 60FPS
 2.  `Pause` - game is stopped, and no `Systems` is running
-3.  `SlowMotion { frames = 60, fps = 20 }` - will run game **20FPS** for next **60** frames (3s)
+3.  `SlowMotion { frames = 30, fps = 20 }` - will run game **20FPS** for next **30** frames (1.5s) and then return to normal flow (`Running`)
 
 -}
 type GameFlow
@@ -40,7 +40,7 @@ type alias ExtendedModel a b =
     ( Model a, b )
 
 
-{-| same as update, but instead of Model, takes tuple, to make same output as default Elm update function
+{-| same as `update`, but instead of World, it takes tuple, to make same output as default TEA `update` function
 -}
 updateWith : (ExtendedModel a b -> ExtendedModel a b) -> Float -> ExtendedModel a b -> ExtendedModel a b
 updateWith systems delta (( world, _ ) as model) =
