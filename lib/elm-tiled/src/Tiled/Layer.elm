@@ -17,7 +17,11 @@ module Tiled.Layer exposing
 
 -}
 
+import Base64
+import Bytes exposing (Endianness(..))
+import Bytes.Decode
 import Dict exposing (Dict)
+import Inflate exposing (inflate)
 import Json.Decode as Decode exposing (Decoder, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
@@ -237,22 +241,36 @@ decodeTileChunkedData =
 decodeTileData : String -> String -> Decoder (List Int)
 decodeTileData encoding compression =
     if compression /= "none" then
-        -- https://package.elm-lang.org/packages/jxxcarlson/elm-tar/latest/Tar
         Decode.fail "Tile layer compression not supported yet"
 
     else if encoding == "base64" then
-        Decode.fail "Tile layer encoded not supported yet"
-        --     Decode.string
-        --         |> Decode.andThen
-        --             (\string ->
-        --                 string
-        --                     |> BinaryBase64.decode
-        --                     |> Result.map (\data -> Decode.succeed (convertTilesData data))
-        --                     |> resultExtract (\err -> Decode.fail err)
-        --             )
+        Decode.string
+            |> Decode.andThen
+                (\string ->
+                    string
+                        |> Base64.toBytes
+                        |> Maybe.andThen (\bytes -> Bytes.Decode.decode (listOfBytes (Bytes.width bytes // 4) (Bytes.Decode.unsignedInt32 LE)) bytes)
+                        |> Maybe.map List.reverse
+                        |> Maybe.map Decode.succeed
+                        |> Maybe.withDefault (Decode.fail "Tile layer base64 encoded fail to decoding")
+                )
 
     else
         Decode.list Decode.int
+
+
+listOfBytes : Int -> Bytes.Decode.Decoder a -> Bytes.Decode.Decoder (List a)
+listOfBytes len decoder =
+    Bytes.Decode.loop ( len, [] ) (listStep decoder)
+
+
+listStep : Bytes.Decode.Decoder a -> ( Int, List a ) -> Bytes.Decode.Decoder (Bytes.Decode.Step ( Int, List a ) (List a))
+listStep decoder ( n, xs ) =
+    if n <= 0 then
+        Bytes.Decode.succeed (Bytes.Decode.Done xs)
+
+    else
+        Bytes.Decode.map (\x -> Bytes.Decode.Loop ( n - 1, x :: xs )) decoder
 
 
 decodeChunk : String -> String -> Decoder Chunk
