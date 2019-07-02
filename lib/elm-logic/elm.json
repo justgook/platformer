@@ -1,6 +1,6 @@
 {
     "type": "package",
-    "name": "justgook/elm-logic",
+    "name": "justgook/elm-game-logic",
     "summary": "An ECS library for Elm. Provides an easy way to build a full game",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
