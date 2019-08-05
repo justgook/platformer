@@ -1,4 +1,4 @@
-module Image.Internal exposing (unsignedInt24)
+module Image.Internal.Encode exposing (unsignedInt24)
 
 import Bitwise exposing (and, shiftRightBy)
 import Bytes exposing (Endianness)

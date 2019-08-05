@@ -1,4 +1,3 @@
-elm-stuff/
 #Logs
 logs
 *.log
@@ -9,6 +8,11 @@ elm-stuff/
 assets/
 gh-pages/assets
 gh-pages/assets/
+
+# Develop
+examples/index.html
+examples/bundle.js
+
 # Yarn Integrity file
 .yarn-integrity
 
