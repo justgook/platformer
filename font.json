@@ -1,0 +1,14 @@
+{ "columns":59,
+ "image":"kromasky_16x16.png",
+ "imageheight":16,
+ "imagewidth":944,
+ "margin":0,
+ "name":"kromasky_16x16",
+ "spacing":0,
+ "tilecount":59,
+ "tiledversion":"1.2.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":1.2
+}
