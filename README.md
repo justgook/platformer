@@ -1,5 +1,5 @@
 ## Custom Level properties
-  1. `pixelPerUnit` - `float` - (Default `160.0`) - height in pixels of viewport vertically (horizontally adjusting based on screen ratio)
+  1. `pixelsPerUnit` - `float` - (Default `160.0`) - height in pixels of viewport vertically (horizontally adjusting based on screen ratio)
   1. `offset.x` - `float` - (Default `0`) camera offset of left-bottom corner by **horizontal** axis in pixels
   1. `offset.y` - `float` - (Default `0`) camera offset of left-bottom corner by **vertical** axis in pixels
   1. `gravitiy` - `float` - (Default `-1.0`) - acceleration pixels pers second each second
