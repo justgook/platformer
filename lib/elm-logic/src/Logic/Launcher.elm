@@ -1,12 +1,14 @@
 module Logic.Launcher exposing
-    ( document
-    , Document, Error(..), Launcher, World, task, worker
+    ( document, task, worker
+    , Message, Document, Error(..), Launcher, World
+    , inline
     )
 
 {-|
 
-@docs document
-@docs Document, Error, Launcher, World, task, worker
+@docs document, task, worker
+@docs Message, Document, Error, Launcher, World
+@docs inline
 
 -}
 
@@ -14,7 +16,7 @@ import Browser exposing (Document, UrlRequest(..))
 import Browser.Events as Browser
 import Html exposing (Html)
 import Logic.GameFlow
-import Task exposing (Task)
+import Task
 
 
 {-| Error type to hold all error of game init
@@ -29,6 +31,7 @@ type alias World world =
     Logic.GameFlow.Model world
 
 
+{-| -}
 type Message world
     = Frame Float
     | Subscription (World world)
@@ -65,7 +68,7 @@ type alias Document flags world =
 
 {-| Main entry point, but have few difference from `Browser.document`
 -}
-document : Document flags world -> Launcher flags world
+document : Document flags (World world) -> Launcher flags (World world)
 document { init, update, view, subscriptions } =
     Browser.document
         { init = init_ init
@@ -73,6 +76,26 @@ document { init, update, view, subscriptions } =
         , update = update_ update
         , subscriptions = subscriptions_ subscriptions
         }
+
+
+{-| Instead of creating game as separate application, you can inline it inside your own application
+-}
+inline :
+    { a
+        | update : World world -> ( World world, Cmd (Message world) )
+        , view : world -> List (Html (World world -> World world))
+        , subscriptions : world -> Sub (World world)
+    }
+    ->
+        { view : world -> List (Html (Message world))
+        , update : Message world -> World world -> ( World world, Cmd (Message world) )
+        , subscriptions : world -> Sub (Message world)
+        }
+inline { update, view, subscriptions } =
+    { view = viewSucceed_ view
+    , update = updateSucceed_ update
+    , subscriptions = subscriptionsSucceed_ subscriptions
+    }
 
 
 {-| Main entry point, but have few difference from `Platform.worker`
@@ -145,6 +168,13 @@ subscriptions_ subscriptions model_ =
             Sub.none
 
 
+subscriptionsSucceed_ subscriptions world =
+    [ Browser.onAnimationFrameDelta Frame
+    , subscriptions world |> Sub.map Subscription
+    ]
+        |> Sub.batch
+
+
 update_ :
     (World world -> ( World world, Cmd (Message world) ))
     -> Message world
@@ -159,7 +189,6 @@ update_ update msg model =
             ( Succeed custom, Cmd.none )
 
         ( Event f, Succeed world ) ->
-            --            ( Succeed (f world |> Logic.GameFlow.update update 1), Cmd.none )
             ( Succeed (f world), Cmd.none )
 
         ( Resource (Succeed world), Loading ) ->
@@ -170,6 +199,25 @@ update_ update msg model =
 
         _ ->
             ( model, Cmd.none )
+
+
+updateSucceed_ update msg world =
+    case msg of
+        Frame delta ->
+            Logic.GameFlow.updateWith (updateWrapper update) delta ( world, [] )
+                |> Tuple.mapSecond Cmd.batch
+
+        Event f ->
+            ( f world, Cmd.none )
+
+        Subscription custom ->
+            ( custom, Cmd.none )
+
+        Resource (Succeed resource) ->
+            ( resource, Cmd.none )
+
+        Resource _ ->
+            ( world, Cmd.none )
 
 
 updateWrapper :
@@ -194,8 +242,7 @@ view_ view model =
         Succeed world ->
             { title = "Success"
             , body =
-                view world
-                    |> List.map (Html.map Event)
+                view world |> List.map (Html.map Event)
             }
 
         Loading ->
@@ -206,3 +253,8 @@ view_ view model =
             , body =
                 []
             }
+
+
+viewSucceed_ : (world -> List (Html (World world -> World world))) -> world -> List (Html (Message world))
+viewSucceed_ view world =
+    view world |> List.map (Html.map Event)

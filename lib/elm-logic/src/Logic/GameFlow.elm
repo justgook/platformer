@@ -1,8 +1,12 @@
-module Logic.GameFlow exposing (GameFlow(..), update, Model, updateWith, ExtendedModel)
+module Logic.GameFlow exposing
+    ( GameFlow(..), update, Model, updateWith, ExtendedModel
+    , setFrameRate
+    )
 
 {-|
 
 @docs GameFlow, update, Model, updateWith, ExtendedModel
+@docs setFrameRate
 
 -}
 
@@ -27,12 +31,27 @@ type alias Model a =
 type GameFlow
     = Running
     | Pause
-    | SlowMotion { frames : Int, fps : Int }
+    | SlowMotion { endTime : Float, fps : Int }
 
 
-default : { fps : Float }
-default =
-    { fps = 60 }
+{-| Reduce or increase game FPS for limited amount of time, useful for creating freeze frame, or debugging some systems frame by frame
+-}
+setFrameRate : { a | time : Float, fps : Int } -> Model world -> Model world
+setFrameRate { time, fps } w =
+    let
+        runtime =
+            w.frame
+                |> resetRuntime (toFloat fps)
+    in
+    { w
+        | runtime_ = runtime
+        , flow = SlowMotion { endTime = runtime + time, fps = fps }
+    }
+
+
+defaultFps : Float
+defaultFps =
+    60
 
 
 {-| -}
@@ -48,31 +67,28 @@ updateWith systems delta (( world, _ ) as model) =
         ( worldWithUpdatedRuntime, countOfFrames ) =
             case world.flow of
                 Running ->
-                    updateRuntime model delta default.fps
+                    updateRuntimeExtended model delta defaultFps
 
                 Pause ->
-                    updateRuntime model delta 0
+                    updateRuntimeExtended model delta 0
 
                 SlowMotion current ->
                     let
                         ( ( newWorld, newWorld2 ), countOfFrames_ ) =
-                            updateRuntime model delta (toFloat current.fps)
-
-                        framesLeft =
-                            current.frames - countOfFrames_
+                            updateRuntimeExtended model delta (toFloat current.fps)
 
                         ( flow, runtime ) =
-                            if framesLeft < 0 then
-                                ( Running, newWorld.frame |> resetRuntime default.fps )
+                            if current.endTime <= world.runtime_ then
+                                ( Running, newWorld.frame |> resetRuntime defaultFps )
 
                             else
-                                ( SlowMotion { current | frames = framesLeft }, newWorld.runtime_ )
+                                ( world.flow, newWorld.runtime_ )
                     in
                     ( ( { newWorld | flow = flow, runtime_ = runtime }, newWorld2 ), countOfFrames_ )
     in
     worldWithUpdatedRuntime
         |> (if countOfFrames > 0 then
-                worldUpdate systems countOfFrames
+                worldUpdateExtended systems countOfFrames
 
             else
                 identity
@@ -86,31 +102,28 @@ update systems delta model =
         ( worldWithUpdatedRuntime, countOfFrames ) =
             case model.flow of
                 Running ->
-                    updateRuntime_ model delta default.fps
+                    updateRuntime model delta defaultFps
 
                 Pause ->
-                    updateRuntime_ model delta 0
+                    updateRuntime model delta 0
 
                 SlowMotion current ->
                     let
                         ( newWorld, countOfFrames_ ) =
-                            updateRuntime_ model delta (toFloat current.fps)
-
-                        framesLeft =
-                            current.frames - countOfFrames_
+                            updateRuntime model delta (toFloat current.fps)
 
                         ( flow, runtime ) =
-                            if framesLeft < 0 then
-                                ( Running, newWorld.frame |> resetRuntime default.fps )
+                            if current.endTime <= model.runtime_ then
+                                ( Running, newWorld.frame |> resetRuntime defaultFps )
 
                             else
-                                ( SlowMotion { current | frames = framesLeft }, newWorld.runtime_ )
+                                ( model.flow, newWorld.runtime_ )
                     in
                     ( { newWorld | flow = flow, runtime_ = runtime }, countOfFrames_ )
     in
     worldWithUpdatedRuntime
         |> (if countOfFrames > 0 then
-                worldUpdate_ systems countOfFrames
+                worldUpdate systems countOfFrames
 
             else
                 identity
@@ -119,32 +132,24 @@ update systems delta model =
 
 resetRuntime : Float -> Int -> Float
 resetRuntime fps frames =
-    toFloat frames / fps
+    if fps > 0 then
+        toFloat frames / fps
+
+    else
+        0
 
 
-updateRuntime : ExtendedModel a b -> Float -> Float -> ( ExtendedModel a b, Int )
-updateRuntime ( world, world2 ) delta fps =
+updateRuntimeExtended : ExtendedModel a b -> Float -> Float -> ( ExtendedModel a b, Int )
+updateRuntimeExtended ( world, world2 ) delta fps =
     let
-        thresholdTime =
-            1 / fps * 12
-
-        deltaSec =
-            delta / 1000
-
-        newRuntime =
-            -- max 12 game frame per one animationFrame event
-            world.runtime_ + min deltaSec thresholdTime
-
-        countOfFrames =
-            (newRuntime * fps - toFloat world.frame)
-                |> min (fps * thresholdTime)
-                |> round
+        ( w1, countOfFrames ) =
+            updateRuntime world delta fps
     in
-    ( ( { world | runtime_ = newRuntime }, world2 ), countOfFrames )
+    ( ( w1, world2 ), countOfFrames )
 
 
-updateRuntime_ : Model a -> Float -> Float -> ( Model a, Int )
-updateRuntime_ model delta fps =
+updateRuntime : Model a -> Float -> Float -> ( Model a, Int )
+updateRuntime model delta fps =
     let
         thresholdTime =
             1 / fps * 12
@@ -164,8 +169,8 @@ updateRuntime_ model delta fps =
     ( { model | runtime_ = newRuntime }, countOfFrames )
 
 
-worldUpdate : (ExtendedModel a b -> ExtendedModel a b) -> Int -> ExtendedModel a b -> ExtendedModel a b
-worldUpdate system framesLeft model =
+worldUpdateExtended : (ExtendedModel a b -> ExtendedModel a b) -> Int -> ExtendedModel a b -> ExtendedModel a b
+worldUpdateExtended system framesLeft model =
     if framesLeft < 1 then
         model
 
@@ -174,11 +179,11 @@ worldUpdate system framesLeft model =
             ( newWorld, newWorld2 ) =
                 system model
         in
-        worldUpdate system (framesLeft - 1) ( { newWorld | frame = newWorld.frame + 1 }, newWorld2 )
+        worldUpdateExtended system (framesLeft - 1) ( { newWorld | frame = newWorld.frame + 1 }, newWorld2 )
 
 
-worldUpdate_ : (Model a -> Model a) -> Int -> Model a -> Model a
-worldUpdate_ system framesLeft model =
+worldUpdate : (Model a -> Model a) -> Int -> Model a -> Model a
+worldUpdate system framesLeft model =
     if framesLeft < 1 then
         model
 
@@ -187,4 +192,4 @@ worldUpdate_ system framesLeft model =
             newModel =
                 system model
         in
-        worldUpdate_ system (framesLeft - 1) { newModel | frame = newModel.frame + 1 }
+        worldUpdate system (framesLeft - 1) { newModel | frame = newModel.frame + 1 }

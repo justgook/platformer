@@ -3,6 +3,7 @@ module Logic.System exposing
     , step, step2, step3, step4
     , foldl, foldl2, foldl3, foldl4
     , indexedFoldl, indexedFoldl2, indexedFoldl3
+    , map, filterMap
     , applyIf
     , UnfinishedSystem, start, andMap, end, endCustom
     , SetsReducer2, SetsReducer3, SetsReducer4
@@ -15,6 +16,7 @@ module Logic.System exposing
 
 @docs foldl, foldl2, foldl3, foldl4
 @docs indexedFoldl, indexedFoldl2, indexedFoldl3
+@docs map, filterMap
 
 
 # Util
@@ -35,7 +37,7 @@ module Logic.System exposing
 
 import Array
 import Logic.Component as Component
-import Logic.Entity exposing (EntityID)
+import Logic.Entity as Entity exposing (EntityID)
 import Logic.Internal exposing (indexedFoldlArray, indexedMap2)
 
 
@@ -502,3 +504,15 @@ step4 f spec1 spec2 spec3 spec4 world =
         |> applyIf (result.b /= combined.b) (spec2.set result.b)
         |> applyIf (result.c /= combined.c) (spec3.set result.c)
         |> applyIf (result.d /= combined.d) (spec4.set result.d)
+
+
+{-| -}
+filterMap : (comp -> Maybe comp) -> Component.Set comp -> Component.Set comp
+filterMap f comps =
+    Array.map (Maybe.andThen f) comps
+
+
+{-| -}
+map : (comp -> comp) -> EntityID -> Component.Set comp -> Component.Set comp
+map f i comps =
+    Array.set i (Entity.get i comps |> Maybe.map f) comps
