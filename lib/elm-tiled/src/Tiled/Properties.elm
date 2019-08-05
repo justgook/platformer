@@ -56,9 +56,8 @@ encode props =
         |> Encode.list
             (\( key, value ) ->
                 Encode.object
-                    ([ ( "name", Encode.string key )
-                     ]
-                        ++ (case value of
+                    (( "name", Encode.string key )
+                        :: (case value of
                                 PropBool v ->
                                     [ ( "type", Encode.string "bool" ), ( "value", Encode.bool v ) ]
 

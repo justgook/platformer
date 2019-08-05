@@ -36,7 +36,11 @@ decode =
 
 
 type alias GidInfo =
-    { gid : Int, fh : Bool, fv : Bool, fd : Bool }
+    { gid : Int
+    , fh : Bool
+    , fv : Bool
+    , fd : Bool
+    }
 
 
 gidInfo : Int -> GidInfo
@@ -72,13 +76,16 @@ cleanGid globalTileId =
         |> Bitwise.and globalTileId
 
 
+flippedHorizontalFlag : Int
 flippedHorizontalFlag =
     0x80000000
 
 
+flippedVerticalFlag : Int
 flippedVerticalFlag =
     0x40000000
 
 
+flippedDiagonalFlag : Int
 flippedDiagonalFlag =
     0x20000000

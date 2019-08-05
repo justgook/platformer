@@ -2,9 +2,9 @@ module Tiled.Tileset exposing
     ( Tileset(..), decode, encode
     , SourceTileData, EmbeddedTileData, ImageCollectionTileData
     , TilesData, ImageCollectionTileDataTile, TilesDataObjectgroup, SpriteAnimation
+    , decodeFile
     , GridData
     , decodeTilesData, encodeTilesData
-    , decodeFile, decodeTiles
     )
 
 {-|
@@ -12,6 +12,11 @@ module Tiled.Tileset exposing
 @docs Tileset, decode, encode
 @docs SourceTileData, EmbeddedTileData, ImageCollectionTileData
 @docs TilesData, ImageCollectionTileDataTile, TilesDataObjectgroup, SpriteAnimation
+
+
+## Decode tileset from file
+
+@docs decodeFile
 
 
 ## Internal stuff
@@ -79,7 +84,7 @@ encode tileset =
              ]
                 |> addAnimationIf data.animation
             )
-                ++ (data.objectgroup |> Maybe.map (\a -> [ ( "objectgroup", encodeTilesDataObjectgroup a ) ]) |> Maybe.withDefault [])
+                ++ (data.objectgroup |> Maybe.map (\a -> [ ( "objectgroup", encodeTilesDataObjectGroup a ) ]) |> Maybe.withDefault [])
                 ++ ([] |> encodeProps data.properties)
                 |> Encode.object
     in
@@ -111,8 +116,7 @@ encode tileset =
                         |> encodeTilesIf data.tiles
                    )
             )
-                ++ [ ( "tilewidth", Encode.int data.tilewidth ) ]
-                ++ transparentcolor data.transparentcolor
+                ++ (( "tilewidth", Encode.int data.tilewidth ) :: transparentcolor data.transparentcolor)
                 |> Encode.object
 
         ImageCollection data ->
@@ -133,6 +137,7 @@ encode tileset =
                 |> Encode.object
 
 
+addAnimationIf : List SpriteAnimation -> (List ( String, Encode.Value ) -> List ( String, Encode.Value ))
 addAnimationIf l =
     if l == [] then
         identity
@@ -141,15 +146,21 @@ addAnimationIf l =
         (::) ( "animation", Encode.list encodeSpriteAnimation l )
 
 
+encodeTilesData : ( Int, TilesDataPlain a ) -> Encode.Value
 encodeTilesData ( id, data ) =
     []
         |> encodeProps data.properties
-        |> (++) (data.objectgroup |> Maybe.map (\a -> [ ( "objectgroup", encodeTilesDataObjectgroup a ) ]) |> Maybe.withDefault [])
+        |> (++)
+            (data.objectgroup
+                |> Maybe.map (\a -> [ ( "objectgroup", encodeTilesDataObjectGroup a ) ])
+                |> Maybe.withDefault []
+            )
         |> addAnimationIf data.animation
         |> (::) ( "id", Encode.int id )
         |> Encode.object
 
 
+encodeProps : Properties -> (List ( String, Encode.Value ) -> List ( String, Encode.Value ))
 encodeProps data =
     if Dict.isEmpty data then
         identity
@@ -158,7 +169,8 @@ encodeProps data =
         (::) ( "properties", Properties.encode data )
 
 
-encodeTilesDataObjectgroup data =
+encodeTilesDataObjectGroup : TilesDataObjectgroup -> Encode.Value
+encodeTilesDataObjectGroup data =
     Encode.object
         [ ( "draworder", Layer.encodeDraworder data.draworder )
         , ( "name", Encode.string data.name )
@@ -171,6 +183,7 @@ encodeTilesDataObjectgroup data =
         ]
 
 
+encodeSpriteAnimation : { a | duration : Int, tileid : Int } -> Encode.Value
 encodeSpriteAnimation data =
     Encode.object
         [ ( "duration", Encode.int data.duration )
@@ -178,17 +191,16 @@ encodeSpriteAnimation data =
         ]
 
 
+type alias Weird =
+    Decoder (Int -> String -> Int -> Int -> Int -> String -> Int -> Int -> Int -> Int -> String -> Dict.Dict Int TilesData -> Properties -> EmbeddedTileData)
+    -> Decoder (String -> Int -> Int -> Int -> String -> Int -> Int -> Int -> Int -> String -> Dict.Dict Int TilesData -> Properties -> EmbeddedTileData)
+
+
 {-| -}
-
-
-
--- decodeEmbeddedTileset : Decoder Tileset
-
-
+decodeEmbeddedTileset : Weird -> Decoder Tileset
 decodeEmbeddedTileset firstgid =
     Decode.succeed EmbeddedTileData
         |> required "columns" Decode.int
-        -- |> required "firstgid" Decode.int
         |> firstgid
         |> required "image" Decode.string
         |> required "imageheight" Decode.int
@@ -281,13 +293,12 @@ decodeSpriteAnimation =
         (Decode.field "tileid" Decode.int)
 
 
-{-| -}
+type alias Weird2 =
+    Decoder (Int -> Int -> String -> Int -> Int -> Int -> Int -> Dict.Dict Int ImageCollectionTileDataTile -> Properties -> Maybe GridData -> ImageCollectionTileData)
+    -> Decoder (Int -> String -> Int -> Int -> Int -> Int -> Dict.Dict Int ImageCollectionTileDataTile -> Properties -> Maybe GridData -> ImageCollectionTileData)
 
 
-
--- decodeImageCollectionTileData : Decode.Decoder Tileset
-
-
+decodeImageCollectionTileData : Weird2 -> Decode.Decoder Tileset
 decodeImageCollectionTileData firstgid =
     Decode.succeed ImageCollectionTileData
         |> required "columns" Decode.int

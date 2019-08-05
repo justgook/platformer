@@ -12,7 +12,7 @@ module Tiled.Object exposing
 
 -}
 
-import Dict exposing (Dict)
+import Dict
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Extra exposing (when)
 import Json.Decode.Pipeline exposing (optional, required)
@@ -60,7 +60,10 @@ type alias Gid =
 
 {-| -}
 type alias PolyPoints =
-    List { x : Float, y : Float }
+    List
+        { x : Float
+        , y : Float
+        }
 
 
 type alias CommonDimension =
@@ -72,7 +75,15 @@ type alias CommonDimensionGid =
 
 
 type alias CommonDimensionPolyPoints =
-    Common (Dimension { points : List { x : Float, y : Float } })
+    Common
+        (Dimension
+            { points :
+                List
+                    { x : Float
+                    , y : Float
+                    }
+            }
+        )
 
 
 commonDimension : Common a -> Dimension a -> CommonDimension
@@ -122,6 +133,7 @@ commonDimensionPolyPoints a b c =
     }
 
 
+encodeProps : Properties -> List ( String, Encode.Value )
 encodeProps data =
     if Dict.isEmpty data then
         []

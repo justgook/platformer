@@ -20,8 +20,8 @@ module Tiled.Layer exposing
 import Base64
 import Bytes exposing (Endianness(..))
 import Bytes.Decode
-import Dict exposing (Dict)
-import Inflate exposing (inflate)
+import Dict
+import Inflate exposing (inflateGZip, inflateZLib)
 import Json.Decode as Decode exposing (Decoder, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
@@ -182,6 +182,7 @@ decodeDraworder =
             )
 
 
+encodeDraworder : DrawOrder -> Encode.Value
 encodeDraworder do =
     (case do of
         TopDown ->
@@ -240,8 +241,32 @@ decodeTileChunkedData =
 
 decodeTileData : String -> String -> Decoder (List Int)
 decodeTileData encoding compression =
-    if compression /= "none" then
-        Decode.fail "Tile layer compression not supported yet"
+    let
+        bytesToList onFail bytes =
+            bytes
+                |> Maybe.andThen (\b -> Bytes.Decode.decode (listOfBytesDecode (Bytes.width b // 4) (Bytes.Decode.unsignedInt32 LE)) b)
+                |> Maybe.map List.reverse
+                |> Maybe.map Decode.succeed
+                |> Maybe.withDefault (Decode.fail onFail)
+    in
+    if compression == "gzip" then
+        Decode.string
+            |> Decode.andThen
+                (Base64.toBytes
+                    >> Maybe.andThen inflateGZip
+                    >> bytesToList "Tile layer gzip compression can not decompress"
+                )
+
+    else if compression == "zlib" then
+        Decode.string
+            |> Decode.andThen
+                (Base64.toBytes
+                    >> Maybe.andThen inflateZLib
+                    >> bytesToList "Tile layer zlib compression can not decompress"
+                )
+
+    else if compression /= "none" then
+        Decode.fail ("Tile layer compression " ++ compression ++ " not supported yet")
 
     else if encoding == "base64" then
         Decode.string
@@ -249,18 +274,15 @@ decodeTileData encoding compression =
                 (\string ->
                     string
                         |> Base64.toBytes
-                        |> Maybe.andThen (\bytes -> Bytes.Decode.decode (listOfBytes (Bytes.width bytes // 4) (Bytes.Decode.unsignedInt32 LE)) bytes)
-                        |> Maybe.map List.reverse
-                        |> Maybe.map Decode.succeed
-                        |> Maybe.withDefault (Decode.fail "Tile layer base64 encoded fail to decoding")
+                        |> bytesToList "Tile layer base64 encoded fail to decoding"
                 )
 
     else
         Decode.list Decode.int
 
 
-listOfBytes : Int -> Bytes.Decode.Decoder a -> Bytes.Decode.Decoder (List a)
-listOfBytes len decoder =
+listOfBytesDecode : Int -> Bytes.Decode.Decoder a -> Bytes.Decode.Decoder (List a)
+listOfBytesDecode len decoder =
     Bytes.Decode.loop ( len, [] ) (listStep decoder)
 
 

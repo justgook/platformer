@@ -191,6 +191,7 @@ encodeStaggered record =
     ]
 
 
+encodeRenderOrder : RenderOrder -> Encode.Value
 encodeRenderOrder ro =
     (case ro of
         RightDown ->
