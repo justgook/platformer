@@ -1,7 +1,7 @@
 module AltMath.Vector2 exposing
     ( Vec2, vec2
     , getX, getY, setX, setY
-    , add, sub, negate, scale, dot, normalize, direction
+    , add, sub, negate, scale, dot, normalize, direction, mul
     , length, lengthSquared, distance, distanceSquared
     , toRecord, fromRecord
     )
@@ -24,7 +24,7 @@ The set functions create a new copy of the vector, updating a single field.
 
 # Operations
 
-@docs add, sub, negate, scale, dot, normalize, direction
+@docs add, sub, negate, scale, dot, normalize, direction, mul
 @docs length, lengthSquared, distance, distanceSquared
 
 
@@ -176,3 +176,10 @@ scale s v2 =
 dot : Vec2 -> Vec2 -> Float
 dot a b =
     a.x * b.x + a.y * b.y
+
+
+{-| Multiply the vector by a vector: a \* b
+-}
+mul : Vec2 -> Vec2 -> Vec2
+mul a b =
+    { x = a.x * b.x, y = a.y * b.y }
