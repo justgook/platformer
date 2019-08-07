@@ -98,3 +98,89 @@ function howlerWrapper(Howl) {
 if (window.Howl) {
     howlerWrapper(window.Howl);
 }
+
+class CustomWebSocket extends HTMLElement {
+    // USE crypto to make "server" (room admin) holder of private and all others uses it public key to exchange messages
+    // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey
+    constructor() {
+        super();
+        this.messagesBuffer = [];
+        this.url = null;
+        this.ws = null;
+        this._reconnectHandeler = null;
+        this.connect = this.connect.bind(this);
+        this._send = this._send.bind(this);
+        this.message = this.message.bind(this);
+        this.onMessage = this.onMessage.bind(this);
+    }
+
+    connectedCallback() {
+        this.url = this.getAttribute("url");
+        this.connect();
+    }
+
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === "url" && oldVal !== newVal) {
+            this.url = newVal;
+            this.connect();
+        }
+    }
+
+    static get observedAttributes() {
+        return ["url"];
+    }
+    set send (msg) {
+        console.log("send (msg)", msg)
+        this._send(msg);
+    }
+    connect(url = this.url) {
+        if (url !== this.url || this.ws === null) {
+            console.log(`Connection::connect (${url})`);
+            this.url = url;
+            if (this.ws != null) this.ws.close();
+            this.ws = new WebSocket(url);
+            this.ws.addEventListener('open', () => {
+                //this.ws.send message for message in this.messagesBuffer
+                this.messagesBuffer.forEach((msg) => this.ws.send(msg));
+                this.messagesBuffer = [];
+                console.log(`Connection::open ${url}`);
+                this.ws.addEventListener('message', this.message);
+            });
+            this.ws.addEventListener('error', (e) => {
+                this.message({ data: "{}", target: { readyState: this.ws.readyState } });
+                console.log(`Connection::error (${url})`);
+            });
+
+            this.ws.addEventListener('close', () => {
+                this.message({ data: "{}", target: { readyState: this.ws.readyState } });
+                console.log(`Connection::close (${url})`);
+            });
+        }
+    }
+
+    // reconnect(url = this.url) {
+    //     this.url = url;
+    //     // this.connecting = true;
+    //     clearTimeout(this._reconnectHandeler);
+    //     this._reconnectHandeler = setTimeout((() => this.connect(url)), 1000);
+    //
+    // }
+
+    onMessage(){
+        this.dispatchEvent(new CustomEvent("message", {
+
+        }));
+    }
+    _send(msg) {
+        if (this.ws.readyState === WebSocket.OPEN)
+            this.ws.send(msg);
+        else
+            this.messagesBuffer.push(msg);
+    }
+
+    message(msg) {
+        this._send(msg);
+    }
+}
+
+window.customElements.define("web-socket", CustomWebSocket);
