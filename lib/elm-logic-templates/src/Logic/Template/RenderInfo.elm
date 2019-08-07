@@ -23,7 +23,7 @@ import Bytes.Encode as E exposing (Encoder)
 import Logic.Component.Singleton as Singleton
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -67,7 +67,7 @@ setInitResize spec__ =
         Browser.getViewport
 
 
-read : Spec world -> Reader world
+read : Spec world -> WorldReader world
 read { get, set } =
     { defaultRead
         | level =

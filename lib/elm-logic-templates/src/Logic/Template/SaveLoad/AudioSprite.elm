@@ -11,7 +11,7 @@ import Logic.Template.Component.SFX as AudioSprite exposing (AudioSprite)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util
@@ -80,7 +80,7 @@ decode spec_ =
         |> D.map (\decoded -> Singleton.update spec_ (\a -> { a | config = decoded }))
 
 
-read : Singleton.Spec AudioSprite world -> Reader world
+read : Singleton.Spec AudioSprite world -> WorldReader world
 read spec =
     { defaultRead
         | level =

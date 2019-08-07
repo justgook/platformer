@@ -132,9 +132,9 @@ enemyHitBoxSpec =
     }
 
 
-spawnPlayerHurtBox : ( EntityID, ( HitPoints, Circles ) ) -> HurtWorld -> HurtWorld
-spawnPlayerHurtBox ( entityID, ( hp, b ) ) w =
-    Entity.with ( playerHurtBoxSpec, HurtBox hp b ) ( entityID, w ) |> Tuple.second
+spawnPlayerHurtBox : ( EntityID, HurtBox ) -> HurtWorld -> HurtWorld
+spawnPlayerHurtBox ( entityID, hurt ) w =
+    Entity.with ( playerHurtBoxSpec, hurt ) ( entityID, w ) |> Tuple.second
 
 
 playerHurtBoxSpec =

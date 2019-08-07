@@ -17,51 +17,36 @@ import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.System exposing (applyIf)
 import Logic.Template.Component.Hurt exposing (Circles, Damage, HurtBox(..), HurtWorld, spawnPlayerHurtBox)
+import Logic.Template.SaveLoad.Input as Input
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), Reader, TileArg, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, GuardReader, Read(..), TileArg, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (getCollision)
 import Tiled.Object exposing (Object(..))
 
 
-read : Singleton.Spec HurtWorld world -> Reader world
+read : Singleton.Spec HurtWorld world -> WorldReader world
 read spec =
-    { defaultRead
-        | objectTile =
-            Async
-                (\info ->
-                    extractHurtBox info
-                        >> ResourceTask.map
-                            (\hurt ->
-                                \( entityID, world ) ->
-                                    --                                    let
-                                    --                                        _ =
-                                    --                                            hurt |> Debug.log "Logic.Template.SaveLoad.Hurt::read"
-                                    --                                    in
-                                    --                                    case Maybe.andThen (.objects >> List.head) col of
-                                    --                                        Just (Ellipse { kind, width }) ->
-                                    --                                            let
-                                    --                                                hitPoints =
-                                    --                                                    (Util.propertiesWithDefault info).int "hp" 100
-                                    --
-                                    --                                                offset =
-                                    --                                                    vec2 0 0
-                                    --                                            in
-                                    --                                            ( entityID
-                                    --                                            , applyIf
-                                    --                                                (kind == "player")
-                                    --                                                (Singleton.update spec
-                                    --                                                    (spawnPlayerHurtBox ( entityID, ( hitPoints, ( offset, width ) ) ))
-                                    --                                                )
-                                    --                                                world
-                                    --                                            )
-                                    --                                        _ ->
-                                    ( entityID, world )
-                            )
-                )
-    }
+    Reader.guard Input.haveInput
+        { defaultRead
+            | objectTile =
+                Async
+                    (\info ->
+                        extractHurtBox info
+                            >> ResourceTask.map
+                                (\hurt_ ->
+                                    \( entityID, world ) ->
+                                        case hurt_ of
+                                            Just hurt ->
+                                                ( entityID, Singleton.update spec (spawnPlayerHurtBox ( entityID, hurt )) world )
+
+                                            Nothing ->
+                                                ( entityID, world )
+                                )
+                    )
+        }
 
 
 extractHurtBox : ExtractAsync TileArg (Maybe HurtBox)

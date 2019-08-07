@@ -3,7 +3,7 @@ module Logic.Template.SaveLoad.ImageLayer exposing (ImageLayer, Repeat(..), read
 import Dict
 import Logic.Component.Singleton as Singleton
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Math.Vector2 exposing (Vec2, vec2)
@@ -29,7 +29,7 @@ type Repeat
     | Repeat
 
 
-read : Singleton.Spec (List ImageLayer) world -> Reader world
+read : Singleton.Spec (List ImageLayer) world -> WorldReader world
 read { set, get } =
     { defaultRead
         | layerImage =

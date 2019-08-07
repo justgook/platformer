@@ -10,7 +10,7 @@ import Logic.Template.Component.Animation as FrameChange exposing (Animation)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (TileUV, boolToFloat)
@@ -19,7 +19,7 @@ import Math.Vector4 as Vec4 exposing (vec4)
 import Tiled.Tileset
 
 
-read : Spec Animation world -> Reader world
+read : Spec Animation world -> WorldReader world
 read spec =
     { defaultRead
         | objectTile =

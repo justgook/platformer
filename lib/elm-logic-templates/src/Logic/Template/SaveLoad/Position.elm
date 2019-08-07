@@ -8,11 +8,11 @@ import Logic.Entity as Entity
 import Logic.Template.Component.Position exposing (Position)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 
 
-read : Logic.Component.Spec Position world -> Reader world
+read : Logic.Component.Spec Position world -> WorldReader world
 read spec =
     { defaultRead
         | objectTile = Sync (\{ x, y } -> Entity.with ( spec, vec2 x y ))

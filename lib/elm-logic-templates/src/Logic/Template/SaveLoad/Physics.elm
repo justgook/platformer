@@ -9,7 +9,7 @@ import Dict
 import Logic.Component.Singleton as Singleton
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (extractObjectGroup)
@@ -82,7 +82,7 @@ decode spec_ =
         staticDecoder
 
 
-read : Singleton.Spec (Collision.Physic.AABB.World Int) world -> Reader world
+read : Singleton.Spec (Collision.Physic.AABB.World Int) world -> WorldReader world
 read spec =
     let
         updateConfig f info =

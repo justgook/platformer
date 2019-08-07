@@ -3,7 +3,7 @@ module Logic.Template.SaveLoad.TileLayer exposing (TileLayer(..), read)
 import Dict exposing (Dict)
 import Logic.Component.Singleton as Component
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, TileDataWith, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), TileDataWith, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
 import Math.Vector2 exposing (Vec2, vec2)
@@ -43,7 +43,7 @@ type TileLayer
         }
 
 
-read : Component.Spec (List TileLayer) world -> Reader world
+read : Component.Spec (List TileLayer) world -> WorldReader world
 read { set, get } =
     { defaultRead
         | layerTile =

@@ -21,7 +21,7 @@ import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.Input
-import Logic.Template.SaveLoad.Internal.Reader exposing (Reader)
+import Logic.Template.SaveLoad.Internal.Reader exposing (WorldReader)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
 import Logic.Template.SaveLoad.Layer exposing (lutCollector)
@@ -176,7 +176,7 @@ subscriptions w =
         ]
 
 
-read : List (Reader World)
+read : List (WorldReader World)
 read =
     [ Logic.Template.SaveLoad.Layer.read Logic.Template.Component.Layer.spec
     , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec

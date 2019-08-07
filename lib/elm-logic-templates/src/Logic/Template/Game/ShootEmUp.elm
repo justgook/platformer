@@ -42,7 +42,7 @@ import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.Hurt as Hurt
 import Logic.Template.SaveLoad.Input
-import Logic.Template.SaveLoad.Internal.Reader exposing (Reader)
+import Logic.Template.SaveLoad.Internal.Reader exposing (WorldReader)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
 import Logic.Template.SaveLoad.Position
@@ -128,6 +128,7 @@ type alias ShootEmUpWorld =
         , deadFx : Component.Set ( Animation, Sprite )
         , seed : Random.Seed
         , score : Int
+        , hp : Component.Set Int
         }
 
 
@@ -156,6 +157,7 @@ empty =
     , deadFx = Component.empty
     , seed = Random.initialSeed 42
     , score = 0
+    , hp = Component.empty
     }
 
 
@@ -402,7 +404,7 @@ subscriptions w =
         ]
 
 
-read : List (Reader ShootEmUpWorld)
+read : List (WorldReader ShootEmUpWorld)
 read =
     [ Sprite.read Sprite.spec
     , RenderInfo.read RenderInfo.spec

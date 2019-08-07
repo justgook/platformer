@@ -10,7 +10,7 @@ import Logic.Template.Component.Layer exposing (Layer)
 import Logic.Template.SaveLoad.ImageLayer as ImageLayer
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (DecoderWithTexture, Manager, Selector(..))
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.TileLayer as TileLayer exposing (TileLayer(..))
@@ -51,7 +51,7 @@ lutCollector { layers } t =
             t
 
 
-read : Singleton.Spec (List Layer) world -> Reader world
+read : Singleton.Spec (List Layer) world -> WorldReader world
 read spec =
     let
         imageLayerSpec =
@@ -230,7 +230,7 @@ decode spec_ getTexture =
 --
 
 
-objLayerRead : (Int -> Logic.Component.Spec () world) -> Reader world
+objLayerRead : (Int -> Logic.Component.Spec () world) -> WorldReader world
 objLayerRead spec =
     { defaultRead
         | objectTile = Sync (\{ layer } -> Entity.with ( spec layer.id, () ))

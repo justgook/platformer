@@ -11,7 +11,7 @@ import Logic.Launcher exposing (Error(..))
 import Logic.Template.Component.AnimationsDict exposing (AnimationId, TimeLineDict3)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Math.Vector2 as Vec2 exposing (Vec2)
@@ -21,7 +21,7 @@ import Tiled.Properties exposing (Property(..))
 import Tiled.Tileset exposing (EmbeddedTileData)
 
 
-read : (EmbeddedTileData -> Int -> Maybe { a | uMirror : Vec2 }) -> Component.Spec (TimeLineDict3 { a | uMirror : Vec2 }) world -> Reader world
+read : (EmbeddedTileData -> Int -> Maybe { a | uMirror : Vec2 }) -> Component.Spec (TimeLineDict3 { a | uMirror : Vec2 }) world -> WorldReader world
 read f spec =
     { defaultRead
         | objectTile =

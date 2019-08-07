@@ -18,7 +18,7 @@ import Logic.Template.Input as Input
 import Logic.Template.SaveLoad.Ammo as Ammo
 import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.Hurt as Hurt
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.Sprite as Sprite
@@ -108,7 +108,7 @@ maybeSpawn ( spec, value ) acc =
             acc
 
 
-read : Singleton.Spec (EventSequence Event) world -> Reader world
+read : Singleton.Spec (EventSequence Event) world -> WorldReader world
 read spec_ =
     { defaultRead
         | objectTile =

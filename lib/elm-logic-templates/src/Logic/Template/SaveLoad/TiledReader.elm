@@ -3,7 +3,7 @@ module Logic.Template.SaveLoad.TiledReader exposing (parse)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader, combineListInTask, pointData, polygonData, rectangleData, tileArgs, tileDataWith)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader, combineListInTask, pointData, polygonData, rectangleData, tileArgs, tileDataWith)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (getTilesetByGid)
 import Tiled exposing (gidInfo)
@@ -15,7 +15,7 @@ import Tiled.Tileset exposing (Tileset)
 
 parse :
     world
-    -> List (Reader.Reader world)
+    -> List (Reader.WorldReader world)
     -> Tiled.Level.Level
     -> Loader.TaskTiled world
 parse emptyECS readers level start =
@@ -75,7 +75,7 @@ parse emptyECS readers level start =
 objectLayerParser :
     Tiled.Level.Level
     -> (Tiled.Object.Object -> Tiled.Object.Object)
-    -> List (Reader world)
+    -> List (WorldReader world)
     ->
         { c
             | ecs : world

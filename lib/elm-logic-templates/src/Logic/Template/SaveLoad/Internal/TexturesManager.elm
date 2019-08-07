@@ -24,7 +24,7 @@ import Logic.Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (ResourceTask)
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Tiled.Tileset as Tileset exposing (Tileset)
@@ -257,7 +257,7 @@ loadTask bytes =
         |> ResourceTask.sequence
 
 
-read : Reader BytesManager
+read : WorldReader BytesManager
 read =
     let
         spec_ =

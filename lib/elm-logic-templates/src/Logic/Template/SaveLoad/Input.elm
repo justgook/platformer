@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Input exposing (decode, encode, read)
+module Logic.Template.SaveLoad.Input exposing (decode, encode, haveInput, read)
 
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
@@ -9,9 +9,9 @@ import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.Input as Input exposing (Input, InputSingleton, emptyComp)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (GuardReader, Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
-import Parser exposing ((|.), (|=))
+import Parser exposing ((|.), (|=), Parser)
 import Set
 import Tiled.Properties exposing (Property(..))
 
@@ -69,7 +69,20 @@ decode spec_ =
             )
 
 
-read : Singleton.Spec InputSingleton world -> Reader world
+haveInput : GuardReader
+haveInput =
+    { defaultRead
+        | objectTile =
+            Sync
+                (\{ properties } ->
+                    properties
+                        |> Dict.keys
+                        |> List.any (Parser.run onKey >> Result.toMaybe >> (/=) Nothing)
+                )
+    }
+
+
+read : Singleton.Spec InputSingleton world -> WorldReader world
 read spec =
     let
         compsSpec =
@@ -84,22 +97,6 @@ read spec =
             }
 
         filterKeys props ( entityId, registered ) =
-            let
-                keyVar =
-                    Parser.variable
-                        { start = \c -> Char.isAlphaNum c || c == ' ' -- specific case for space
-                        , inner = \c -> Char.isAlphaNum c || c == '_' || c == ' '
-                        , reserved = Set.empty
-                        }
-
-                onKey =
-                    Parser.succeed identity
-                        |. Parser.keyword "onKey"
-                        |. Parser.symbol "["
-                        |= keyVar
-                        |. Parser.symbol "]"
-                        |. Parser.end
-            in
             Dict.foldl
                 (\k v ( maybeComp, registered_ ) ->
                     Parser.run onKey k
@@ -142,3 +139,21 @@ read spec =
                         ( entityId, newWorld )
                 )
     }
+
+
+onKey : Parser String
+onKey =
+    let
+        keyVar =
+            Parser.variable
+                { start = \c -> Char.isAlphaNum c || c == ' ' -- specific case for space
+                , inner = \c -> Char.isAlphaNum c || c == '_' || c == ' '
+                , reserved = Set.empty
+                }
+    in
+    Parser.succeed identity
+        |. Parser.keyword "onKey"
+        |. Parser.symbol "["
+        |= keyVar
+        |. Parser.symbol "]"
+        |. Parser.end

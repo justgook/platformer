@@ -24,7 +24,7 @@ import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
 import Logic.Template.SaveLoad.Input
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
 import Logic.Template.SaveLoad.Layer
 import Logic.Template.SaveLoad.Physics
@@ -120,7 +120,7 @@ decoders getTexture =
     ]
 
 
-read : List (Reader PresentationWorld)
+read : List (WorldReader PresentationWorld)
 read =
     [ Sprite.read Sprite.spec
     , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec

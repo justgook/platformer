@@ -1,14 +1,18 @@
 module Logic.Template.SaveLoad.Internal.Reader exposing
     ( EllipseData
     , ExtractAsync
+    , GuardReader
     , Read(..)
     , Reader
     , RectangleData
     , TileArg
     , TileDataWith
+    , WorldRead
+    , WorldReader
     , combine
     , combineListInTask
     , defaultRead
+    , guard
     , pointData
     , polygonData
     , rectangleData
@@ -26,18 +30,26 @@ import Tiled.Object exposing (Common, CommonDimension, CommonDimensionGid, Commo
 import Tiled.Properties
 
 
-type alias Reader world =
-    { objectTile : Read world TileArg
-    , objectPoint : Read world PointData
-    , objectRectangle : Read world RectangleData
-    , objectEllipse : Read world EllipseData
-    , objectPolygon : Read world PolygonData
-    , objectPolyLine : Read world PolyLineData
-    , layerTile : Read world TileDataWith
-    , layerInfiniteTile : Read world TileChunkedData
-    , layerImage : Read world Tiled.Layer.ImageData
-    , layerObject : Read world Tiled.Layer.ObjectData
-    , level : Read world Tiled.Level.Level
+type alias WorldReader world =
+    Reader (( EntityID, world ) -> ( EntityID, world ))
+
+
+type alias GuardReader =
+    Reader Bool
+
+
+type alias Reader to =
+    { objectTile : Read TileArg to
+    , objectPoint : Read PointData to
+    , objectRectangle : Read RectangleData to
+    , objectEllipse : Read EllipseData to
+    , objectPolygon : Read PolygonData to
+    , objectPolyLine : Read PolyLineData to
+    , layerTile : Read TileDataWith to
+    , layerInfiniteTile : Read TileChunkedData to
+    , layerImage : Read Tiled.Layer.ImageData to
+    , layerObject : Read Tiled.Layer.ObjectData to
+    , level : Read Tiled.Level.Level to
     }
 
 
@@ -68,10 +80,6 @@ type alias PolyLineData =
 
 type alias ExtractAsync from to =
     from -> CacheTask CacheTiled -> ResourceTask to CacheTiled
-
-
-
---guard:
 
 
 pointData : Tiled.Layer.ObjectData -> Common {} -> PointData
@@ -121,21 +129,102 @@ polygonData layer a =
     }
 
 
-type alias ReturnSync world =
-    ( EntityID, world ) -> ( EntityID, world )
+type alias WorldRead from world =
+    Read from (( EntityID, world ) -> ( EntityID, world ))
 
 
-type alias ReturnAsync world =
-    Loader.TaskTiled (( EntityID, world ) -> ( EntityID, world ))
-
-
-type Read world a
-    = Sync (a -> ReturnSync world)
-    | Async (a -> ReturnAsync world)
+type Read from to
+    = Sync (from -> to)
+    | Async (from -> Loader.TaskTiled to)
     | None
 
 
-defaultRead : Reader world
+
+--
+--sync : (from -> to) -> Read from to
+--sync =
+--    Sync
+--
+--
+--async : (from -> CacheTask CacheTiled -> ResourceTask to CacheTiled) -> Read from to
+--async =
+--    Async
+
+
+guard : GuardReader -> WorldReader world -> WorldReader world
+guard g r =
+    let
+        change a b =
+            case ( a, b ) of
+                ( _, None ) ->
+                    None
+
+                ( None, _ ) ->
+                    b
+
+                ( Sync f, Sync f2 ) ->
+                    Sync
+                        (\input ->
+                            if f input then
+                                f2 input
+
+                            else
+                                identity
+                        )
+
+                ( Sync f, Async f2 ) ->
+                    Async
+                        (\input ->
+                            if f input then
+                                f2 input
+
+                            else
+                                ResourceTask.succeed identity
+                        )
+
+                ( Async f, Async f2 ) ->
+                    Async
+                        (\input ->
+                            f input
+                                >> ResourceTask.andThen
+                                    (\result ->
+                                        if result then
+                                            f2 input
+
+                                        else
+                                            ResourceTask.succeed identity
+                                    )
+                        )
+
+                ( Async f, Sync f2 ) ->
+                    Async
+                        (\input ->
+                            f input
+                                >> ResourceTask.andThen
+                                    (\result ->
+                                        if result then
+                                            ResourceTask.succeed (f2 input)
+
+                                        else
+                                            ResourceTask.succeed identity
+                                    )
+                        )
+    in
+    { objectTile = change g.objectTile r.objectTile
+    , objectPoint = change g.objectPoint r.objectPoint
+    , objectRectangle = change g.objectRectangle r.objectRectangle
+    , objectEllipse = change g.objectEllipse r.objectEllipse
+    , objectPolygon = change g.objectPolygon r.objectPolygon
+    , objectPolyLine = change g.objectPolyLine r.objectPolyLine
+    , layerTile = change g.layerTile r.layerTile
+    , layerInfiniteTile = change g.layerInfiniteTile r.layerInfiniteTile
+    , layerImage = change g.layerImage r.layerImage
+    , layerObject = change g.layerObject r.layerObject
+    , level = change g.level r.level
+    }
+
+
+defaultRead : Reader to
 defaultRead =
     { objectTile = None
     , objectPoint = None
@@ -225,7 +314,7 @@ tileArgs level objectData a c d =
     }
 
 
-combine : Reader world -> Reader world -> Reader world
+combine : WorldReader world -> WorldReader world -> WorldReader world
 combine r1 r2 =
     { objectTile = combine_ .objectTile r1 r2
     , objectPoint = combine_ .objectPoint r1 r2
@@ -241,7 +330,7 @@ combine r1 r2 =
     }
 
 
-combine_ : (Reader world -> Read world a) -> Reader world -> Reader world -> Read world a
+combine_ : (WorldReader world -> WorldRead a world) -> WorldReader world -> WorldReader world -> WorldRead a world
 combine_ getKey r1 r2 =
     case ( getKey r1, getKey r2 ) of
         ( None, None ) ->
@@ -279,7 +368,7 @@ combine_ getKey r1 r2 =
 
 
 combineListInTask :
-    (reader -> Read world a)
+    (reader -> WorldRead a world)
     -> a
     -> List reader
     -> ( EntityID, world )
