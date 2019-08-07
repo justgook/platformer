@@ -3,14 +3,19 @@ module Logic.Template.SaveLoad.Internal.Util exposing
     , animation
     , animationFraming
     , boolToFloat
-    , common
-    , extractObjectData
+    , extractObjectGroup
     , firstGid
+    , getCollision
     , getTilesetByGid
     , hexColor2Vec3
+    , imageBase64
+    , imageBytes
+    , levelCommon
     , levelProps
     , maybeDo
     , objFix
+    , objectById
+    , objectPosition
     , properties
     , propertiesWithDefault
     , scrollRatio
@@ -20,17 +25,37 @@ module Logic.Template.SaveLoad.Internal.Util exposing
     , updateTileset
     )
 
+import Base64
+import Bytes exposing (Bytes)
 import Dict
+import Image
+import Image.Magic
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.SaveLoad.Internal.Loader exposing (GetTileset, getTileset)
-import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.Loader exposing (GetTileset, TaskTiled, getTileset)
+import Logic.Template.SaveLoad.Internal.Reader exposing (TileArg, TileDataWith)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (ResourceTask)
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Math.Vector4 as Vec4 exposing (Vec4)
 import Tiled.Level as Level exposing (Level)
-import Tiled.Object
+import Tiled.Object exposing (Object(..))
 import Tiled.Properties exposing (Properties, Property(..))
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset(..))
+
+
+imageBase64 : Int -> List Int -> String
+imageBase64 width l =
+    imageBytes width l
+        |> Base64.fromBytes
+        |> Maybe.withDefault ""
+        |> (++) "data:image/png;base64,"
+
+
+imageBytes : Int -> List Int -> Bytes
+imageBytes width l =
+    Image.fromList width l
+        |> Image.Magic.mirror True True
+        |> Image.encodePng
 
 
 maybeDo : (a -> b -> b) -> Maybe a -> b -> b
@@ -56,7 +81,70 @@ getTilesetByGid tilesets_ gid =
             ResourceTask.fail (Error 5001 ("Not found Tileset for GID:" ++ String.fromInt gid))
 
 
-extractObjectData gid t_ =
+objectById : Int -> List Tiled.Object.Object -> Maybe Tiled.Object.Object
+objectById id l =
+    let
+        find : (a -> Bool) -> List a -> Maybe a
+        find predicate list =
+            case list of
+                [] ->
+                    Nothing
+
+                first :: rest ->
+                    if predicate first then
+                        Just first
+
+                    else
+                        find predicate rest
+    in
+    find (objectId >> (==) id) l
+
+
+objectPosition : Tiled.Object.Object -> { x : Float, y : Float }
+objectPosition obj =
+    case obj of
+        Point { x, y } ->
+            { x = x, y = y }
+
+        Rectangle { x, y } ->
+            { x = x, y = y }
+
+        Ellipse { x, y } ->
+            { x = x, y = y }
+
+        Polygon { x, y } ->
+            { x = x, y = y }
+
+        PolyLine { x, y } ->
+            { x = x, y = y }
+
+        Tile { x, y } ->
+            { x = x, y = y }
+
+
+objectId : Tiled.Object.Object -> Int
+objectId obj =
+    case obj of
+        Point { id } ->
+            id
+
+        Rectangle { id } ->
+            id
+
+        Ellipse { id } ->
+            id
+
+        Polygon { id } ->
+            id
+
+        PolyLine { id } ->
+            id
+
+        Tile { id } ->
+            id
+
+
+extractObjectGroup gid t_ =
     case t_ of
         Embedded t ->
             Dict.get (gid - t.firstgid) t.tiles
@@ -66,13 +154,20 @@ extractObjectData gid t_ =
             Nothing
 
 
+getCollision : TileArg -> TaskTiled (Maybe Tiled.Tileset.TilesDataObjectgroup)
+getCollision info =
+    info.getTilesetByGid info.gid
+        >> ResourceTask.map
+            (\t_ -> extractObjectGroup info.gid t_)
+
+
 objFix levelHeight obj =
     case obj of
-        Tiled.Object.Point _ ->
-            obj
+        Tiled.Object.Point c ->
+            Tiled.Object.Point { c | y = levelHeight - c.y }
 
-        Tiled.Object.Rectangle _ ->
-            obj
+        Tiled.Object.Rectangle c ->
+            Tiled.Object.Rectangle { c | y = levelHeight - c.y }
 
         Tiled.Object.Ellipse _ ->
             obj
@@ -88,7 +183,7 @@ objFix levelHeight obj =
                 { c | y = levelHeight - c.y + c.height / 2, x = c.x + c.width / 2 }
 
 
-common level =
+levelCommon level =
     case level of
         Level.Orthogonal info ->
             { backgroundcolor = info.backgroundcolor

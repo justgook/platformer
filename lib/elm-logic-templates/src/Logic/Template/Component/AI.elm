@@ -1,31 +1,42 @@
-module Logic.Template.Component.AI exposing (AI, empty, spec)
+module Logic.Template.Component.AI exposing (AiPercentage, Spot, empty, emptySpot, spec)
 
+import AltMath.Vector2 exposing (Vec2)
 import Logic.Component
 import Logic.System
 
 
-type alias AI =
-    { start : Int
-    , x : Options
-    , y : Options
+type alias AiPercentage =
+    { waiting : Int
+    , prev : List Spot
+    , target : Spot
+    , next : List Spot
     }
 
 
-type alias Options =
-    { max : Float
-    , min : Float
-    , speed : Float
-    , start : Float
+type alias Spot =
+    { position : Vec2
+    , action : List String
+    , wait : Int
+    , invSteps : Float
     }
 
 
-spec : Logic.Component.Spec AI { world | ai : Logic.Component.Set AI }
+emptySpot : Spot
+emptySpot =
+    { position = { x = 0, y = 0 }
+    , action = []
+    , wait = 0
+    , invSteps = 0.01
+    }
+
+
+spec : Logic.Component.Spec AiPercentage { world | ai2 : Logic.Component.Set AiPercentage }
 spec =
-    { get = .ai
-    , set = \comps world -> { world | ai = comps }
+    { get = .ai2
+    , set = \comps world -> { world | ai2 = comps }
     }
 
 
-empty : Logic.Component.Set AI
+empty : Logic.Component.Set AiPercentage
 empty =
     Logic.Component.empty

@@ -45,12 +45,19 @@ uniform vec2 uAtlasSize;
 uniform float px;
 uniform vec2 uTileSize;
 
-float color2float(vec4 c) { return c.z * 255.0 + c.y * 256.0 * 255.0 + c.x * 256.0 * 256.0 * 255.0; }
+float color2float(vec4 color) {
+    return
+    color.a * 255.0
+    + color.b * 256.0 * 255.0
+    + color.g * 256.0 * 256.0 * 255.0
+    + color.r * 256.0 * 256.0 * 256.0 * 255.0;
+    }
 
 float modI(float a, float b) {
    float m = a - floor((a + 0.5) / b) * b;
    return floor(m + 0.5);
 }
+
 
 void main() {
    vec2 point = uv / (px * uTileSize);// + (viewportOffset / uTileSize) * scrollRatio;

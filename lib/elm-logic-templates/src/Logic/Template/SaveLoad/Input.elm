@@ -3,6 +3,7 @@ module Logic.Template.SaveLoad.Input exposing (decode, encode, read)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
+import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.Input as Input exposing (Input, InputSingleton, emptyComp)
@@ -53,11 +54,11 @@ decode spec_ =
                                     (\( _, ( id, _ ) ) acc ->
                                         let
                                             comp =
-                                                Entity.getComponent id acc.comps
+                                                Entity.get id acc.comps
                                                     |> Maybe.withDefault emptyComp
                                         in
                                         { acc
-                                            | comps = Entity.spawnComponent id comp acc.comps
+                                            | comps = Component.spawn id comp acc.comps
                                         }
                                     )
                                     info

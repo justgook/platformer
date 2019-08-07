@@ -1,8 +1,6 @@
 module Logic.Template.SaveLoad.TileLayer exposing (TileLayer(..), read)
 
 import Dict exposing (Dict)
-import Image exposing (Order(..))
-import Image.BMP exposing (encodeWith)
 import Logic.Component.Singleton as Component
 import Logic.Template.SaveLoad.Internal.Loader as Loader
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, TileDataWith, defaultRead)
@@ -118,15 +116,6 @@ splitTileLayerByTileSet2 tilesets getTileset dataLeft ({ cache, static, animated
                 }
 
 
-imageOptions : Image.Options {}
-imageOptions =
-    let
-        opt =
-            Image.defaultOptions
-    in
-    { opt | order = RightDown }
-
-
 tileStaticLayerBuilder2 =
     tileStaticLayerBuilder_ Tiles
 
@@ -156,7 +145,7 @@ tileStaticLayerBuilder_ constructor layerData =
                         }
                 )
                 (Loader.getTextureTiled tileset.image)
-                (Loader.getTextureTiled (encodeWith imageOptions layerData.width layerData.height data))
+                (Loader.getTextureTiled (Util.imageBase64 layerData.width data))
         )
 
 
@@ -187,10 +176,10 @@ tileAnimatedLayerBuilder_ constructor layerData =
             Loader.getTextureTiled tileset.image
                 >> ResourceTask.andThen
                     (\tileSetImage ->
-                        Loader.getTextureTiled (encodeWith imageOptions layerData.width layerData.height data)
+                        Loader.getTextureTiled (Util.imageBase64 layerData.width data)
                             >> ResourceTask.andThen
                                 (\lut ->
-                                    Loader.getTextureTiled (encodeWith Image.defaultOptions animLength 1 animLutData)
+                                    Loader.getTextureTiled (Util.imageBase64 animLength animLutData)
                                         >> ResourceTask.map
                                             (\animLUT ->
                                                 constructor
@@ -213,21 +202,24 @@ tileAnimatedLayerBuilder_ constructor layerData =
         )
 
 
-fillTiles :
-    Int
-    -> EmbeddedTileData
-    ->
-        { animated :
-            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
-        , cache : List Int
-        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
-        }
-    ->
-        { animated :
-            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
-        , cache : List Int
-        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
-        }
+
+--fillTiles :
+--    Int
+--    -> EmbeddedTileData
+--    ->
+--        { animated :
+--            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
+--        , cache : List Int
+--        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
+--        }
+--    ->
+--        { animated :
+--            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
+--        , cache : List Int
+--        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
+--        }
+
+
 fillTiles tileId info { cache, static, animated } =
     case Dict.get tileId animated of
         Just ( t_, v ) ->

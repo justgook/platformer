@@ -2,6 +2,7 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     ( andMap
     , bool
     , float
+    , foldl
     , id
     , list
     , sequence
@@ -115,3 +116,17 @@ listStep decoder ( n, xs ) =
 
     else
         map (\x -> Loop ( n - 1, x :: xs )) decoder
+
+
+foldl : Int -> (b -> Decoder b) -> b -> Decoder b
+foldl count decoder acc =
+    D.loop ( count, acc ) (foldlStep decoder)
+
+
+foldlStep : (a -> Decoder b) -> ( Int, a ) -> Decoder (Step ( Int, b ) a)
+foldlStep decoder ( n, acc ) =
+    if n <= 0 then
+        D.succeed (Done acc)
+
+    else
+        D.map (\x -> Loop ( n - 1, x )) (decoder acc)

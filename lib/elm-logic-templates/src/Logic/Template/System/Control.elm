@@ -6,25 +6,23 @@ import Collision.Physic.Narrow.AABB as AABB exposing (AABB)
 import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
-import Logic.System exposing (System)
+import Logic.System exposing (System, applyIf)
 import Logic.Template.Component.Physics as PhysicsComponent
 import Logic.Template.Component.SFX as AudioSprite exposing (AudioSprite)
 import Logic.Template.Input as Input exposing (InputSingleton)
 import Set
 
 
-shootEmUp inputSpec_ posSpec world =
+shootEmUp speed inputSpec_ posSpec { width, height } world =
     let
-        speed =
-            { x = 8, y = 9 }
-
         inputSpec =
             Input.toComps inputSpec_
     in
     Logic.System.step2
         (\( { x, y }, _ ) ( pos, setPos ) ->
-            { x = x * speed.x, y = y * speed.y }
-                |> Vec2.add pos
+            { x = pos.x + x * speed.x
+            , y = pos.y + y * speed.y
+            }
                 |> setPos
         )
         inputSpec
@@ -48,7 +46,7 @@ platformer force inputSpec_ physicsSpec audioSpec world =
 
         setBody : EntityID -> AABB Int -> { b | a : Component.Set (AABB Int) } -> { b | a : Component.Set (AABB Int) }
         setBody index value acc_ =
-            { acc_ | a = Entity.setComponent index value acc_.a }
+            { acc_ | a = Component.set index value acc_.a }
 
         combined =
             { a = engine |> Collision.Physic.AABB.getIndexed |> Entity.fromList
@@ -67,8 +65,6 @@ platformer force inputSpec_ physicsSpec audioSpec world =
                             if .y (AABB.getContact body_) == -1 then
                                 acc
                                     |> setBody i (AABB.setVelocity (vec2 (key.x * force.x) force.y) body_)
-                                    |> addSound (AudioSprite.sound "Jump")
-                                    |> addSound (AudioSprite.sound "Punch")
                                     |> addSound (AudioSprite.sound "Jump")
 
                             else if a == 0 then
@@ -92,12 +88,3 @@ platformer force inputSpec_ physicsSpec audioSpec world =
         |> applyIf (result.a /= combined.a) (physicsSpec.set { engine | indexed = result.a |> Entity.toDict })
         --                |> applyIf (result.b /= combined.b) (spec2.set result.b)--Never Happens - it is just reading
         |> applyIf (result.c /= combined.c) (audioSpec.set result.c)
-
-
-applyIf : Bool -> (a -> a) -> a -> a
-applyIf bool f world =
-    if bool then
-        f world
-
-    else
-        world

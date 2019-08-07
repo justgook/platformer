@@ -8,8 +8,8 @@ import Logic.GameFlow as Flow
 import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.Template.Camera
 import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.Animation as TimeLine
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
-import Logic.Template.Component.FrameChange as TimeLine
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
@@ -19,10 +19,10 @@ import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Game.Presentation.Content2 as Content
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.SaveLoad.Animation as TimeLine
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
-import Logic.Template.SaveLoad.FrameChange as TimeLine
 import Logic.Template.SaveLoad.Input
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
@@ -39,8 +39,8 @@ type alias PresentationWorld =
         , input : Logic.Template.Input.InputSingleton
         , render : RenderInfo
         , onScreen : TwoButtonStick {}
-        , animation : Logic.Component.Set TimeLine.NotSimple
-        , animations : Logic.Component.Set (TimeLineDict3 TimeLine.NotSimple)
+        , animation : Logic.Component.Set TimeLine.Animation
+        , animations : Logic.Component.Set (TimeLineDict3 TimeLine.Animation)
         , layers : List Logic.Template.Component.Layer.Layer
         , sfx : Logic.Template.Component.SFX.AudioSprite
         , slideStops : SlideStops

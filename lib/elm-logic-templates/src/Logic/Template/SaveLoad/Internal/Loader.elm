@@ -12,15 +12,14 @@ module Logic.Template.SaveLoad.Internal.Loader exposing
     , getTexture
     , getTextureTiled
     , getTileset
+    , textureError
+    , textureOption
     )
 
 import Base64
 import Bytes exposing (Bytes)
-import Bytes.Encode as E
 import Dict
 import Http
-import Image exposing (Order(..))
-import Image.BMP
 import Json.Decode as Decode exposing (Decoder, Value)
 import Logic.Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.ResourceTask exposing (CacheTask, ResourceTask)
@@ -61,10 +60,22 @@ getTileset url firstgid =
         (\d ->
             case Dict.get url d.dict of
                 Just (Tileset_ r) ->
-                    Task.succeed ( r, d )
+                    (case r of
+                        Tiled.Tileset.Embedded content ->
+                            ( Tiled.Tileset.Embedded { content | firstgid = firstgid }, d )
+
+                        Tiled.Tileset.Source content ->
+                            ( Tiled.Tileset.Source { content | firstgid = firstgid }, d )
+
+                        Tiled.Tileset.ImageCollection content ->
+                            ( Tiled.Tileset.ImageCollection { content | firstgid = firstgid }, d )
+                    )
+                        |> Task.succeed
 
                 _ ->
-                    getJson_ (d.url ++ url) (Tiled.Tileset.decodeFile firstgid) |> Task.map (\r -> ( r, d ))
+                    getJson_ (d.url ++ url) (Tiled.Tileset.decodeFile firstgid)
+                        |> Task.map
+                            (\r -> ( r, d ))
         )
         >> Task.map
             (\( resp, d ) ->
@@ -118,8 +129,12 @@ getTexture url =
             (\( resp, d ) -> ( resp, { d | dict = Dict.insert url (Texture resp) d.dict } ))
 
 
-getLut : Int -> Int -> Int -> Image.BMP.PixelData -> CacheTask CacheBytes -> ResourceTask WebGL.Texture.Texture CacheBytes
-getLut id w h pixels_ =
+
+--getLut : Int -> Int -> Int -> Image.BMP.PixelData -> CacheTask CacheBytes -> ResourceTask WebGL.Texture.Texture CacheBytes
+
+
+getLut : Int -> Bytes -> CacheTask CacheBytes -> ResourceTask WebGL.Texture.Texture CacheBytes
+getLut id image =
     let
         name =
             String.fromInt id |> (++) "____"
@@ -132,23 +147,11 @@ getLut id w h pixels_ =
 
                 _ ->
                     let
-                        imageOptions : Image.Options {}
-                        imageOptions =
-                            let
-                                opt =
-                                    Image.defaultOptions
-                            in
-                            { opt | order = RightDown }
-
                         url2 =
-                            E.sequence
-                                [ E.sequence (Image.BMP.header w h (Bytes.width pixels_))
-                                , E.bytes pixels_
-                                ]
-                                |> E.encode
+                            image
                                 |> Base64.fromBytes
                                 |> Maybe.withDefault ""
-                                |> (++) "data:image/bmp;base64,"
+                                |> (++) "data:image/png;base64,"
                     in
                     url2
                         |> WebGL.Texture.loadWith textureOption
@@ -280,19 +283,24 @@ getJson_ url decoder =
                     case response of
                         Http.GoodStatus_ meta body ->
                             Decode.decodeString decoder body
-                                |> Result.mapError (Decode.errorToString >> Error 4004)
+                                |> Result.mapError (Decode.errorToString >> Error 4005)
 
                         Http.BadUrl_ info ->
-                            Err (Error 4000 info)
+                            Err (Error 4001 info)
 
                         Http.Timeout_ ->
-                            Err (Error 4001 "Timeout")
+                            Err (Error 4002 "Timeout")
 
                         Http.NetworkError_ ->
-                            Err (Error 4002 "NetworkError")
+                            Err (Error 4003 "NetworkError")
 
-                        Http.BadStatus_ { statusCode } _ ->
-                            Err (Error 4003 ("BadStatus:" ++ String.fromInt statusCode))
+                        Http.BadStatus_ err _ ->
+                            case err.statusCode of
+                                404 ->
+                                    Err (Error 4100 url)
+
+                                _ ->
+                                    Err (Error 4004 ("BadStatus:" ++ String.fromInt err.statusCode))
                 )
         , timeout = Nothing
         }

@@ -4,6 +4,7 @@ import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
 import Logic.Component
 import Logic.Component.Singleton as Singleton exposing (Spec)
 import Logic.Entity as Entity exposing (EntityID)
+import Logic.System as System
 import Logic.Template.OnScreenControl exposing (EventConfig, stickWith)
 import Set
 import VirtualDom exposing (Handler(..), attribute, style)
@@ -122,21 +123,30 @@ spec =
 
 
 onscreenSpecExtend :
-    Spec (TwoButtonStick a) world
+    String
+    -> String
+    -> Spec (TwoButtonStick a) world
     -> Logic.Component.Spec { b | action : Set.Set String, x : Float, y : Float } world
     -> EntityID
     -> Spec (TwoButtonStick a) world
-onscreenSpecExtend onScreenSpec inputSpec entityID =
+onscreenSpecExtend action1 action2 onScreenSpec inputSpec entityID =
     { get = onScreenSpec.get
     , set =
         \comp w ->
             let
-                jump =
-                    if comp.button2.active then
-                        Set.insert "Fire"
+                button1 =
+                    if comp.button1.active then
+                        Set.insert action1
 
                     else
-                        Set.remove "Fire"
+                        Set.remove action1
+
+                button2 =
+                    if comp.button2.active then
+                        Set.insert action2
+
+                    else
+                        Set.remove action2
 
                 setXY { x, y } a =
                     { a | x = x, y = y }
@@ -146,7 +156,7 @@ onscreenSpecExtend onScreenSpec inputSpec entityID =
             in
             onScreenSpec.set comp w
                 |> Singleton.update inputSpec
-                    (Entity.mapComponentSet (\key -> componentUpdaterInternal { key | action = jump key.action }) entityID)
+                    (System.map (\key -> componentUpdaterInternal { key | action = key.action |> button1 |> button2 }) entityID)
     }
 
 

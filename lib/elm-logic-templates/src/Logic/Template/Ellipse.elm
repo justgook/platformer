@@ -8,8 +8,7 @@ import WebGL exposing (Mesh, Shader)
 
 type alias Model a =
     { a
-        | width : Float
-        , height : Float
+        | uDimension : Vec2
         , color : Vec4
     }
 
@@ -33,8 +32,9 @@ fragmentShader =
         precision mediump float;
         varying vec2 uv;
         uniform vec4 color;
-        uniform float width;
-        uniform float height;
+        uniform vec2 uDimension;
+        float width = uDimension.x;
+        float height = uDimension.y;
         vec2 px = vec2( 1.0 / width, 1.0 / height );
         void main () {
             gl_FragColor = color;

@@ -1,10 +1,8 @@
 module Logic.Template.SaveLoad.Layer exposing (decode, encode, lutCollector, objLayerRead, read, updateObjLayer)
 
-import Bytes exposing (Endianness(..))
+import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
-import Image
-import Image.BMP as BMP
 import Logic.Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
@@ -13,12 +11,18 @@ import Logic.Template.SaveLoad.ImageLayer as ImageLayer
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, defaultRead)
-import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (DecoderWithTexture, Selector(..))
+import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (DecoderWithTexture, Manager, Selector(..))
+import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.TileLayer as TileLayer exposing (TileLayer(..))
 import Math.Vector2 as Vec2
 import Math.Vector3 as Vec3
 
 
+
+--lutCollector : { a | layers : List Layer } -> Manager PixelData -> Manager PixelData
+
+
+lutCollector : { a | layers : List Layer } -> Manager Bytes -> Manager Bytes
 lutCollector { layers } t =
     --TODO remove when there will be sync texture creation from bytes
     layers
@@ -36,16 +40,8 @@ lutCollector { layers } t =
                             h =
                                 round y
 
-                            imageOptions : Image.Options {}
-                            imageOptions =
-                                let
-                                    opt =
-                                        Image.defaultOptions
-                                in
-                                { opt | order = Image.RightDown }
-
                             lut2 =
-                                BMP.pixelData imageOptions w h data
+                                Util.imageBytes w data
                         in
                         TexturesManager.setLut id w h lut2 acc
 

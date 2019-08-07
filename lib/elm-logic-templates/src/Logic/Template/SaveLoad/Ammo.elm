@@ -1,15 +1,20 @@
-module Logic.Template.SaveLoad.Ammo exposing (extract, read)
+module Logic.Template.SaveLoad.Ammo exposing (decode, encode, extract, read)
 
 import AltMath.Vector2 as Vec2
+import Bytes.Decode as D
+import Bytes.Encode as E exposing (Encoder)
 import Dict
 import Logic.Component exposing (Spec)
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), Reader, TileArg, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
-import Logic.Template.SaveLoad.Sprite as Sprite
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture)
+import Logic.Template.SaveLoad.Sprite as Sprite exposing (decodeSprite, encodeSprite)
 import Parser exposing ((|.), (|=))
 import Set
 import Tiled.Properties exposing (Property(..))
@@ -21,7 +26,7 @@ read spec =
     { defaultRead
         | objectTile =
             Async
-                (\({ properties, gid, getTilesetByGid, fh, fv } as info) ->
+                (\info ->
                     let
                         task =
                             extract info
@@ -39,8 +44,9 @@ read spec =
     }
 
 
+extract : ExtractAsync TileArg Ammo
 extract =
-    \({ properties, gid, getTilesetByGid, fh, fv } as info) ->
+    \({ properties } as info) ->
         let
             var =
                 Parser.variable
@@ -64,6 +70,7 @@ extract =
                         , Parser.map (\_ -> OffsetY) (Parser.keyword "offset.y")
                         , Parser.map (\_ -> VelocityX) (Parser.keyword "velocity.x")
                         , Parser.map (\_ -> VelocityY) (Parser.keyword "velocity.y")
+                        , Parser.map (\_ -> Damage) (Parser.keyword "damage")
                         ]
                     |= Parser.oneOf
                         [ Parser.succeed identity |. Parser.symbol "[" |= Parser.int |. Parser.symbol "]"
@@ -76,7 +83,8 @@ extract =
                 , velocity = { x = 0, y = 0 }
                 , fireRate = 0
                 , firstGid = 0
-                , uIndex = 0
+                , tileId = 0
+                , damage = 1
                 }
 
             setProp f value =
@@ -100,9 +108,9 @@ extract =
                             (setProp (\a -> { a | firstGid = firstGid }))
                             acc
 
-                    ( Ok (Id name index), PropInt ammoGid ) ->
+                    ( Ok (Id name index), PropInt tileId ) ->
                         Dict.update ( name, index )
-                            (setProp (\a -> { a | uIndex = ammoGid }))
+                            (setProp (\a -> { a | tileId = tileId }))
                             acc
 
                     ( Ok (OffsetX name index), PropFloat offsetX ) ->
@@ -125,6 +133,11 @@ extract =
                             (setProp (\a -> { a | velocity = Vec2.setY velocityY a.velocity }))
                             acc
 
+                    ( Ok (Damage name index), PropInt damage ) ->
+                        Dict.update ( name, index )
+                            (setProp (\a -> { a | damage = damage }))
+                            acc
+
                     _ ->
                         acc
             )
@@ -136,26 +149,17 @@ extract =
                     acc
                         >> ResourceTask.andThen
                             (\ammo ->
-                                getTilesetByGid item.firstGid
-                                    >> ResourceTask.andThen
-                                        (\t_ ->
-                                            case t_ of
-                                                Tileset.Embedded t ->
-                                                    Loader.getTextureTiled t.image
-                                                        >> ResourceTask.map (\texture -> ( t, texture ))
-
-                                                _ ->
-                                                    ResourceTask.fail (Error 10001 "Cannot read Ammo info from not Tileset.Embedded")
-                                        )
+                                Sprite.extract { info | gid = item.tileId + item.firstGid }
                                     >> ResourceTask.map
-                                        (\( t, image ) ->
+                                        (\sprite ->
                                             --http://www.asahi-net.or.jp/~cs8k-cyu/bulletml/index_e.html
                                             ammo
                                                 |> Ammo.add name
-                                                    { sprite = Sprite.create t image { info | gid = item.uIndex + t.firstgid }
+                                                    { sprite = sprite
                                                     , offset = item.offset
                                                     , velocity = item.velocity
                                                     , fireRate = item.fireRate
+                                                    , damage = item.damage
                                                     }
                                         )
                             )
@@ -171,20 +175,58 @@ type Key
     | OffsetY String Int
     | VelocityX String Int
     | VelocityY String Int
+    | Damage String Int
 
 
+encode : Spec Ammo world -> world -> Encoder
+encode { get } world =
+    Entity.toList (get world)
+        |> E.list
+            (\( id, ammo ) ->
+                E.sequence
+                    [ E.id id
+                    , Dict.toList ammo
+                        |> E.list
+                            (\( key, template ) ->
+                                E.sequence
+                                    [ E.sizedString key
+                                    , E.list
+                                        (\content ->
+                                            E.sequence
+                                                [ encodeSprite content.sprite
+                                                , E.xy content.offset
+                                                , E.xy content.velocity
+                                                , E.id content.fireRate
+                                                , E.id content.damage
+                                                ]
+                                        )
+                                        template
+                                    ]
+                            )
+                    ]
+            )
 
---encode : Spec Bullet world -> world -> Encoder
---encode { get } world =
---    Entity.toList (get world)
---        |> E.list (\( id, item ) -> E.sequence [ E.id id, E.xy item ])
---
---
---decode : Spec Bullet world -> WorldDecoder world
---decode spec =
---    let
---        decoder =
---            D.map2 Tuple.pair D.id D.xy
---    in
---    D.list decoder
---        |> D.map (\list -> spec.set (Entity.fromList list))
+
+decode : Spec Ammo world -> DecoderWithTexture world
+decode spec getTexture =
+    let
+        decodeTemplate =
+            D.succeed Ammo.Template
+                |> D.andMap (decodeSprite getTexture)
+                |> D.andMap D.xy
+                |> D.andMap D.xy
+                |> D.andMap D.id
+                |> D.andMap D.id
+
+        decodeTemplateList =
+            D.list decodeTemplate
+
+        decodeDict =
+            D.list (D.map2 Tuple.pair D.sizedString decodeTemplateList)
+                |> D.map Dict.fromList
+
+        decoder =
+            D.map2 (\id item -> ( id, item )) D.id decodeDict
+    in
+    D.list decoder
+        |> D.map (\list -> spec.set (Entity.fromList list))

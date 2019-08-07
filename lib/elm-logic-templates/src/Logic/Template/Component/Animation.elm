@@ -1,4 +1,4 @@
-module Logic.Template.Component.FrameChange exposing (Frame, NotSimple, empty, emptyComp, get, spec)
+module Logic.Template.Component.Animation exposing (Animation, Frame, empty, emptyComp, get, spec)
 
 import Logic.Component exposing (Set, Spec)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree(..))
@@ -7,7 +7,7 @@ import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector4 exposing (Vec4)
 
 
-spec : Spec NotSimple { world | animation : Set NotSimple }
+spec : Spec Animation { world | animation : Set Animation }
 spec =
     { get = .animation
     , set = \comps world -> { world | animation = comps }
@@ -18,14 +18,14 @@ type alias Frame =
     Int
 
 
-type alias NotSimple =
+type alias Animation =
     { start : Int
     , timeline : RangeTree TileUV
     , uMirror : Vec2
     }
 
 
-empty : Set NotSimple
+empty : Set Animation
 empty =
     Logic.Component.empty
 
@@ -37,7 +37,7 @@ emptyComp tree =
     }
 
 
-get : Frame -> NotSimple -> TileUV
+get : Frame -> Animation -> TileUV
 get frame notSimple =
     case notSimple.timeline of
         Value _ v ->

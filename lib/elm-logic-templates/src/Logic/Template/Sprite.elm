@@ -1,4 +1,4 @@
-module Logic.Template.Sprite exposing (Model, draw, draw2)
+module Logic.Template.Sprite exposing (Model, draw, draw2, drawCustom, invertFragmentShader, mainFragmentShader)
 
 import Logic.Template.Internal exposing (Plate, clipPlate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
@@ -35,11 +35,61 @@ draw2 vertexShader_ =
     WebGL.entityWith
         entitySettings
         vertexShader_
-        fragmentShader2
+        mainFragmentShader
         clipPlate
 
 
-fragmentShader2 =
+drawCustom vertexShader_ fShader =
+    WebGL.entityWith
+        entitySettings
+        vertexShader_
+        fShader
+        clipPlate
+
+
+diffusedFragmentShader =
+    [glsl|
+        precision mediump float;
+        varying vec2 uv;
+        uniform vec3 uTransparentColor;
+        uniform sampler2D uAtlas;
+        uniform vec2 uAtlasSize;
+        uniform vec4 uTileUV;
+        uniform vec4 uTileUV;
+        uniform vec4 uDiffuseColor;
+        void main () {
+            vec2 uv_ = uv;
+            vec2 pixel = (floor(uv_) + 0.5) / uAtlasSize;
+            gl_FragColor = texture2D(uAtlas, pixel);
+            gl_FragColor.a *= float(gl_FragColor.rgb != uTransparentColor);
+            gl_FragColor.a *= float(uv.y < uTileUV.y + uTileUV.w); //cut last top fragment on to - some bugs appiers..
+            gl_FragColor.rgb *= (uDiffuseColor.rgb * uDiffuseColor.a);
+            gl_FragColor.rgb *= gl_FragColor.a;
+        }
+    |]
+
+
+invertFragmentShader =
+    [glsl|
+        precision mediump float;
+        varying vec2 uv;
+        uniform vec3 uTransparentColor;
+        uniform sampler2D uAtlas;
+        uniform vec2 uAtlasSize;
+        uniform vec4 uTileUV;
+        void main () {
+            vec2 uv_ = uv;
+            vec2 pixel = (floor(uv_) + 0.5) / uAtlasSize;
+            gl_FragColor = texture2D(uAtlas, pixel);
+            gl_FragColor.a *= float(gl_FragColor.rgb != uTransparentColor);
+            gl_FragColor.a *= float(uv.y < uTileUV.y + uTileUV.w); //cut last top fragment on to - some bugs appiers..
+            gl_FragColor.rgb = vec3 (1.,1.,1.) - gl_FragColor.rgb;
+            gl_FragColor.rgb *= gl_FragColor.a;
+        }
+    |]
+
+
+mainFragmentShader =
     [glsl|
         precision mediump float;
         varying vec2 uv;
@@ -48,13 +98,13 @@ fragmentShader2 =
         uniform sampler2D uAtlas;
         uniform vec2 uAtlasSize;
         uniform vec4 uTileUV;
-         mat2 rotate2d(float _angle){
-                    return mat2(cos(_angle),-sin(_angle),
-                                sin(_angle),cos(_angle));
-             }
+//         mat2 rotate2d(float _angle){
+//                    return mat2(cos(_angle),-sin(_angle),
+//                                sin(_angle),cos(_angle));
+//             }
         void main () {
             vec2 uv_ = uv;
-            vec2 uTileSize = vec2(32., 32.);
+//            vec2 uTileSize = vec2(32., 32.);
 //            vec2 fragmentOffsetPx = mod(uv_, uTileSize);
 //                        fragmentOffsetPx -= uTileSize * 0.5;
 //                        fragmentOffsetPx *= rotate2d(0.5708);
@@ -93,11 +143,12 @@ fragmentShader =
         uniform vec2 uMirror;
         uniform float uIndex;
 
-        float color2float(vec4 c) {
-            return c.z * 255.0
-            + c.y * 256.0 * 255.0
-            + c.x * 256.0 * 256.0 * 255.0
-            ;
+        float color2float(vec4 color) {
+            return
+            color.a * 255.0
+            + color.b * 256.0 * 255.0
+            + color.g * 256.0 * 256.0 * 255.0
+            + color.r * 256.0 * 256.0 * 256.0 * 255.0;
         }
 
         float modI(float a, float b) {

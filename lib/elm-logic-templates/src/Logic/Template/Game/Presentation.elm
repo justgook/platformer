@@ -19,8 +19,8 @@ import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.System as System
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
+import Logic.Template.Component.Animation as TimeLine2
 import Logic.Template.Component.AnimationsDict as TimeLineDict2
-import Logic.Template.Component.FrameChange as TimeLine2
 import Logic.Template.Component.Layer
 import Logic.Template.Component.Physics
 import Logic.Template.Component.SFX as AudioSprite
@@ -151,7 +151,7 @@ objRender w ( _, objLayer ) =
                 |> (::)
                     (Sprite.draw
                         w.render
-                        (case Logic.Entity.getComponent i w.animation of
+                        (case Logic.Entity.get i w.animation of
                             Just t ->
                                 let
                                     testSprite =
@@ -199,7 +199,7 @@ update w =
             Math.Vector2.fromRecord w.camera.viewportOffset
 
         updatedWorld =
-            { w | render = RenderInfo.updateOffset newOffset w.render }
+            { w | render = RenderInfo.setOffset newOffset w.render }
 
         moveJump =
             vec2 13 8
@@ -214,6 +214,13 @@ update w =
         |> TimelineChange.sideScroll TimeLineDict2.spec aabb.spec TimeLine2.spec
         |> Singleton.update Logic.Template.Camera.spec cameraStep
         |> (\m -> ( m, Cmd.none ))
+
+
+
+--        |> (\m -> ( m, start () ))
+--
+--
+--port start : () -> Cmd msg
 
 
 aabb =

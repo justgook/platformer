@@ -4,12 +4,14 @@ import Array
 import Browser.Events
 import Dict
 import Json.Decode as Decode exposing (Decoder)
+import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.Input exposing (InputSingleton)
 import Set exposing (Set)
 
 
+sub : Singleton.Spec InputSingleton world -> world -> Sub world
 sub spec world =
     Sub.batch
         [ Browser.Events.onKeyDown (onKeyDown spec world)
@@ -78,7 +80,7 @@ updateKeys { get, set } update keyChanged world pressed =
                                             { x, y } =
                                                 arrows2 keyNames actionSet
                                         in
-                                        Entity.spawnComponent id
+                                        Component.spawn id
                                             { comp
                                                 | x = x
                                                 , y = y

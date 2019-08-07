@@ -9,19 +9,25 @@ module Logic.Template.RenderInfo exposing
     , lowResCanvas
     , read
     , resize
+    , resizeAndCenterLevelX
+    , setInitResize
+    , setOffset
+    , setOffsetX
     , spec
-    , updateOffset
+    , updateOffsetX
     )
 
+import Browser.Dom as Browser
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Logic.Component.Singleton as Singleton
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
-import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
+import Logic.Template.SaveLoad.Internal.Util as Util
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Task exposing (Task)
 import VirtualDom
 
 
@@ -38,11 +44,27 @@ type alias RenderInfo =
         { width : Float
         , height : Float
         }
+    , levelSize :
+        { width : Int
+        , height : Int
+        }
     }
 
 
 type alias Spec world =
     Singleton.Spec RenderInfo world
+
+
+
+--setInitResize : Spec world -> Task x world -> Task x world
+
+
+setInitResize spec__ =
+    Task.map2
+        (\{ scene } w ->
+            resize spec__ w (round scene.width) (round scene.height)
+        )
+        Browser.getViewport
 
 
 read : Spec world -> Reader world
@@ -55,8 +77,15 @@ read { get, set } =
                         renderInfo =
                             get world
 
+                        levelData =
+                            Util.levelCommon level
+
+                        aaa =
+                            levelData.width
+                                * levelData.tilewidth
+
                         prop =
-                            levelProps level
+                            Util.levelProps level
 
                         px =
                             1 / prop.float "pixelsPerUnit" 0.1
@@ -68,7 +97,18 @@ read { get, set } =
                             prop.float "offset.y" 0
                     in
                     ( entityID
-                    , set (updateOffset (Vec2.fromRecord { x = x, y = y }) { renderInfo | px = px }) world
+                    , set
+                        (setOffset
+                            (Vec2.fromRecord { x = x, y = y })
+                            { renderInfo
+                                | px = px
+                                , levelSize =
+                                    { width = levelData.width * levelData.tilewidth
+                                    , height = levelData.height * levelData.tileheight
+                                    }
+                            }
+                        )
+                        world
                     )
                 )
     }
@@ -110,7 +150,8 @@ applyOffsetVec v =
     applyOffset (Vec2.toRecord v)
 
 
-updateOffset newOffset_ info =
+setOffset : Vec2 -> RenderInfo -> RenderInfo
+setOffset newOffset_ info =
     let
         newOffset =
             newOffset_ |> Vec2.scale info.px
@@ -119,6 +160,57 @@ updateOffset newOffset_ info =
         | offset = newOffset
         , absolute = applyOffsetVec newOffset info.fixed
     }
+
+
+updateOffsetX : Float -> RenderInfo -> RenderInfo
+updateOffsetX newOffsetX info =
+    let
+        x =
+            Vec2.getX info.offset
+
+        newOffset =
+            Vec2.setX (x + newOffsetX * info.px) info.offset
+    in
+    { info
+        | offset = newOffset
+        , absolute = applyOffsetVec newOffset info.fixed
+    }
+
+
+setOffsetX : Float -> RenderInfo -> RenderInfo
+setOffsetX newOffsetX info =
+    let
+        newOffset =
+            Vec2.setX (newOffsetX * info.px) info.offset
+    in
+    { info
+        | offset = newOffset
+        , absolute = applyOffsetVec newOffset info.fixed
+    }
+
+
+resizeAndCenterLevelX spec_ world w h =
+    resize spec_ world w h
+        |> centerLevel spec_
+
+
+centerLevel { get, set } world =
+    let
+        info =
+            get world
+
+        width =
+            info
+                |> .virtualScreen
+                |> .width
+
+        levelWidth =
+            info
+                |> .levelSize
+                |> .width
+                |> toFloat
+    in
+    set (setOffsetX (width * -0.5) info) world
 
 
 resize { get, set } world w h =
@@ -200,6 +292,10 @@ empty =
         , height = 1
         }
     , virtualScreen =
+        { width = 1
+        , height = 1
+        }
+    , levelSize =
         { width = 1
         , height = 1
         }

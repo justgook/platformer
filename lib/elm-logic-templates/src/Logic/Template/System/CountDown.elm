@@ -2,10 +2,11 @@ module Logic.Template.System.CountDown exposing (system)
 
 import Array
 import Logic.Component
+import Logic.Entity exposing (EntityID)
 import Logic.System exposing (System, applyIf)
 
 
-system : (Int -> world -> world) -> Logic.Component.Spec number world -> world -> world
+system : (EntityID -> world -> world) -> Logic.Component.Spec number world -> world -> world
 system end spec world =
     let
         combined =
@@ -23,7 +24,7 @@ system end spec world =
                         newNum =
                             num - 1
                     in
-                    if newNum > 0 then
+                    if newNum >= 0 then
                         setA i newNum acc
 
                     else
@@ -35,15 +36,3 @@ system end spec world =
     world
         |> applyIf (result.a /= combined.a) (spec.set result.a)
         |> applyIf (result.b /= combined.b) (\w -> List.foldl end w result.b)
-
-
-aSpec =
-    { get = .a
-    , set = \comps world -> { world | a = comps }
-    }
-
-
-bSpec =
-    { get = .b
-    , set = \comps world -> { world | b = comps }
-    }

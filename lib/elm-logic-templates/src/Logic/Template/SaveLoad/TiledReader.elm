@@ -5,7 +5,7 @@ import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.SaveLoad.Internal.Loader as Loader
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader, combineListInTask, pointData, polygonData, rectangleData, tileArgs, tileDataWith)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
-import Logic.Template.SaveLoad.Internal.Util as Util exposing (getTilesetByGid, objFix)
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (getTilesetByGid)
 import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Level
@@ -21,11 +21,11 @@ parse :
 parse emptyECS readers level start =
     let
         fix =
-            Util.common level
+            Util.levelCommon level
                 |> (\{ height, tileheight } ->
                         toFloat (tileheight * height)
                    )
-                |> objFix
+                |> Util.objFix
 
         readFor f args acc =
             combineListInTask f args readers ( acc.idSource, acc.ecs )
@@ -35,7 +35,7 @@ parse emptyECS readers level start =
                     )
 
         layersTask =
-            (Util.common level).layers
+            (Util.levelCommon level).layers
                 |> List.foldl
                     (\layer acc ->
                         case layer of
@@ -55,7 +55,7 @@ parse emptyECS readers level start =
 
                             Tiled.Layer.Object objectData ->
                                 acc
-                                    |> ResourceTask.andThen (\info -> objectLayerParser fix readers info objectData)
+                                    |> ResourceTask.andThen (\info -> objectLayerParser level fix readers info objectData)
 
                             Tiled.Layer.InfiniteTile tileChunkedData ->
                                 acc |> ResourceTask.andThen (readFor .layerInfiniteTile tileChunkedData)
@@ -73,7 +73,8 @@ parse emptyECS readers level start =
 
 
 objectLayerParser :
-    (Tiled.Object.Object -> Tiled.Object.Object)
+    Tiled.Level.Level
+    -> (Tiled.Object.Object -> Tiled.Object.Object)
     -> List (Reader world)
     ->
         { c
@@ -89,7 +90,7 @@ objectLayerParser :
                 , idSource : Int
                 , tilesets : List Tileset
             }
-objectLayerParser fix readers info_ objectData start =
+objectLayerParser level fix readers info_ objectData start =
     let
         readFor f args ( layerECS, acc ) =
             combineListInTask f args readers (Entity.create acc.idSource acc.ecs)
@@ -135,7 +136,7 @@ objectLayerParser fix readers info_ objectData start =
                             (\( layerECS, info ) ->
                                 let
                                     args =
-                                        tileArgs objectData data (gidInfo data.gid) (getTilesetByGid info.tilesets)
+                                        tileArgs level objectData data (gidInfo data.gid) (getTilesetByGid info.tilesets)
                                 in
                                 readFor .objectTile args ( layerECS, info )
                             )

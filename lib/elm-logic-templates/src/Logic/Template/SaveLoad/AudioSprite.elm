@@ -89,7 +89,7 @@ read spec =
                     let
                         audiosprite =
                             level
-                                |> Util.common
+                                |> Util.levelCommon
                                 |> Util.properties
                                 |> .file
                                 |> (|>) "audiosprite"

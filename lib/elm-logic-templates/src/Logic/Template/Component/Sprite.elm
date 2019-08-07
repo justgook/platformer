@@ -1,4 +1,4 @@
-module Logic.Template.Component.Sprite exposing (Sprite, draw, empty, emptyComp, spec)
+module Logic.Template.Component.Sprite exposing (Sprite, draw, drawCustom, empty, emptyComp, spec)
 
 import Logic.Component exposing (Set, Spec)
 import Logic.Template.Internal exposing (tileVertexShader2)
@@ -59,6 +59,24 @@ emptyComp uAtlas =
 draw : { a | absolute : Mat4, px : Float } -> Sprite -> WebGL.Entity
 draw { absolute, px } info =
     Logic.Template.Sprite.draw2 tileVertexShader2
+        { uP = info.uP
+        , uAtlas = info.uAtlas
+        , uTileUV = info.uTileUV
+        , uMirror = info.uMirror
+        , uAtlasSize = info.uAtlasSize
+        , uTransparentColor = info.uTransparentColor
+        , uAbsolute = absolute
+        , px = px
+        }
+
+
+
+--drawCustom : { a | absolute : Mat4, px : Float } -> Sprite -> WebGL.Entity
+
+
+drawCustom fShader { absolute, px } info =
+    Logic.Template.Sprite.drawCustom tileVertexShader2
+        fShader
         { uP = info.uP
         , uAtlas = info.uAtlas
         , uTileUV = info.uTileUV

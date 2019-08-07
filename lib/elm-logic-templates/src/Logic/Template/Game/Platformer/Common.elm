@@ -4,8 +4,8 @@ import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Encode as E exposing (Encoder)
 import Logic.GameFlow as Flow
 import Logic.Template.Camera
+import Logic.Template.Component.Animation as TimeLine
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
-import Logic.Template.Component.FrameChange as TimeLine
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
@@ -15,10 +15,10 @@ import Logic.Template.GFX.Projectile as Projectile exposing (Projectile)
 import Logic.Template.Game.Platformer.Custom exposing (PlatformerWorldWith_)
 import Logic.Template.Input
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.SaveLoad.Animation as TimeLine
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.AudioSprite
 import Logic.Template.SaveLoad.Camera
-import Logic.Template.SaveLoad.FrameChange as TimeLine
 import Logic.Template.SaveLoad.Input
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)

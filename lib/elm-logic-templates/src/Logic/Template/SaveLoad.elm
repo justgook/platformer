@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad exposing (loadBytes, loadFromBytes, loadTiled, loadTiledAndEncode)
+module Logic.Template.SaveLoad exposing (encode, loadBytes, loadFromBytes, loadTiled, loadTiledAndEncode, loadTiledResourceTask)
 
 import Bytes exposing (Bytes)
 import Bytes.Decode as D exposing (Decoder)
@@ -6,12 +6,13 @@ import Bytes.Encode as E
 import Logic.Launcher as Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.Decode as InternalD
 import Logic.Template.SaveLoad.Internal.Encode
-import Logic.Template.SaveLoad.Internal.Loader as Loader
+import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled)
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Reader)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (ResourceTask)
-import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (GetTexture)
-import Logic.Template.SaveLoad.TiledReader as SaveLoad
+import Logic.Template.SaveLoad.Internal.TexturesManager as TexturesManager exposing (BytesManager, GetTexture, Manager)
+import Logic.Template.SaveLoad.TiledReader as TiledReader
 import Task exposing (Task)
+import Tiled.Level exposing (Level)
 
 
 loadTiled : String -> world -> List (Reader world) -> Task Launcher.Error world
@@ -24,7 +25,7 @@ loadTiledResourceTask : String -> world -> List (Reader world) -> ResourceTask w
 loadTiledResourceTask levelUrl empty readers =
     ResourceTask.init
         |> Loader.getLevel levelUrl
-        |> ResourceTask.andThen (SaveLoad.parse empty readers)
+        |> ResourceTask.andThen (TiledReader.parse empty readers)
 
 
 loadBytes : String -> world -> (GetTexture -> List (Decoder (world -> world))) -> ResourceTask world Loader.CacheBytes
@@ -47,8 +48,6 @@ loadFromBytes bytes world decoders =
                             get =
                                 TexturesManager.get loadedTextures
 
-                            --                            _ =
-                            --                                Debug.log "loadedTextures" loadedTextures
                             worldDecode =
                                 bytes
                                     |> D.decode
@@ -70,23 +69,22 @@ loadFromBytes bytes world decoders =
             Task.fail (Error 1001 "Can not decode textures")
 
 
+loadTiledAndEncode : String -> world -> List (Reader world) -> List (world -> E.Encoder) -> (world -> Manager Bytes -> BytesManager) -> ResourceTask ( Bytes, world ) Loader.CacheTiled
 loadTiledAndEncode url world read encoders lut =
     ResourceTask.init
         |> Loader.getLevel url
-        |> ResourceTask.andThen
-            (\level ->
-                SaveLoad.parse world read level
-                    >> ResourceTask.andThen
-                        (\w ->
-                            SaveLoad.parse TexturesManager.empty [ TexturesManager.read ] level
-                                -->> ResourceTask.map (Debug.log "loadTiledAndEncode")
-                                >> ResourceTask.map
-                                    (\textures ->
-                                        ( lut w textures, w )
-                                    )
-                        )
-            )
-        |> ResourceTask.map
+        |> ResourceTask.andThen (\level -> TiledReader.parse world read level >> ResourceTask.map (Tuple.pair level))
+        |> encode encoders lut
+
+
+encode : List (world -> E.Encoder) -> (world -> Manager Bytes -> BytesManager) -> ResourceTask ( Level, world ) CacheTiled -> ResourceTask ( Bytes, world ) Loader.CacheTiled
+encode encoders lut =
+    ResourceTask.andThen
+        (\( level, w ) ->
+            TiledReader.parse TexturesManager.empty [ TexturesManager.read ] level
+                >> ResourceTask.map (\textures -> ( lut w textures, w ))
+        )
+        >> ResourceTask.map
             (\( textures, w ) ->
                 let
                     encodedTextures =

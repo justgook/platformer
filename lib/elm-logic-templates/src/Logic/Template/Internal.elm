@@ -21,8 +21,10 @@ module Logic.Template.Internal exposing
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
 import Array exposing (Array)
+import Logic.Template.SaveLoad.Internal.Util exposing (TileUV)
 import Math.Matrix4 exposing (Mat4)
 import Math.Vector2 as Vector2
+import Math.Vector4
 import WebGL exposing (Mesh, Shader)
 import WebGL.Settings as WebGL exposing (Setting)
 import WebGL.Settings.Blend as Blend
@@ -64,6 +66,17 @@ type alias TileVertexShaderModel a =
     { a | uDimension : Vector2.Vec2, uAbsolute : Mat4, uP : Vector2.Vec2 }
 
 
+type alias SpriteVertexShaderModel a =
+    { a
+        | uAtlasSize : Vector2.Vec2
+        , uAbsolute : Mat4
+        , uP : Vector2.Vec2
+        , px : Float
+        , uMirror : Vector2.Vec2
+        , uTileUV : TileUV
+    }
+
+
 type alias FullScreenVertexShaderModel a =
     { a | viewport : Mat4, offset : Vector2.Vec2 }
 
@@ -86,6 +99,7 @@ tileVertexShader =
     |]
 
 
+tileVertexShader2 : Shader Plate (SpriteVertexShaderModel a) { uv : Vector2.Vec2 }
 tileVertexShader2 =
     [glsl|
         precision mediump float;

@@ -1,5 +1,6 @@
 module Logic.Template.SaveLoad.Internal.Reader exposing
     ( EllipseData
+    , ExtractAsync
     , Read(..)
     , Reader
     , RectangleData
@@ -63,6 +64,14 @@ type alias PolygonData =
 
 type alias PolyLineData =
     PolygonData
+
+
+type alias ExtractAsync from to =
+    from -> CacheTask CacheTiled -> ResourceTask to CacheTiled
+
+
+
+--guard:
 
 
 pointData : Tiled.Layer.ObjectData -> Common {} -> PointData
@@ -159,6 +168,7 @@ type alias TileArg =
     , x : Float
     , y : Float
     , layer : Tiled.Layer.ObjectData
+    , level : Tiled.Level.Level
     }
 
 
@@ -193,8 +203,8 @@ tileDataWith getTilesetByGid tileData =
     }
 
 
-tileArgs : Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
-tileArgs objectData a c d =
+tileArgs : Tiled.Level.Level -> Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
+tileArgs level objectData a c d =
     { id = a.id
     , name = a.name
     , kind = a.kind
@@ -211,6 +221,7 @@ tileArgs objectData a c d =
     , fv = c.fv
     , fd = c.fd
     , layer = objectData
+    , level = level
     }
 
 

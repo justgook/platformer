@@ -57,11 +57,12 @@ fragmentShader =
         vec2 tilesPerUnit = uTileSize * px;
 //        float px = 1.0 / pixelsPerUnit;
 
-        float color2float(vec4 c) {
-            return c.z * 255.0
-            + c.y * 256.0 * 255.0
-            + c.x * 256.0 * 256.0 * 255.0
-            ;
+        float color2float(vec4 color) {
+            return
+            color.a * 255.0
+            + color.b * 256.0 * 255.0
+            + color.g * 256.0 * 256.0 * 255.0
+            + color.r * 256.0 * 256.0 * 256.0 * 255.0;
         }
 
         float modI(float a, float b) {

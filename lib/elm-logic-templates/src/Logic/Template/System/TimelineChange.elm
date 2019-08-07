@@ -13,7 +13,7 @@ topDown inputSpec animDictSpec timelineSpec ecs =
         (\( input, _ ) ( obj_, setObj ) ( ( current, anim ), setAnim ) acc ->
             let
                 key =
-                    ( "walk", { x = input.x, y = 0 } |> Dir.fromRecord |> Dir.toInt )
+                    ( "walk", { x = input.x, y = input.y } |> Dir.fromRecord |> Dir.toInt )
             in
             if key == current then
                 acc

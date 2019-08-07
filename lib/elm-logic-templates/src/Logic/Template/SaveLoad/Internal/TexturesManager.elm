@@ -1,6 +1,8 @@
 module Logic.Template.SaveLoad.Internal.TexturesManager exposing
-    ( DecoderWithTexture
+    ( BytesManager
+    , DecoderWithTexture
     , GetTexture
+    , Manager
     , Selector(..)
     , WorldDecoder
     , decoder
@@ -241,7 +243,7 @@ loadTask bytes =
                                 )
 
                     Lut_ item ->
-                        Loader.getLut item.id item.w item.h item.image
+                        Loader.getLut item.id item.image
                             >> ResourceTask.map
                                 (\image ->
                                     Lut_

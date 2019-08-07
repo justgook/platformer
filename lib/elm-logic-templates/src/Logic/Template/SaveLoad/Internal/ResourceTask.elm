@@ -7,8 +7,11 @@ module Logic.Template.SaveLoad.Internal.ResourceTask exposing
     , fail
     , getCache
     , init
+    , initWithCache
     , map
     , map2
+    , map3
+    , map4
     , sequence
     , succeed
     , toTask
@@ -89,8 +92,28 @@ map2 :
     -> (CacheTask b -> ResourceTask a2 b)
     -> (CacheTask b -> ResourceTask a3 b)
 map2 f task1 task2 =
-    --TODO validate cache pass from first to second task
     task1 >> andThen (\a -> task2 >> map (\b -> f a b))
+
+
+map3 :
+    (a1 -> a2 -> a3 -> a4)
+    -> (CacheTask b -> ResourceTask a1 b)
+    -> (CacheTask b -> ResourceTask a2 b)
+    -> (CacheTask b -> ResourceTask a3 b)
+    -> (CacheTask b -> ResourceTask a4 b)
+map3 f task1 task2 task3 =
+    task1 >> andThen (\a -> task2 >> andThen (\b -> task3 >> map (\c -> f a b c)))
+
+
+map4 :
+    (a1 -> a2 -> a3 -> a4 -> a5)
+    -> (CacheTask b -> ResourceTask a1 b)
+    -> (CacheTask b -> ResourceTask a2 b)
+    -> (CacheTask b -> ResourceTask a3 b)
+    -> (CacheTask b -> ResourceTask a4 b)
+    -> (CacheTask b -> ResourceTask a5 b)
+map4 f task1 task2 task3 task4 =
+    task1 >> andThen (\a -> task2 >> andThen (\b -> task3 >> andThen (\c -> task4 >> map (\d -> f a b c d))))
 
 
 andThen : (a -> CacheTask b -> ResourceTask a1 b) -> ResourceTask a b -> ResourceTask a1 b
@@ -105,3 +128,8 @@ andThen f =
 init : CacheTask b
 init =
     Task.succeed { dict = Dict.empty, url = "" }
+
+
+initWithCache : String -> List ( String, b ) -> CacheTask b
+initWithCache url l =
+    Task.succeed { dict = Dict.fromList l, url = url }

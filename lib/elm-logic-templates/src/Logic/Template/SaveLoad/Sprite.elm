@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Sprite exposing (create, decode, encode, extract, read)
+module Logic.Template.SaveLoad.Sprite exposing (create, decode, decodeSprite, encode, encodeSprite, extract, read)
 
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
@@ -8,10 +8,10 @@ import Logic.Launcher exposing (Error(..))
 import Logic.Template.Component.Sprite exposing (Sprite, emptyComp)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), Reader, TileArg, defaultRead)
-import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
-import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture, Selector(..))
+import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), Reader, TileArg, defaultRead)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture, GetTexture, Selector(..))
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (boolToFloat, hexColor2Vec3)
 import Math.Vector2 as Vec2 exposing (vec2)
 import Math.Vector3 as Vec3 exposing (vec3)
@@ -25,52 +25,58 @@ encode { get } world =
     Entity.toList (get world)
         |> E.list
             (\( id, item ) ->
-                E.sequence
-                    [ E.id id
-                    , E.xy (Vec2.toRecord item.uP)
-                    , E.xy (Vec2.toRecord item.uAtlasSize)
-                    , E.xy (Vec2.toRecord item.uMirror)
-                    , E.xyz (Vec3.toRecord item.uTransparentColor)
-                    , E.id item.atlasFirstGid
-                    , E.xyzw (Vec4.toRecord item.uTileUV)
-                    ]
+                E.sequence [ E.id id, encodeSprite item ]
             )
+
+
+encodeSprite : Sprite -> Encoder
+encodeSprite item =
+    E.sequence
+        [ E.xy (Vec2.toRecord item.uP)
+        , E.xy (Vec2.toRecord item.uAtlasSize)
+        , E.xy (Vec2.toRecord item.uMirror)
+        , E.xyz (Vec3.toRecord item.uTransparentColor)
+        , E.id item.atlasFirstGid
+        , E.xyzw (Vec4.toRecord item.uTileUV)
+        ]
 
 
 decode : Spec Sprite world -> DecoderWithTexture world
 decode spec_ getTexture =
     let
         decoder =
-            D.succeed
-                (\id uP uAtlasSize uMirror uTransparentColor atlasFirstGid uTileUV ->
-                    case getTexture Atlas atlasFirstGid of
-                        Just uAtlas ->
-                            D.succeed
-                                ( id
-                                , { uP = Vec2.fromRecord uP
-                                  , uAtlas = uAtlas
-                                  , uAtlasSize = Vec2.fromRecord uAtlasSize
-                                  , uMirror = Vec2.fromRecord uMirror
-                                  , uTransparentColor = Vec3.fromRecord uTransparentColor
-                                  , atlasFirstGid = 0
-                                  , uTileUV = uTileUV |> Vec4.fromRecord
-                                  }
-                                )
-
-                        Nothing ->
-                            D.fail
-                )
-                |> D.andMap D.id
-                |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.xy
-                |> D.andMap D.xyz
-                |> D.andMap D.id
-                |> D.andMap D.xyzw
-                |> D.andThen identity
+            D.map2 Tuple.pair D.id (decodeSprite getTexture)
     in
     D.list decoder
         |> D.map (\list -> spec_.set (Entity.fromList list))
+
+
+decodeSprite : GetTexture -> Decoder Sprite
+decodeSprite getTexture =
+    D.succeed
+        (\uP uAtlasSize uMirror uTransparentColor atlasFirstGid uTileUV ->
+            case getTexture Atlas atlasFirstGid of
+                Just uAtlas ->
+                    D.succeed
+                        { uP = Vec2.fromRecord uP
+                        , uAtlas = uAtlas
+                        , uAtlasSize = Vec2.fromRecord uAtlasSize
+                        , uMirror = Vec2.fromRecord uMirror
+                        , uTransparentColor = Vec3.fromRecord uTransparentColor
+                        , atlasFirstGid = 0
+                        , uTileUV = uTileUV |> Vec4.fromRecord
+                        }
+
+                Nothing ->
+                    D.fail
+        )
+        |> D.andMap D.xy
+        |> D.andMap D.xy
+        |> D.andMap D.xy
+        |> D.andMap D.xyz
+        |> D.andMap D.id
+        |> D.andMap D.xyzw
+        |> D.andThen identity
 
 
 read : Spec Sprite world -> Reader world
@@ -80,6 +86,7 @@ read spec =
     }
 
 
+extract : ExtractAsync TileArg Sprite
 extract =
     \({ gid, getTilesetByGid } as info) ->
         getTilesetByGid gid
@@ -99,7 +106,7 @@ extract =
                 )
 
 
-create : EmbeddedTileData -> Texture -> TileArg -> Sprite
+create : EmbeddedTileData -> Texture -> { a | x : Float, y : Float, gid : Int, fh : Bool, fv : Bool } -> Sprite
 create t image { x, y, gid, fh, fv } =
     let
         uIndex =

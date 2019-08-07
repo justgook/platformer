@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.FrameChange exposing (decode, decodeItem, durationToFrame, encode, encodeItem, fromTileset, read)
+module Logic.Template.SaveLoad.Animation exposing (decode, decodeItem, durationToFrame, encode, encodeItem, extract, fromTileset, read)
 
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
@@ -6,7 +6,7 @@ import Logic.Component as Component exposing (Spec)
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.Component.FrameChange as FrameChange exposing (NotSimple)
+import Logic.Template.Component.Animation as FrameChange exposing (Animation)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
@@ -19,42 +19,49 @@ import Math.Vector4 as Vec4 exposing (vec4)
 import Tiled.Tileset
 
 
-read : Spec NotSimple world -> Reader world
+read : Spec Animation world -> Reader world
 read spec =
     { defaultRead
         | objectTile =
             Async
-                (\{ gid, getTilesetByGid, fh, fv } ->
-                    getTilesetByGid gid
-                        >> ResourceTask.andThen
-                            (\t_ ->
-                                case t_ of
-                                    Tiled.Tileset.Embedded t ->
-                                        ResourceTask.succeed
-                                            (\( entityID, world ) ->
-                                                case animationFraming t (gid - t.firstgid) of
-                                                    Just timeline ->
-                                                        let
-                                                            obj_ =
-                                                                FrameChange.emptyComp timeline
-
-                                                            obj =
-                                                                { obj_ | uMirror = Vec2.vec2 (boolToFloat fh) (boolToFloat fv) }
-                                                        in
-                                                        Entity.with ( spec, obj ) ( entityID, world )
-
-                                                    Nothing ->
-                                                        ( entityID, world )
-                                            )
-
-                                    _ ->
-                                        ResourceTask.fail (Error 6002 "object tile readers works only with single image tilesets")
+                (\info ->
+                    extract info
+                        >> ResourceTask.map
+                            (\obj_ ->
+                                obj_
+                                    |> Maybe.map (\obj -> Entity.with ( spec, obj ))
+                                    |> Maybe.withDefault identity
                             )
                 )
     }
 
 
-encode : Spec NotSimple world -> world -> Encoder
+extract { gid, getTilesetByGid, fh, fv } =
+    getTilesetByGid gid
+        >> ResourceTask.map
+            (\t_ ->
+                case t_ of
+                    Tiled.Tileset.Embedded t ->
+                        case animationFraming t (gid - t.firstgid) of
+                            Just timeline ->
+                                let
+                                    obj_ =
+                                        FrameChange.emptyComp timeline
+
+                                    obj =
+                                        { obj_ | uMirror = Vec2.vec2 (boolToFloat fh) (boolToFloat fv) }
+                                in
+                                Just obj
+
+                            Nothing ->
+                                Nothing
+
+                    _ ->
+                        Nothing
+            )
+
+
+encode : Spec Animation world -> world -> Encoder
 encode { get } world =
     Entity.toList (get world)
         |> E.list
@@ -66,7 +73,7 @@ encode { get } world =
             )
 
 
-encodeItem : NotSimple -> Encoder
+encodeItem : Animation -> Encoder
 encodeItem item =
     E.sequence
         [ E.list (\( i, a ) -> E.sequence [ E.id i, a |> Vec4.toRecord |> E.xyzw ]) (RangeTree.toList item.timeline)
@@ -74,7 +81,7 @@ encodeItem item =
         ]
 
 
-decode : Spec NotSimple world -> WorldDecoder world
+decode : Spec Animation world -> WorldDecoder world
 decode spec_ =
     let
         decoder =
@@ -87,7 +94,7 @@ decode spec_ =
             (\list -> Singleton.update spec_ (\_ -> Entity.fromList list))
 
 
-decodeItem : Decoder NotSimple
+decodeItem : Decoder Animation
 decodeItem =
     D.map2
         (\item uMirror ->

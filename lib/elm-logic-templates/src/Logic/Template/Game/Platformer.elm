@@ -13,8 +13,8 @@ import Logic.System as System
 import Logic.Template.Camera
 import Logic.Template.Camera.PositionLocking
 import Logic.Template.Camera.Trigger exposing (Trigger)
+import Logic.Template.Component.Animation as TimeLine2
 import Logic.Template.Component.AnimationsDict as TimeLineDict2
-import Logic.Template.Component.FrameChange as TimeLine2
 import Logic.Template.Component.Layer
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Physics
@@ -22,9 +22,9 @@ import Logic.Template.Component.SFX as AudioSprite
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Game.Platformer.Common exposing (PlatformerWorld, decoders, empty, encoders, read)
 import Logic.Template.Game.Platformer.RenderSystem exposing (debugPhysicsAABB)
-import Logic.Template.Input
+import Logic.Template.Input exposing (InputSingleton)
 import Logic.Template.Input.Keyboard as Keyboard
-import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo, setInitResize)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Layer exposing (lutCollector)
@@ -67,7 +67,7 @@ decode bytes =
         worldTask =
             SaveLoad.loadFromBytes bytes empty decoders |> ResourceTask.toTask
     in
-    setInitResize worldTask
+    setInitResize RenderInfo.spec worldTask
 
 
 run : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
@@ -76,7 +76,7 @@ run levelUrl =
         worldTask =
             SaveLoad.loadBytes levelUrl empty decoders |> ResourceTask.toTask
     in
-    setInitResize worldTask
+    setInitResize RenderInfo.spec worldTask
 
 
 load : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
@@ -85,15 +85,11 @@ load levelUrl =
         worldTask =
             SaveLoad.loadTiled levelUrl empty read
     in
-    setInitResize worldTask
+    setInitResize RenderInfo.spec worldTask
 
 
-setInitResize =
-    Task.map2
-        (\{ scene } w ->
-            RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
-        )
-        Browser.getViewport
+
+--subscriptions : { world | input : InputSingleton, render : RenderInfo } -> Sub { world | input : InputSingleton }
 
 
 subscriptions w =
@@ -105,7 +101,7 @@ subscriptions w =
 
 
 -- Not works with intellij elm plugin
---view : List (VirtualDom.Attribute msg) -> Launcher.World OwnWorld -> List (VirtualDom.Node msg)
+--view : List (VirtualDom.Attribute msg) -> Launcher.World PlatformerWorld -> List (VirtualDom.Node msg)
 
 
 view w =
@@ -139,7 +135,7 @@ view w =
         --        ++ Projectile.draw fxUniforms
         --        ++ [ space ]
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
-    , OnScreenControl.twoButtonStick (OnScreenControl.onscreenSpecExtend OnScreenControl.spec (Logic.Template.Input.toComps Logic.Template.Input.spec) playerEntityID) w
+    , OnScreenControl.twoButtonStick (OnScreenControl.onscreenSpecExtend "" "Jump" OnScreenControl.spec (Logic.Template.Input.toComps Logic.Template.Input.spec) playerEntityID) w
     ]
         |> (::) (AudioSprite.draw AudioSprite.spec w)
 
@@ -159,7 +155,7 @@ objRender w ( _, objLayer ) =
                 |> (::)
                     (Sprite.draw
                         w.render
-                        (case Logic.Entity.getComponent i w.animation of
+                        (case Logic.Entity.get i w.animation of
                             Just t ->
                                 let
                                     testSprite =
@@ -225,7 +221,7 @@ update w =
             Math.Vector2.fromRecord w.camera.viewportOffset
 
         updatedWorld =
-            { w | render = RenderInfo.updateOffset newOffset w.render }
+            { w | render = RenderInfo.setOffset newOffset w.render }
 
         moveJump =
             vec2 3 8

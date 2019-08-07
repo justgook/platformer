@@ -90,7 +90,7 @@ applyInput inputSpec physicsSpec ({ slideStops } as ecs) =
                     ( Collision.Physic.AABB.setById ecs.camera.id newBody engine, slideStops_ )
                 )
                 (Collision.Physic.AABB.byId ecs.camera.id engine)
-                (inputSpec.get ecs |> Entity.getComponent ecs.camera.id)
+                (inputSpec.get ecs |> Entity.get ecs.camera.id)
                 |> Maybe.withDefault ( engine, ecs.slideStops )
 
         newEcs =

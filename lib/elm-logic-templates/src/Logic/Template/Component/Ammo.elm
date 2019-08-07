@@ -1,4 +1,4 @@
-module Logic.Template.Component.Ammo exposing (Ammo, add, empty, emptyComp, get, spec)
+module Logic.Template.Component.Ammo exposing (Ammo, Template, add, empty, emptyComp, get, spec)
 
 import AltMath.Vector2 exposing (Vec2)
 import Dict exposing (Dict)
@@ -19,6 +19,7 @@ type alias Template =
     , offset : Vec2
     , velocity : Vec2
     , fireRate : Int
+    , damage : Int
     }
 
 

@@ -12,7 +12,7 @@ import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), Reader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
-import Logic.Template.SaveLoad.Internal.Util as Util exposing (extractObjectData)
+import Logic.Template.SaveLoad.Internal.Util as Util exposing (extractObjectGroup)
 import Tiled.Object exposing (Object(..))
 
 
@@ -109,7 +109,7 @@ read spec =
                 (\level ( entityID, world ) ->
                     let
                         { tileheight, tilewidth, width, height } =
-                            Util.common level
+                            Util.levelCommon level
 
                         boundary =
                             { xmin = 0
@@ -161,7 +161,7 @@ read spec =
                     getTilesetByGid gid
                         >> ResourceTask.map
                             (\t_ ( mId, world ) ->
-                                extractObjectData gid t_
+                                extractObjectGroup gid t_
                                     |> Maybe.map .objects
                                     |> Maybe.andThen List.head
                                     |> Maybe.andThen (indexedBody info)
@@ -206,7 +206,7 @@ recursionSpawn f get dataLeft ( i, cache, acc ) =
                             (\t ->
                                 let
                                     cacheValue =
-                                        extractObjectData gid t
+                                        extractObjectGroup gid t
 
                                     newAcc =
                                         cacheValue
@@ -220,6 +220,7 @@ recursionSpawn f get dataLeft ( i, cache, acc ) =
             ResourceTask.succeed acc
 
 
+createEnvAABB : Int -> Object -> Collision.Physic.AABB.World comparable -> Collision.Physic.AABB.World comparable
 createEnvAABB i obj physicsWorld =
     let
         config =
