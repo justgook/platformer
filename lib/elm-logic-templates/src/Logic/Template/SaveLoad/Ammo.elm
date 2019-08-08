@@ -6,11 +6,9 @@ import Bytes.Encode as E exposing (Encoder)
 import Dict
 import Logic.Component exposing (Spec)
 import Logic.Entity as Entity
-import Logic.Launcher exposing (Error(..))
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Loader as Loader
 import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture)
@@ -18,7 +16,6 @@ import Logic.Template.SaveLoad.Sprite as Sprite exposing (decodeSprite, encodeSp
 import Parser exposing ((|.), (|=))
 import Set
 import Tiled.Properties exposing (Property(..))
-import Tiled.Tileset as Tileset
 
 
 read : Spec Ammo world -> WorldReader world

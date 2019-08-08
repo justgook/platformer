@@ -11,7 +11,7 @@ import Logic.Template.Input as Input
 import Set
 
 
-spawn idSpec hurtSpec inputSpec_ ammoSpec posSpec velocitySpec lifetimeSpec spriteSpec world =
+spawn idSpec damageSpec_ hurtSpec inputSpec_ ammoSpec posSpec velocitySpec lifetimeSpec spriteSpec world =
     let
         inputSpec =
             Input.toComps inputSpec_
@@ -24,6 +24,7 @@ spawn idSpec hurtSpec inputSpec_ ammoSpec posSpec velocitySpec lifetimeSpec spri
             , e = lifetimeSpec.get world
             , f = spriteSpec.get world
             , g = idSpec.get world
+            , damage = damageSpec_.get world
             , h = hurtSpec.get world
             , frame = world.frame
             }
@@ -47,6 +48,7 @@ spawn idSpec hurtSpec inputSpec_ ammoSpec posSpec velocitySpec lifetimeSpec spri
         |> applyIf (result.e /= combined.e) (spriteSpec.set result.f)
         |> applyIf (result.g /= combined.g) (idSpec.set result.g)
         |> applyIf (result.h /= combined.h) (hurtSpec.set result.h)
+        |> applyIf (result.damage /= combined.damage) (damageSpec_.set result.damage)
 
 
 spawnSystem ( targetId, targetPos ) i key pos ammo acc =
@@ -77,7 +79,8 @@ spawnSystem ( targetId, targetPos ) i key pos ammo acc =
                                 |> Entity.with ( dSpec, velocity template )
                                 |> Entity.with ( eSpec, lifetime )
                                 |> Entity.with ( fSpec, template.sprite )
-                                |> hitWith i ( hSpec, ( template.damage, hitBox ) )
+                                |> Entity.with ( damageSpec, template.damage )
+                                |> hitWith i ( hSpec, hitBox )
                                 |> Tuple.second
 
                         else
@@ -136,4 +139,10 @@ gSpec =
 hSpec =
     { get = .h
     , set = \comps world -> { world | h = comps }
+    }
+
+
+damageSpec =
+    { get = .damage
+    , set = \comps world -> { world | damage = comps }
     }

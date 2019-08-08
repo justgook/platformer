@@ -1,6 +1,5 @@
 module Logic.Template.Component.Hurt exposing
     ( Circles
-    , Damage
     , HitBox
     , HurtBox(..)
     , HurtWorld
@@ -44,19 +43,11 @@ type alias HurtWorld =
 
 
 type alias HitBox =
-    ( Damage, Circles )
+    Circles
 
 
 type HurtBox
-    = HurtBox HitPoints Circles
-
-
-type alias HitPoints =
-    Int
-
-
-type alias Damage =
-    Int
+    = HurtBox Circles
 
 
 type alias Circles =
@@ -94,6 +85,7 @@ remove spec_ ( entityID, w ) =
     ( entityID, Singleton.update spec_ (\comps -> remove_ ( entityID, comps ) |> Tuple.second) w )
 
 
+spawnHitBox : EntityID -> ( EntityID, HitBox ) -> HurtWorld -> HurtWorld
 spawnHitBox author ( entityID, info ) w =
     case Entity.get author w.enemyHurtBox of
         Just _ ->
@@ -108,10 +100,7 @@ spawnHitBox author ( entityID, info ) w =
                     w
 
 
-
---spawnPlayerHitBox : (EntityID, b) -> { a | playerHitBox : Component.Set b } -> { a | playerHitBox : Set b }
-
-
+spawnPlayerHitBox : ( EntityID, HitBox ) -> HurtWorld -> HurtWorld
 spawnPlayerHitBox ( entityID, info ) w =
     Entity.with ( playerHitBoxSpec, info ) ( entityID, w ) |> Tuple.second
 
@@ -148,14 +137,14 @@ spawnEnemyHurtBox ( entityID, hurtBox ) w =
     Entity.with ( enemyHurtBoxSpec, hurtBox ) ( entityID, w ) |> Tuple.second
 
 
-setEnemyHpBox : EntityID -> HitPoints -> HurtWorld -> HurtWorld
-setEnemyHpBox entityID hp w =
+setEnemyHpBox : EntityID -> HurtWorld -> HurtWorld
+setEnemyHpBox entityID w =
     Entity.get entityID w.enemyHurtBox
         |> Maybe.map
-            (\(HurtBox _ b) ->
+            (\(HurtBox b) ->
                 let
                     hurt =
-                        HurtBox hp b
+                        HurtBox b
                 in
                 { w
                     | enemyHurtBox =
@@ -180,9 +169,9 @@ collide hitPlayer hitEnemy ( { playerHitBox, enemyHitBox, playerHurtBox, enemyHu
 
 hurtVsHurt f pos pack1 pack2 =
     System.indexedFoldl2
-        (\i1 (HurtBox _ ( o1, r1 )) p1 ->
+        (\i1 (HurtBox ( o1, r1 )) p1 ->
             System.indexedFoldl2
-                (\i2 (HurtBox _ ( o2, r2 )) p2 acc2 ->
+                (\i2 (HurtBox ( o2, r2 )) p2 acc2 ->
                     let
                         isColliding =
                             Vec2.distanceSquared (Vec2.add o1 p1) (Vec2.add o2 p2) < (r1 * r1 + r2 * r2)
@@ -198,9 +187,9 @@ hurtVsHurt f pos pack1 pack2 =
 
 hurtVsHit f pos pack1 pack2 =
     System.indexedFoldl2
-        (\i1 (HurtBox _ ( o1, r1 )) p1 ->
+        (\i1 (HurtBox ( o1, r1 )) p1 ->
             System.indexedFoldl2
-                (\i2 ( _, ( o2, r2 ) ) p2 acc2 ->
+                (\i2 ( o2, r2 ) p2 acc2 ->
                     let
                         isColliding =
                             Vec2.distanceSquared (Vec2.add o1 p1) (Vec2.add o2 p2) < (r1 * r1 + r2 * r2)
@@ -235,7 +224,7 @@ debug hurtSpec posSpec { uAbsolute, px } world =
             , uP = Math.Vector2.vec2 0.5 0.5
             }
 
-        create r g b a uP ( _, ( offset, radius ) ) acc =
+        create r g b a uP ( offset, radius ) acc =
             Ellipse.draw tileVertexShader
                 { comp
                     | color = Math.Vector4.vec4 r g b a
@@ -247,5 +236,10 @@ debug hurtSpec posSpec { uAbsolute, px } world =
     []
         |> System.foldl2 (create 1 1 1 1) pos playerHitBox
         |> System.foldl2 (create (233 / 255) (56 / 255) (65 / 255) 1) pos enemyHitBox
-        |> System.foldl2 (\pos_ (HurtBox hp r) acc -> create (90 / 255) 1 (80 / 255) 1 pos_ ( hp, r ) acc) pos playerHurtBox
-        |> System.foldl2 (\pos_ (HurtBox hp r) acc -> create (77 / 255) 0.5 (201 / 255) 1 pos_ ( hp, r ) acc) pos enemyHurtBox
+        |> System.foldl2 (\pos_ (HurtBox circles) acc -> create (90 / 255) 1 (80 / 255) 1 pos_ circles acc) pos playerHurtBox
+        |> System.foldl2
+            (\pos_ (HurtBox circles) acc ->
+                create (77 / 255) 0.5 (201 / 255) 1 pos_ circles acc
+            )
+            pos
+            enemyHurtBox

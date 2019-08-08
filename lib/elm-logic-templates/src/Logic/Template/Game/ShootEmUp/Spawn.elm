@@ -8,6 +8,7 @@ import Logic.Template.Component.AI as AI exposing (AiPercentage)
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation exposing (Animation)
 import Logic.Template.Component.EventSequence as EventSequence exposing (EventSequence)
+import Logic.Template.Component.HitPoints as HitPoints
 import Logic.Template.Component.Hurt as Hurt exposing (HitBox, HurtBox(..), spawnEnemyHurtBox)
 import Logic.Template.Component.IdSource as IdSource
 import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
@@ -24,7 +25,6 @@ import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.Sprite as Sprite
 import Maybe exposing (Maybe)
 import Parser exposing ((|.), (|=), Parser)
-import Set
 import Tiled.Object exposing (Object)
 import Tiled.Properties exposing (Property(..))
 
@@ -37,6 +37,7 @@ type Event
         , explosion : Explosion
         , targets : AiPercentage
         , lifetime : Int
+        , hp : Int
         }
 
 
@@ -44,37 +45,22 @@ type alias Explosion =
     Maybe ( Animation, Sprite )
 
 
-spawn deadFxSpec (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime }) world =
-    spawn_
-        deadFxSpec
-        sprite
-        ammo
-        hurtbox
-        explosion
-        targets
-        lifetime
-        world
-
-
-spawn_ deadFxSpec sprite ammo hurtbox explosion targets lifetime =
+spawn deadFxSpec enemy =
     entity
-        sprite
-        ammo
-        hurtbox
-        explosion
-        targets
-        lifetime
+        enemy
         IdSource.spec
+        HitPoints.spec
         deadFxSpec
         Position.spec
         Velocity.spec
         AI.spec
         Lifetime.spec
         Sprite.spec
+        Ammo.spec
         (Input.toComps Input.spec)
 
 
-entity sprite ammo hurtbox explosion targets lifetime idSpec deadFx posSpec velSpec aiSpec2 lifetimeSpec spriteSpec inputSpec world =
+entity (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime, hp }) idSpec hpSpec deadFx posSpec velSpec aiSpec2 lifetimeSpec spriteSpec ammoSpec inputSpec world =
     let
         input =
             Input.emptyComp
@@ -94,9 +80,12 @@ entity sprite ammo hurtbox explosion targets lifetime idSpec deadFx posSpec velS
         |> Entity.with ( lifetimeSpec, lifetime )
         |> Entity.with ( spriteSpec, sprite )
         |> Entity.with ( inputSpec, input )
-        |> Entity.with ( Ammo.spec, ammo )
+        |> Entity.with ( ammoSpec, ammo )
+        |> Entity.with ( hpSpec, hp )
         |> maybeSpawn ( deadFx, explosion )
-        |> (\( entityID, w ) -> Singleton.update Hurt.spec (spawnEnemyHurtBox ( entityID, hurtbox )) w)
+        |> (\( entityID, w ) ->
+                Singleton.update Hurt.spec (spawnEnemyHurtBox ( entityID, hurtbox )) w
+           )
 
 
 maybeSpawn ( spec, value ) acc =
@@ -192,10 +181,11 @@ read spec_ =
                                                                         , Enemy
                                                                             { sprite = sprite
                                                                             , ammo = ammo
-                                                                            , hurtbox = hurtbox |> Maybe.withDefault (HurtBox hitPoints ( vec2 0 0, width / 2 ))
+                                                                            , hurtbox = hurtbox |> Maybe.withDefault (HurtBox ( vec2 0 0, width / 2 ))
                                                                             , explosion = explosion
                                                                             , targets = targets_
                                                                             , lifetime = lifetime
+                                                                            , hp = hitPoints
                                                                             }
                                                                         )
                                                                     )
@@ -307,14 +297,6 @@ type AiKey
 
 aiKeyParser : Parser ( AiKey, Int )
 aiKeyParser =
-    let
-        var =
-            Parser.variable
-                { start = Char.isAlphaNum
-                , inner = \c -> Char.isAlphaNum c || c == '_'
-                , reserved = Set.empty
-                }
-    in
     Parser.succeed
         (\index key ->
             ( key, index )

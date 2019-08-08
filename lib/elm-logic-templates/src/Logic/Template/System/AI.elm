@@ -1,4 +1,4 @@
-module Logic.Template.System.AI exposing (system2)
+module Logic.Template.System.AI exposing (system)
 
 --https://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
 -- https://www.youtube.com/watch?v=oBJxLYIih7M
@@ -9,7 +9,7 @@ import Logic.Template.Component.AI as AI
 import Set
 
 
-system2 lazyGetScale inputSpec posSpec velSpec aiSpec w =
+system lazyGetScale inputSpec posSpec velSpec aiSpec w =
     Logic.System.step4
         (\( input, setInput ) ( pos, _ ) ( velocity, setVel ) ( ai, setAi ) acc ->
             let

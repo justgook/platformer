@@ -8,6 +8,7 @@ import Logic.Component.Singleton as Singleton
 import Logic.Template.Camera.Common
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
+import Logic.Template.SaveLoad.Internal.Parser as Parser
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), defaultRead)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util exposing (levelProps)
@@ -84,18 +85,10 @@ read spec_ =
 
 
 getFollowId =
-    let
-        var =
-            Parser.variable
-                { start = Char.isAlphaNum
-                , inner = \c -> Char.isAlphaNum c || c == '_'
-                , reserved = Set.empty
-                }
-    in
     Parser.succeed (\a b -> ( a, b ))
         |. Parser.keyword "camera"
         |. Parser.symbol "."
-        |= var
+        |= Parser.var
         |. Parser.symbol "."
-        |= var
+        |= Parser.var
         |. Parser.end

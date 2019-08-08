@@ -10,7 +10,7 @@ import Browser.Events as Events
 import Bytes exposing (Bytes)
 import Bytes.Encode exposing (Encoder)
 import Html exposing (div, text)
-import Html.Attributes as Html exposing (style)
+import Html.Attributes exposing (style)
 import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
@@ -21,8 +21,10 @@ import Logic.Template.Component.AI as AI exposing (AiPercentage)
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation as Animation exposing (Animation)
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
+import Logic.Template.Component.Damage as Damage exposing (Damage)
 import Logic.Template.Component.EventSequence as EventSequence exposing (EventSequence)
 import Logic.Template.Component.FX as FX exposing (FX)
+import Logic.Template.Component.HitPoints as HitPoints exposing (HitPoints)
 import Logic.Template.Component.Hurt as Hurt exposing (HurtBox(..), HurtWorld)
 import Logic.Template.Component.IdSource as IdSource exposing (IdSource)
 import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
@@ -41,11 +43,11 @@ import Logic.Template.SaveLoad.Ammo as Ammo
 import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
 import Logic.Template.SaveLoad.Hurt as Hurt
-import Logic.Template.SaveLoad.Input
-import Logic.Template.SaveLoad.Internal.Reader exposing (WorldReader)
+import Logic.Template.SaveLoad.Input as Input
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
-import Logic.Template.SaveLoad.Position
+import Logic.Template.SaveLoad.Position as Position
 import Logic.Template.SaveLoad.Sprite as Sprite
 import Logic.Template.Sprite exposing (invertFragmentShader, mainFragmentShader)
 import Logic.Template.System.AI as AI
@@ -128,7 +130,8 @@ type alias ShootEmUpWorld =
         , deadFx : Component.Set ( Animation, Sprite )
         , seed : Random.Seed
         , score : Int
-        , hp : Component.Set Int
+        , hp : Component.Set HitPoints
+        , damage : Component.Set Damage
         }
 
 
@@ -157,7 +160,8 @@ empty =
     , deadFx = Component.empty
     , seed = Random.initialSeed 42
     , score = 0
-    , hp = Component.empty
+    , hp = HitPoints.empty
+    , damage = Damage.empty
     }
 
 
@@ -173,6 +177,8 @@ clearOut id world =
                 >> Entity.removeFor AI.spec
                 >> Entity.removeFor (Input.toComps Input.spec)
                 >> Entity.removeFor Ammo.spec
+                >> Entity.removeFor HitPoints.spec
+                >> Entity.removeFor Damage.spec
                 >> Entity.removeFor deadFxSpec
                 >> Hurt.remove Hurt.spec
     in
@@ -199,11 +205,11 @@ lazyGetScale w =
 update world =
     world
         |> EventSequence.apply EventSequence.spec (SelfEvent.spawn deadFxSpec)
-        |> AI.system2 lazyGetScale (Input.toComps Input.spec) Position.spec Velocity.spec AI.spec
+        |> AI.system lazyGetScale (Input.toComps Input.spec) Position.spec Velocity.spec AI.spec
         |> Control.shootEmUp { x = 10, y = 10 } Input.spec Position.spec world.render.virtualScreen
         |> Logic.Template.System.CountDown.system clearOut Lifetime.spec
         |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
-        |> Logic.Template.System.Fire.spawn IdSource.spec Hurt.spec Input.spec Ammo.spec Position.spec Velocity.spec Lifetime.spec Sprite.spec
+        |> Logic.Template.System.Fire.spawn IdSource.spec Damage.spec Hurt.spec Input.spec Ammo.spec Position.spec Velocity.spec Lifetime.spec Sprite.spec
         |> TimelineChange.topDown (Input.toComps Input.spec) AnimationsDict.spec Animation.spec
         |> FX.system FX.spec
         |> (\w_ ->
@@ -217,11 +223,11 @@ update world =
 
 onEnemyHit_ i1 i2 acc =
     case
-        Maybe.map2 (\( damage, _ ) (HurtBox hp enemyHurtBox) -> HurtBox (hp - damage) enemyHurtBox)
-            (Entity.get i2 acc.hurt.playerHitBox)
-            (Entity.get i1 acc.hurt.enemyHurtBox)
+        Maybe.map2 (\damage hp -> hp - damage)
+            (Entity.get i2 acc.damage)
+            (Entity.get i1 acc.hp)
     of
-        Just (HurtBox hpLeft _) ->
+        Just hpLeft ->
             if hpLeft <= 0 then
                 onEnemyKill i1 acc
                     |> (\www ->
@@ -231,10 +237,10 @@ onEnemyHit_ i1 i2 acc =
                        )
 
             else
-                { acc | hurt = Hurt.setEnemyHpBox i1 hpLeft acc.hurt }
+                { acc | hp = Component.set i1 hpLeft acc.hp }
                     |> FX.invertColors FX.spec i1
                     |> (\www ->
-                            Entity.with ( Lifetime.spec, getRestLife i1 i2 acc ) ( i2, www )
+                            Entity.with ( Lifetime.spec, calculateRestLife i1 i2 acc ) ( i2, www )
                                 |> Hurt.remove Hurt.spec
                                 |> Tuple.second
                        )
@@ -243,7 +249,7 @@ onEnemyHit_ i1 i2 acc =
             acc
 
 
-getRestLife i1 i2 world =
+calculateRestLife i1 i2 world =
     Position.spec.get world
         |> (\store ->
                 Maybe.map3
@@ -277,8 +283,9 @@ onEnemyKill entityId world =
                 >> Entity.removeFor AI.spec
                 >> Entity.removeFor (Input.toComps Input.spec)
                 >> Entity.removeFor Ammo.spec
+                >> Entity.removeFor HitPoints.spec
+                >> Entity.removeFor Damage.spec
                 >> Entity.removeFor deadFxSpec
-                --                >> Entity.removeFor HP.spec
                 >> Hurt.remove Hurt.spec
 
         ( _, newWorld ) =
@@ -406,14 +413,18 @@ subscriptions w =
 
 read : List (WorldReader ShootEmUpWorld)
 read =
-    [ Sprite.read Sprite.spec
+    let
+        ifPlayer =
+            Reader.guard Input.haveInput
+    in
+    [ Sprite.read Sprite.spec |> ifPlayer
+    , Animation.read Animation.spec |> ifPlayer
+    , AnimationsDict.read Animation.fromTileset AnimationsDict.spec |> ifPlayer
+    , Ammo.read Ammo.spec |> ifPlayer
+    , Hurt.readPlayerHurt Hurt.spec |> ifPlayer
+    , Position.read Position.spec |> ifPlayer
+    , Input.read Input.spec
     , RenderInfo.read RenderInfo.spec
-    , Logic.Template.SaveLoad.Input.read Input.spec
-    , Logic.Template.SaveLoad.Position.read Position.spec
-    , Animation.read Animation.spec
-    , AnimationsDict.read Animation.fromTileset AnimationsDict.spec
-    , Hurt.read Hurt.spec
-    , Ammo.read Ammo.spec
 
     ---------
     , SelfEvent.read EventSequence.spec
@@ -423,26 +434,26 @@ read =
 encoders : List (ShootEmUpWorld -> Encoder)
 encoders =
     [ Sprite.encode Sprite.spec
-    , RenderInfo.encode RenderInfo.spec
-    , Logic.Template.SaveLoad.Input.encode Input.spec
-    , Logic.Template.SaveLoad.Position.encode Position.spec
     , Animation.encode Animation.spec
     , AnimationsDict.encode Animation.encodeItem AnimationsDict.spec
-    , Hurt.encode Hurt.spec
     , Ammo.encode Ammo.spec
+    , Hurt.encode Hurt.spec
+    , Position.encode Position.spec
+    , RenderInfo.encode RenderInfo.spec
+    , Input.encode Input.spec
     ]
 
 
 decoders : GetTexture -> List (WorldDecoder ShootEmUpWorld)
 decoders getTexture =
     [ Sprite.decode Sprite.spec |> withTexture getTexture
-    , RenderInfo.decode RenderInfo.spec
-    , Logic.Template.SaveLoad.Input.decode Input.spec
-    , Logic.Template.SaveLoad.Position.decode Position.spec
     , Animation.decode Animation.spec
     , AnimationsDict.decode Animation.decodeItem AnimationsDict.spec
-    , Hurt.decode Hurt.spec
     , Ammo.decode Ammo.spec |> withTexture getTexture
+    , Hurt.decode Hurt.spec
+    , Position.decode Position.spec
+    , Input.decode Input.spec
+    , RenderInfo.decode RenderInfo.spec
     ]
 
 
