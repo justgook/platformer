@@ -5,7 +5,7 @@ import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.System exposing (applyIf)
 import Logic.Template.Component.Ammo as Ammo
-import Logic.Template.Component.Hurt as Hurt exposing (Circles, spawnHitBox)
+import Logic.Template.Component.Hurt exposing (Circles, spawnHitBox)
 import Logic.Template.Component.IdSource as IdSource
 import Logic.Template.Input as Input
 import Set
@@ -58,7 +58,7 @@ spawnSystem ( targetId, targetPos ) i key pos ammo acc =
 
         hitBox : Circles
         hitBox =
-            ( vec2 10 10, 5 )
+            [ ( vec2 10 10, 5 ) ]
 
         velocity template =
             --            if i /= targetId then

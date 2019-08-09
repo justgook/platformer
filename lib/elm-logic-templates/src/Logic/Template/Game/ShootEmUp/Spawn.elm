@@ -9,7 +9,7 @@ import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation exposing (Animation)
 import Logic.Template.Component.EventSequence as EventSequence exposing (EventSequence)
 import Logic.Template.Component.HitPoints as HitPoints
-import Logic.Template.Component.Hurt as Hurt exposing (HitBox, HurtBox(..), spawnEnemyHurtBox)
+import Logic.Template.Component.Hurt as Hurt exposing (HitBox, HurtBox, spawnEnemyHurtBox)
 import Logic.Template.Component.IdSource as IdSource
 import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
 import Logic.Template.Component.Position as Position
@@ -181,7 +181,7 @@ read spec_ =
                                                                         , Enemy
                                                                             { sprite = sprite
                                                                             , ammo = ammo
-                                                                            , hurtbox = hurtbox |> Maybe.withDefault (HurtBox ( vec2 0 0, width / 2 ))
+                                                                            , hurtbox = hurtbox |> Maybe.withDefault [ ( vec2 0 0, width / 2 ) ]
                                                                             , explosion = explosion
                                                                             , targets = targets_
                                                                             , lifetime = lifetime

@@ -1,7 +1,7 @@
 module Logic.Template.Component.Hurt exposing
     ( Circles
     , HitBox
-    , HurtBox(..)
+    , HurtBox
     , HurtWorld
     , collide
     , debug
@@ -9,7 +9,6 @@ module Logic.Template.Component.Hurt exposing
     , enemyHitBoxSpec
     , playerHitBoxSpec
     , remove
-    , setEnemyHpBox
     , spawnEnemyHurtBox
     , spawnHitBox
     , spawnPlayerHurtBox
@@ -46,12 +45,12 @@ type alias HitBox =
     Circles
 
 
-type HurtBox
-    = HurtBox Circles
+type alias HurtBox =
+    Circles
 
 
 type alias Circles =
-    ( Vec2, Radius )
+    List ( Vec2, Radius )
 
 
 type alias Radius =
@@ -137,23 +136,6 @@ spawnEnemyHurtBox ( entityID, hurtBox ) w =
     Entity.with ( enemyHurtBoxSpec, hurtBox ) ( entityID, w ) |> Tuple.second
 
 
-setEnemyHpBox : EntityID -> HurtWorld -> HurtWorld
-setEnemyHpBox entityID w =
-    Entity.get entityID w.enemyHurtBox
-        |> Maybe.map
-            (\(HurtBox b) ->
-                let
-                    hurt =
-                        HurtBox b
-                in
-                { w
-                    | enemyHurtBox =
-                        Component.set entityID hurt w.enemyHurtBox
-                }
-            )
-        |> Maybe.withDefault w
-
-
 enemyHurtBoxSpec =
     { get = .enemyHurtBox
     , set = \comps world -> { world | enemyHurtBox = comps }
@@ -162,21 +144,21 @@ enemyHurtBoxSpec =
 
 collide : (EntityID -> EntityID -> world -> world) -> (EntityID -> EntityID -> world -> world) -> ( HurtWorld, Component.Set Vec2 ) -> world -> world
 collide hitPlayer hitEnemy ( { playerHitBox, enemyHitBox, playerHurtBox, enemyHurtBox }, pos ) =
-    hurtVsHurt hitPlayer pos playerHurtBox enemyHurtBox
-        >> hurtVsHit hitPlayer pos playerHurtBox enemyHitBox
-        >> hurtVsHit hitEnemy pos enemyHurtBox playerHitBox
+    checkCollision hitPlayer pos playerHurtBox enemyHurtBox
+        >> checkCollision hitPlayer pos playerHurtBox enemyHitBox
+        >> checkCollision hitEnemy pos enemyHurtBox playerHitBox
 
 
-hurtVsHurt f pos pack1 pack2 =
+checkCollision f pos pack1 pack2 =
     System.indexedFoldl2
-        (\i1 (HurtBox ( o1, r1 )) p1 ->
+        (\i1 circles1 p1 ->
             System.indexedFoldl2
-                (\i2 (HurtBox ( o2, r2 )) p2 acc2 ->
+                (\i2 circles2 p2 acc2 ->
                     let
-                        isColliding =
+                        isColliding_ ( o1, r1 ) ( o2, r2 ) =
                             Vec2.distanceSquared (Vec2.add o1 p1) (Vec2.add o2 p2) < (r1 * r1 + r2 * r2)
                     in
-                    applyIf isColliding (f i1 i2) acc2
+                    applyIf (any2 isColliding_ circles1 circles2) (f i1 i2) acc2
                 )
                 pack2
                 pos
@@ -185,22 +167,9 @@ hurtVsHurt f pos pack1 pack2 =
         pos
 
 
-hurtVsHit f pos pack1 pack2 =
-    System.indexedFoldl2
-        (\i1 (HurtBox ( o1, r1 )) p1 ->
-            System.indexedFoldl2
-                (\i2 ( o2, r2 ) p2 acc2 ->
-                    let
-                        isColliding =
-                            Vec2.distanceSquared (Vec2.add o1 p1) (Vec2.add o2 p2) < (r1 * r1 + r2 * r2)
-                    in
-                    applyIf isColliding (f i1 i2) acc2
-                )
-                pack2
-                pos
-        )
-        pack1
-        pos
+any2 : (a -> b -> Bool) -> List a -> List b -> Bool
+any2 f l1 l2 =
+    List.any (\a -> List.any (f a) l2) l1
 
 
 debug :
@@ -224,22 +193,23 @@ debug hurtSpec posSpec { uAbsolute, px } world =
             , uP = Math.Vector2.vec2 0.5 0.5
             }
 
-        create r g b a uP ( offset, radius ) acc =
-            Ellipse.draw tileVertexShader
-                { comp
-                    | color = Math.Vector4.vec4 r g b a
-                    , uP = Math.Vector2.fromRecord uP |> Math.Vector2.add (Math.Vector2.fromRecord offset) |> Math.Vector2.scale px
-                    , uDimension = Math.Vector2.vec2 (radius * 2) (radius * 2) |> Math.Vector2.scale px
-                }
-                :: acc
+        create r g b a uP shapes acc =
+            List.foldl
+                (\( offset, radius ) ->
+                    (::)
+                        (Ellipse.draw tileVertexShader
+                            { comp
+                                | color = Math.Vector4.vec4 r g b a
+                                , uP = Math.Vector2.fromRecord uP |> Math.Vector2.add (Math.Vector2.fromRecord offset) |> Math.Vector2.scale px
+                                , uDimension = Math.Vector2.vec2 (radius * 2) (radius * 2) |> Math.Vector2.scale px
+                            }
+                        )
+                )
+                acc
+                shapes
     in
     []
         |> System.foldl2 (create 1 1 1 1) pos playerHitBox
         |> System.foldl2 (create (233 / 255) (56 / 255) (65 / 255) 1) pos enemyHitBox
-        |> System.foldl2 (\pos_ (HurtBox circles) acc -> create (90 / 255) 1 (80 / 255) 1 pos_ circles acc) pos playerHurtBox
-        |> System.foldl2
-            (\pos_ (HurtBox circles) acc ->
-                create (77 / 255) 0.5 (201 / 255) 1 pos_ circles acc
-            )
-            pos
-            enemyHurtBox
+        |> System.foldl2 (\pos_ circles acc -> create (90 / 255) 1 (80 / 255) 1 pos_ circles acc) pos playerHurtBox
+        |> System.foldl2 (\pos_ circles acc -> create (77 / 255) 0.5 (201 / 255) 1 pos_ circles acc) pos enemyHurtBox

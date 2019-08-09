@@ -15,7 +15,7 @@ import Bytes.Encode as E exposing (Encoder)
 import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
-import Logic.Template.Component.Hurt exposing (Circles, HitBox, HurtBox(..), HurtWorld, spawnPlayerHurtBox)
+import Logic.Template.Component.Hurt exposing (Circles, HitBox, HurtBox, HurtWorld, spawnPlayerHurtBox)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, GuardReader, Read(..), TileArg, WorldReader, defaultRead)
@@ -51,21 +51,28 @@ extractHurtBox tile =
     getCollision tile
         >> ResourceTask.map
             (Maybe.andThen
-                (\col ->
-                    case List.head col.objects of
-                        Just (Ellipse { x, y, width }) ->
-                            let
-                                r =
-                                    width * 0.5
+                (.objects
+                    >> List.foldl
+                        (\item acc ->
+                            case item of
+                                Ellipse { x, y, width } ->
+                                    let
+                                        r =
+                                            width * 0.5
+                                    in
+                                    ( vec2 (x + r - tile.width * 0.5) (tile.height * 0.5 - r - y), r ) :: acc
 
-                                offsetFromCenter =
-                                    vec2 (x + r - tile.width * 0.5) (tile.height * 0.5 - r - y)
-                            in
-                            HurtBox ( offsetFromCenter, r )
-                                |> Just
+                                _ ->
+                                    acc
+                        )
+                        []
+                    >> (\l ->
+                            if List.isEmpty l then
+                                Nothing
 
-                        _ ->
-                            Nothing
+                            else
+                                Just l
+                       )
                 )
             )
 
@@ -86,16 +93,19 @@ encode { get } world =
 encodeHit : Component.Set HitBox -> Encoder
 encodeHit =
     Entity.toList
-        >> E.list (\( id, ( offset, radius ) ) -> E.sequence [ E.id id, E.xy offset, E.float radius ])
+        >> E.list
+            (\( id, shapes ) ->
+                E.sequence [ E.id id, E.list encodeCircle shapes ]
+            )
+
+
+encodeCircle ( offset, radius ) =
+    E.sequence [ E.xy offset, E.float radius ]
 
 
 encodeHurt : Component.Set HurtBox -> Encoder
 encodeHurt =
-    Entity.toList
-        >> E.list
-            (\( id, HurtBox ( offset, radius ) ) ->
-                E.sequence [ E.id id, E.xy offset, E.float radius ]
-            )
+    encodeHit
 
 
 decode : Singleton.Spec HurtWorld world -> WorldDecoder world
@@ -110,19 +120,14 @@ decode spec =
 
 decodeHit : Decoder (Component.Set HitBox)
 decodeHit =
-    D.list (D.map3 (\id offset radius -> ( id, ( offset, radius ) )) D.id D.xy D.float)
+    D.list (D.map2 (\id shapes -> ( id, shapes )) D.id (D.list decodeCircle))
         |> D.map Entity.fromList
 
 
 decodeHurt : Decoder (Component.Set HurtBox)
 decodeHurt =
-    D.list
-        (D.map3
-            (\id offset radius ->
-                ( id, HurtBox ( offset, radius ) )
-            )
-            D.id
-            D.xy
-            D.float
-        )
-        |> D.map Entity.fromList
+    decodeHit
+
+
+decodeCircle =
+    D.map2 Tuple.pair D.xy D.float
