@@ -29,3 +29,6 @@ gh-pages/*
 !gh-pages/script.js
 !gh-pages/.gitignore
 
+!gh-pages/space-shooter
+!gh-pages/top-down-adventure
+!gh-pages/platformer
