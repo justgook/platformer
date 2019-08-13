@@ -3,17 +3,19 @@ module Logic.Template.Game.ShootEmUp exposing (World, decode, encode, game, load
 --https://www.gamedev.net/articles/visual-arts/the-total-beginner%E2%80%99s-guide-to-better-2d-game-art-r2959/
 --https://www.shadertoy.com/view/XlfGRj
 --https://yahiko.developpez.com/apps/Starfield/
+--https://raymond-schlitter.squarespace.com/blog/2017/9/18/thyria-devlog-06-one-year-and-going-strong
 
 import AltMath.Vector2 as Vec2
 import Browser.Dom as Browser
 import Browser.Events as Events
 import Bytes exposing (Bytes)
+import Bytes.Decode as D
 import Bytes.Encode exposing (Encoder)
 import Html exposing (div, text)
 import Html.Attributes exposing (style)
 import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
-import Logic.Entity as Entity
+import Logic.Entity as Entity exposing (EntityID)
 import Logic.GameFlow as Flow exposing (GameFlow(..))
 import Logic.Launcher as Launcher
 import Logic.System as System
@@ -21,11 +23,11 @@ import Logic.Template.Component.AI as AI exposing (AiPercentage)
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation as Animation exposing (Animation)
 import Logic.Template.Component.AnimationsDict as AnimationsDict exposing (TimeLineDict3)
+import Logic.Template.Component.Circles as Circles exposing (Circles)
 import Logic.Template.Component.Damage as Damage exposing (Damage)
 import Logic.Template.Component.EventSequence as EventSequence exposing (EventSequence)
 import Logic.Template.Component.FX as FX exposing (FX)
 import Logic.Template.Component.HitPoints as HitPoints exposing (HitPoints)
-import Logic.Template.Component.Hurt as Hurt exposing (HurtWorld)
 import Logic.Template.Component.IdSource as IdSource exposing (IdSource)
 import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
@@ -33,17 +35,21 @@ import Logic.Template.Component.Position as Position exposing (Position)
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
 import Logic.Template.Component.Velocity as Velocity exposing (Velocity)
 import Logic.Template.GFX.Space
-import Logic.Template.Game.ShootEmUp.Spawn as SelfEvent
+import Logic.Template.Game.ShootEmUp.Spawn as Spawn
 import Logic.Template.Input as Input
 import Logic.Template.Input.Keyboard as Keyboard
-import Logic.Template.Internal exposing (fullscreenVertexShader)
+import Logic.Template.Internal exposing (fullscreenVertexShader, tileVertexShader)
+import Logic.Template.Rectangle as Rectangle
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
 import Logic.Template.SaveLoad as SaveLoad
 import Logic.Template.SaveLoad.Ammo as Ammo
 import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.AnimationsDict as AnimationsDict
-import Logic.Template.SaveLoad.Hurt as Hurt
+import Logic.Template.SaveLoad.Circles as Circles
+import Logic.Template.SaveLoad.EventSequence as EventSequence
 import Logic.Template.SaveLoad.Input as Input
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
@@ -57,6 +63,7 @@ import Logic.Template.System.Fire
 import Logic.Template.System.TimelineChange as TimelineChange
 import Logic.Template.System.VelocityPosition
 import Math.Vector2
+import Math.Vector4
 import Random
 import Task exposing (Task)
 import WebGL
@@ -116,7 +123,6 @@ type alias ShootEmUpWorld =
         , sprites : Component.Set Sprite
         , input : Input.InputSingleton
         , position : Component.Set Position
-        , hurt : HurtWorld
         , ammo : Component.Set Ammo
         , idSource : IdSource
         , onScreen : TwoButtonStick {}
@@ -124,7 +130,7 @@ type alias ShootEmUpWorld =
         , animations : Component.Set (TimeLineDict3 Animation)
         , velocity : Component.Set Velocity
         , lifetime : Component.Set Lifetime
-        , events : EventSequence SelfEvent.Event
+        , events : EventSequence Spawn.Event
         , ai2 : Component.Set AiPercentage
         , fx : FX
         , deadFx : Component.Set ( Animation, Sprite )
@@ -132,6 +138,12 @@ type alias ShootEmUpWorld =
         , score : Int
         , hp : Component.Set HitPoints
         , damage : Component.Set Damage
+
+        ---- NEW "physics"
+        , playerHitBox : Component.Set Circles
+        , enemyHitBox : Component.Set Circles
+        , playerHurtBox : Component.Set Circles
+        , enemyHurtBox : Component.Set Circles
         }
 
 
@@ -146,7 +158,6 @@ empty =
     , sprites = Sprite.empty
     , input = Input.empty
     , position = Position.empty
-    , hurt = Hurt.empty
     , ammo = Ammo.empty
     , idSource = IdSource.empty 15
     , onScreen = OnScreenControl.emptyTwoButtonStick
@@ -162,6 +173,12 @@ empty =
     , score = 0
     , hp = HitPoints.empty
     , damage = Damage.empty
+
+    ---- NEW "physics"
+    , playerHitBox = Component.empty
+    , enemyHitBox = Component.empty
+    , playerHurtBox = Component.empty
+    , enemyHurtBox = Component.empty
     }
 
 
@@ -180,18 +197,16 @@ clearOut id world =
                 >> Entity.removeFor HitPoints.spec
                 >> Entity.removeFor Damage.spec
                 >> Entity.removeFor deadFxSpec
-                >> Hurt.remove Hurt.spec
+                >> Entity.removeFor playerHitBoxSpec
+                >> Entity.removeFor enemyHitBoxSpec
+                >> Entity.removeFor playerHurtBoxSpec
+                >> Entity.removeFor enemyHurtBoxSpec
+
+        --                >> Hurt.remove Hurt.spec
     in
     ( id, world |> Singleton.update IdSource.spec (\c -> { c | pool = id :: c.pool }) )
         |> remove
         |> Tuple.second
-
-
-deadFxSpec : Component.Spec ( Animation, Sprite ) { world | deadFx : Component.Set ( Animation, Sprite ) }
-deadFxSpec =
-    { get = .deadFx
-    , set = \comps world -> { world | deadFx = comps }
-    }
 
 
 lazyGetScale w =
@@ -202,26 +217,78 @@ lazyGetScale w =
     { x = virtualScreen.width, y = virtualScreen.height }
 
 
+spawnEnemy deadFxSpec_ enemy =
+    Spawn.entity
+        enemy
+        IdSource.spec
+        HitPoints.spec
+        deadFxSpec_
+        Position.spec
+        Velocity.spec
+        AI.spec
+        Lifetime.spec
+        Sprite.spec
+        Ammo.spec
+        (Input.toComps Input.spec)
+        enemyHurtBoxSpec
+
+
 update world =
     world
-        |> EventSequence.apply EventSequence.spec (SelfEvent.spawn deadFxSpec)
+        |> EventSequence.apply EventSequence.spec (spawnEnemy deadFxSpec)
         |> AI.system lazyGetScale (Input.toComps Input.spec) Position.spec Velocity.spec AI.spec
         |> Control.shootEmUp { x = 10, y = 10 } Input.spec Position.spec world.render.virtualScreen
         |> Logic.Template.System.CountDown.system clearOut Lifetime.spec
         |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
-        |> Logic.Template.System.Fire.spawn IdSource.spec Damage.spec Hurt.spec Input.spec Ammo.spec Position.spec Velocity.spec Lifetime.spec Sprite.spec
+        |> Logic.Template.System.Fire.system spawnBullet (Input.toComps Input.spec) Ammo.spec
         |> TimelineChange.topDown (Input.toComps Input.spec) AnimationsDict.spec Animation.spec
         |> FX.system FX.spec
         |> (\w_ ->
                 let
                     newWorld =
-                        Hurt.collide onPlayerHit onEnemyHit_ ( Hurt.spec.get w_, Position.spec.get w_ ) w_
+                        w_
+                            |> Circles.collide onPlayerHit w_.position w_.playerHurtBox w_.enemyHurtBox
+                            |> Circles.collide onPlayerHit w_.position w_.playerHurtBox w_.enemyHitBox
+                            |> Circles.collide onEnemyHit w_.position w_.enemyHurtBox w_.playerHitBox
                 in
                 ( newWorld, Cmd.none )
            )
 
 
-onEnemyHit_ i1 i2 acc =
+spawnBullet entityId template w =
+    let
+        lifetime =
+            100
+
+        hitBox : Circles
+        hitBox =
+            [ ( Vec2.vec2 -10 10, 5 ) ]
+
+        hitSpec =
+            case Entity.get entityId w.enemyHurtBox of
+                Just _ ->
+                    enemyHitBoxSpec
+
+                Nothing ->
+                    playerHitBoxSpec
+    in
+    case Entity.get entityId w.position of
+        Just pos ->
+            w
+                |> IdSource.create IdSource.spec
+                |> Entity.with ( Position.spec, Vec2.add pos template.offset )
+                |> Entity.with ( Velocity.spec, .velocity template )
+                |> Entity.with ( Lifetime.spec, lifetime )
+                |> Entity.with ( Sprite.spec, template.sprite )
+                |> Entity.with ( Damage.spec, template.damage )
+                |> Entity.with ( hitSpec, hitBox )
+                |> Tuple.second
+
+        Nothing ->
+            w
+
+
+onEnemyHit i1 i2 acc =
     case
         Maybe.map2 (\damage hp -> hp - damage)
             (Entity.get i2 acc.damage)
@@ -232,7 +299,7 @@ onEnemyHit_ i1 i2 acc =
                 onEnemyKill i1 acc
                     |> (\www ->
                             Entity.with ( Lifetime.spec, 1 ) ( i2, www )
-                                |> Hurt.remove Hurt.spec
+                                |> Entity.removeFor playerHitBoxSpec
                                 |> Tuple.second
                        )
 
@@ -241,7 +308,7 @@ onEnemyHit_ i1 i2 acc =
                     |> FX.invertColors FX.spec i1
                     |> (\www ->
                             Entity.with ( Lifetime.spec, calculateRestLife i1 i2 acc ) ( i2, www )
-                                |> Hurt.remove Hurt.spec
+                                |> Entity.removeFor playerHitBoxSpec
                                 |> Tuple.second
                        )
 
@@ -266,8 +333,8 @@ calculateRestLife i1 i2 world =
         |> Maybe.withDefault 1
 
 
-onPlayerHit pId i2 acc =
-    clearOut i2 acc
+onPlayerHit pId enemyId acc =
+    clearOut enemyId acc
         |> FX.shake FX.spec
 
 
@@ -286,7 +353,10 @@ onEnemyKill entityId world =
                 >> Entity.removeFor HitPoints.spec
                 >> Entity.removeFor Damage.spec
                 >> Entity.removeFor deadFxSpec
-                >> Hurt.remove Hurt.spec
+                >> Entity.removeFor playerHitBoxSpec
+                >> Entity.removeFor enemyHitBoxSpec
+                >> Entity.removeFor playerHurtBoxSpec
+                >> Entity.removeFor enemyHurtBoxSpec
 
         ( _, newWorld ) =
             case Entity.get entityId (deadFxSpec.get world) of
@@ -316,14 +386,17 @@ view w_ =
                 , time = toFloat w.frame
                 }
 
-        debug =
-            Hurt.debug Hurt.spec Position.spec { uAbsolute = w.render.absolute, px = w.render.px } w
+        debug2 =
+            Circles.debug { r = 90 / 255, g = 1, b = 80 / 255 } w.playerHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+                ++ Circles.debug { r = 77 / 255, g = 0.5, b = 201 / 255 } w.enemyHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+                ++ Circles.debug { r = 233 / 255, g = 56 / 255, b = 65 / 255 } w.enemyHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+                ++ Circles.debug { r = 1, g = 1, b = 1 } w.playerHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
 
         playerEntityID =
             0
     in
     [ objRender w
-        ++ debug
+        ++ debug2
         --        |> (::) space
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
     , OnScreenControl.twoButtonStick
@@ -398,10 +471,47 @@ objRender w =
                             }
                     )
                 )
+                |> (\l ->
+                        case Entity.get i w.hp of
+                            Just hp ->
+                                let
+                                    pxToScreen px p_ =
+                                        p_
+                                            |> Vec2.add { x = 0, y = -70 }
+                                            |> Vec2.scale px
+                                            |> Math.Vector2.fromRecord
+
+                                    p =
+                                        position
+
+                                    width =
+                                        toFloat hp * 0.1
+
+                                    h =
+                                        10
+
+                                    delme =
+                                        { uDimension = Math.Vector2.vec2 (width * w.render.px) (h * w.render.px)
+                                        , absolute = w.render.absolute
+                                        , uAbsolute = w.render.absolute
+                                        , uP = pxToScreen w.render.px p
+                                        , color = Math.Vector4.vec4 0.8 0.2 0.2 1
+                                        }
+                                            |> inlineRectangleFill
+                                in
+                                (::) delme >> l
+
+                            _ ->
+                                l
+                   )
         )
         w.sprites
         w.position
         []
+
+
+inlineRectangleFill =
+    Rectangle.fill tileVertexShader
 
 
 subscriptions w =
@@ -421,13 +531,13 @@ read =
     , Animation.read Animation.spec |> ifPlayer
     , AnimationsDict.read Animation.fromTileset AnimationsDict.spec |> ifPlayer
     , Ammo.read Ammo.spec |> ifPlayer
-    , Hurt.readPlayerHurt Hurt.spec |> ifPlayer
     , Position.read Position.spec |> ifPlayer
     , Input.read Input.spec
     , RenderInfo.read RenderInfo.spec
 
-    ---------
-    , SelfEvent.read EventSequence.spec
+    ---- NEW "physics"
+    , Circles.readCircles playerHurtBoxSpec |> ifPlayer
+    , Spawn.read EventSequence.spec
     ]
 
 
@@ -437,10 +547,16 @@ encoders =
     , Animation.encode Animation.spec
     , AnimationsDict.encode Animation.encodeItem AnimationsDict.spec
     , Ammo.encode Ammo.spec
-    , Hurt.encode Hurt.spec
     , Position.encode Position.spec
-    , RenderInfo.encode RenderInfo.spec
     , Input.encode Input.spec
+    , RenderInfo.encode RenderInfo.spec
+    , EventSequence.spec.get >> EventSequence.encode Spawn.encodeItem
+
+    ---- NEW "physics"
+    , .playerHitBox >> E.components Circles.encodeCircles
+    , .enemyHitBox >> E.components Circles.encodeCircles
+    , .playerHurtBox >> E.components Circles.encodeCircles
+    , .enemyHurtBox >> E.components Circles.encodeCircles
     ]
 
 
@@ -450,10 +566,16 @@ decoders getTexture =
     , Animation.decode Animation.spec
     , AnimationsDict.decode Animation.decodeItem AnimationsDict.spec
     , Ammo.decode Ammo.spec |> withTexture getTexture
-    , Hurt.decode Hurt.spec
     , Position.decode Position.spec
     , Input.decode Input.spec
     , RenderInfo.decode RenderInfo.spec
+    , EventSequence.decode (Spawn.decodeItem getTexture) |> D.map EventSequence.spec.set
+
+    ---- NEW "physics"
+    , D.components Circles.decodeCircles |> D.map (\c w -> { w | playerHitBox = c })
+    , D.components Circles.decodeCircles |> D.map (\c w -> { w | enemyHitBox = c })
+    , D.components Circles.decodeCircles |> D.map (\c w -> { w | playerHurtBox = c })
+    , D.components Circles.decodeCircles |> D.map (\c w -> { w | enemyHurtBox = c })
     ]
 
 
@@ -463,3 +585,38 @@ setInitResize =
             RenderInfo.resizeAndCenterLevelX RenderInfo.spec w (round scene.width) (round scene.height)
         )
         Browser.getViewport
+
+
+playerHitBoxSpec : Component.Spec Circles { world | playerHitBox : Component.Set Circles }
+playerHitBoxSpec =
+    { get = .playerHitBox
+    , set = \comps world -> { world | playerHitBox = comps }
+    }
+
+
+enemyHitBoxSpec : Component.Spec Circles { world | enemyHitBox : Component.Set Circles }
+enemyHitBoxSpec =
+    { get = .enemyHitBox
+    , set = \comps world -> { world | enemyHitBox = comps }
+    }
+
+
+playerHurtBoxSpec : Component.Spec Circles { world | playerHurtBox : Component.Set Circles }
+playerHurtBoxSpec =
+    { get = .playerHurtBox
+    , set = \comps world -> { world | playerHurtBox = comps }
+    }
+
+
+enemyHurtBoxSpec : Component.Spec Circles { world | enemyHurtBox : Component.Set Circles }
+enemyHurtBoxSpec =
+    { get = .enemyHurtBox
+    , set = \comps world -> { world | enemyHurtBox = comps }
+    }
+
+
+deadFxSpec : Component.Spec ( Animation, Sprite ) { world | deadFx : Component.Set ( Animation, Sprite ) }
+deadFxSpec =
+    { get = .deadFx
+    , set = \comps world -> { world | deadFx = comps }
+    }

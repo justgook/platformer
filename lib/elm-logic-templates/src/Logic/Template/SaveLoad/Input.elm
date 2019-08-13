@@ -43,7 +43,7 @@ decode spec_ =
                 D.sizedString
                 D.sizedString
     in
-    D.list decoder
+    D.reverseList decoder
         |> D.map
             (\registered ->
                 Singleton.update spec_

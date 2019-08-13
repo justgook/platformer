@@ -1,26 +1,28 @@
-module Logic.Template.Game.ShootEmUp.Spawn exposing (Event(..), read, spawn)
+module Logic.Template.Game.ShootEmUp.Spawn exposing (Event(..), decodeExplosion, decodeItem, encodeExplosion, encodeItem, entity, read)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
+import Bytes.Decode as D exposing (Decoder)
+import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
 import Logic.Template.Component.AI as AI exposing (AiPercentage)
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation exposing (Animation)
+import Logic.Template.Component.Circles exposing (Circles)
 import Logic.Template.Component.EventSequence as EventSequence exposing (EventSequence)
-import Logic.Template.Component.HitPoints as HitPoints
-import Logic.Template.Component.Hurt as Hurt exposing (HitBox, HurtBox, spawnEnemyHurtBox)
 import Logic.Template.Component.IdSource as IdSource
-import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
-import Logic.Template.Component.Position as Position
 import Logic.Template.Component.Sprite as Sprite exposing (Sprite)
-import Logic.Template.Component.Velocity as Velocity
 import Logic.Template.Input as Input
+import Logic.Template.SaveLoad.AI as AI
 import Logic.Template.SaveLoad.Ammo as Ammo
 import Logic.Template.SaveLoad.Animation as Animation
-import Logic.Template.SaveLoad.Hurt as Hurt
+import Logic.Template.SaveLoad.Circles as Circles
+import Logic.Template.SaveLoad.Internal.Decode as D
+import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture)
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.Sprite as Sprite
 import Maybe exposing (Maybe)
@@ -33,7 +35,7 @@ type Event
     = Enemy
         { sprite : Sprite
         , ammo : Ammo
-        , hurtbox : HurtBox
+        , hurtbox : Circles
         , explosion : Explosion
         , targets : AiPercentage
         , lifetime : Int
@@ -45,22 +47,68 @@ type alias Explosion =
     Maybe ( Animation, Sprite )
 
 
-spawn deadFxSpec enemy =
-    entity
-        enemy
-        IdSource.spec
-        HitPoints.spec
-        deadFxSpec
-        Position.spec
-        Velocity.spec
-        AI.spec
-        Lifetime.spec
-        Sprite.spec
-        Ammo.spec
-        (Input.toComps Input.spec)
+encodeExplosion : Explosion -> Encoder
+encodeExplosion =
+    Maybe.map
+        (\( anim, sprite ) ->
+            E.sequence
+                [ E.id 1
+                , Animation.encodeItem anim
+                , sprite |> Sprite.encodeSprite
+                ]
+        )
+        >> Maybe.withDefault (E.id 0)
 
 
-entity (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime, hp }) idSpec hpSpec deadFx posSpec velSpec aiSpec2 lifetimeSpec spriteSpec ammoSpec inputSpec world =
+decodeExplosion : GetTexture -> Decoder Explosion
+decodeExplosion getTexture =
+    D.id
+        |> D.andThen
+            (\i ->
+                if i == 1 then
+                    D.map2 (\a b -> Just ( a, b )) Animation.decodeItem (Sprite.decodeSprite getTexture)
+
+                else
+                    D.succeed Nothing
+            )
+
+
+encodeItem (Enemy data) =
+    E.sequence
+        [ data.sprite |> Sprite.encodeSprite
+        , data.ammo |> Ammo.encodeItem
+        , data.hurtbox |> Circles.encodeCircles
+        , data.explosion |> encodeExplosion
+        , data.targets |> AI.encodeOne
+        , data.lifetime |> E.id
+        , data.hp |> E.id
+        ]
+
+
+decodeItem : GetTexture -> Decoder Event
+decodeItem getTexture =
+    D.succeed
+        (\sprite ammo hurtbox explosion targets lifetime hp ->
+            Enemy
+                { sprite = sprite
+                , ammo = ammo
+                , hurtbox = hurtbox
+                , explosion = explosion
+                , targets = targets
+                , lifetime = lifetime
+                , hp = hp
+                }
+        )
+        |> D.andMap (Sprite.decodeSprite getTexture)
+        |> D.andMap (Ammo.decodeItem getTexture)
+        |> D.andMap Circles.decodeCircles
+        |> D.andMap (decodeExplosion getTexture)
+        |> D.andMap AI.decodeOne
+        |> D.andMap D.id
+        |> D.andMap D.id
+
+
+entity (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime, hp }) idSpec hpSpec deadFx posSpec velSpec aiSpec2 lifetimeSpec spriteSpec ammoSpec inputSpec enemyHurtBoxSpec world =
     let
         input =
             Input.emptyComp
@@ -83,9 +131,8 @@ entity (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime, hp }) idSpe
         |> Entity.with ( ammoSpec, ammo )
         |> Entity.with ( hpSpec, hp )
         |> maybeSpawn ( deadFx, explosion )
-        |> (\( entityID, w ) ->
-                Singleton.update Hurt.spec (spawnEnemyHurtBox ( entityID, hurtbox )) w
-           )
+        |> Entity.with ( enemyHurtBoxSpec, hurtbox )
+        |> Tuple.second
 
 
 maybeSpawn ( spec, value ) acc =
@@ -112,9 +159,6 @@ read spec_ =
 
                         maybeInterval =
                             Dict.get "spawn.interval" properties
-
-                        --                        _ =
-                        --                            Debug.log "reading enemy width" width
                     in
                     if maybeRepeat == Nothing || maybeDelay == Nothing || maybeInterval == Nothing then
                         ResourceTask.succeed identity
@@ -205,7 +249,7 @@ read spec_ =
                             )
                             (Sprite.extract info)
                             (Ammo.extract info)
-                            (Hurt.extractHurtBox info)
+                            (Circles.extractCircles info)
                             getExplosion
                 )
     }

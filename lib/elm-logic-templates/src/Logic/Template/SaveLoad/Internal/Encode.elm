@@ -1,7 +1,9 @@
-module Logic.Template.SaveLoad.Internal.Encode exposing (bool, encoder, float, id, list, sizedString, xy, xyz, xyzw)
+module Logic.Template.SaveLoad.Internal.Encode exposing (bool, components, encoder, float, id, list, sizedString, xy, xyz, xyzw)
 
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as E exposing (Encoder)
+import Logic.Component as Component
+import Logic.Entity as Entity
 
 
 encoder encoders w =
@@ -63,3 +65,12 @@ sizedString str =
 list : (a -> Encoder) -> List a -> Encoder
 list f l =
     E.sequence (E.unsignedInt32 BE (List.length l) :: List.map f l)
+
+
+components : (b -> Encoder) -> Component.Set b -> Encoder
+components e =
+    Entity.toList
+        >> list
+            (\( id_, shapes ) ->
+                E.sequence [ id id_, e shapes ]
+            )

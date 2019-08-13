@@ -4,7 +4,7 @@ import Bytes exposing (Bytes)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E
 import Logic.Launcher as Launcher exposing (Error(..))
-import Logic.Template.SaveLoad.Internal.Decode as InternalD
+import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode
 import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled)
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader)
@@ -56,7 +56,7 @@ loadFromBytes bytes world decoders =
                                                 (\_ ->
                                                     decoders get
                                                         |> List.reverse
-                                                        |> InternalD.sequence
+                                                        |> D.sequence
                                                 )
                                         )
                         in

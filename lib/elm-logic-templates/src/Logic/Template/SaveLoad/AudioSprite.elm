@@ -47,10 +47,10 @@ decode : Singleton.Spec AudioSprite world -> WorldDecoder world
 decode spec_ =
     let
         src =
-            D.list D.sizedString
+            D.reverseList D.sizedString
 
         sprite =
-            D.list
+            D.reverseList
                 (D.map4
                     (\key offset duration loop ->
                         ( key

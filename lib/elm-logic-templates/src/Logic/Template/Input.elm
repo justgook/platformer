@@ -44,6 +44,7 @@ spec =
     }
 
 
+toComps : Singleton.Spec InputSingleton world -> Logic.Component.Spec Input world
 toComps spec_ =
     { get = spec_.get >> .comps
     , set =

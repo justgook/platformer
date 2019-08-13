@@ -27,5 +27,5 @@ encode { get } world =
 
 decode : Spec Position world -> WorldDecoder world
 decode spec =
-    D.list (D.map2 Tuple.pair D.id D.xy)
+    D.reverseList (D.map2 Tuple.pair D.id D.xy)
         |> D.map (\list -> spec.set (Entity.fromList list))

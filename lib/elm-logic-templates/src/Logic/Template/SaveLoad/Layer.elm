@@ -69,9 +69,8 @@ read spec =
             , set = \c -> Singleton.update spec (\layers -> updateObjLayer id (Logic.Template.Component.Layer.Object ( id, c )) [] layers)
             }
     in
-    Reader.combine
-        (TileLayer.read tileLayerSpec)
-        (ImageLayer.read imageLayerSpec)
+    TileLayer.read tileLayerSpec
+        |> Reader.combine (ImageLayer.read imageLayerSpec)
         |> Reader.combine (objLayerRead objLayerSpec)
 
 
@@ -196,7 +195,7 @@ decode spec_ getTexture =
                     (\layerType ->
                         case layerType of
                             0 ->
-                                D.list (D.map (\i -> ( i, () )) D.id)
+                                D.reverseList (D.map (\i -> ( i, () )) D.id)
                                     |> D.map (\l -> Logic.Template.Component.Layer.Object ( 0, Entity.fromList l ))
 
                             1 ->
@@ -221,7 +220,7 @@ decode spec_ getTexture =
                                 D.fail
                     )
     in
-    D.list decoder
+    D.reverseList decoder
         |> D.map
             (\list -> Singleton.update spec_ ((++) (List.reverse list)))
 

@@ -13,9 +13,6 @@ system lazyGetScale inputSpec posSpec velSpec aiSpec w =
     Logic.System.step4
         (\( input, setInput ) ( pos, _ ) ( velocity, setVel ) ( ai, setAi ) acc ->
             let
-                speed =
-                    10
-
                 distance_ =
                     Vec2.distanceSquared ai.target.position pos
 

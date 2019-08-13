@@ -1,10 +1,11 @@
 module Logic.Template.SaveLoad.Internal.Decode exposing
     ( andMap
     , bool
+    , components
     , float
     , foldl
     , id
-    , list
+    , reverseList
     , sequence
     , sizedString
     , xy
@@ -14,6 +15,8 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
 
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Decode as D exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt32)
+import Logic.Component as Component
+import Logic.Entity as Entity
 
 
 sequence : List (Decoder (a -> a)) -> Decoder (a -> a)
@@ -103,8 +106,8 @@ sizedString =
         |> D.andThen D.string
 
 
-list : Decoder a -> Decoder (List a)
-list decoder =
+reverseList : Decoder a -> Decoder (List a)
+reverseList decoder =
     unsignedInt32 BE
         |> andThen (\len -> loop ( len, [] ) (listStep decoder))
 
@@ -130,3 +133,9 @@ foldlStep decoder ( n, acc ) =
 
     else
         D.map (\x -> Loop ( n - 1, x )) (decoder acc)
+
+
+components : Decoder a -> Decoder (Component.Set a)
+components d =
+    reverseList (D.map2 (\id_ shapes -> ( id_, shapes )) id d)
+        |> D.map Entity.fromList

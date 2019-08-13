@@ -1,4 +1,4 @@
-module Logic.Template.Rectangle exposing (Model, Model2, draw, draw2)
+module Logic.Template.Rectangle exposing (Model, Model2, draw, draw2, fill)
 
 import Logic.Template.Internal exposing (Plate, entitySettings, plate)
 import Math.Vector2 exposing (Vec2)
@@ -22,6 +22,30 @@ type alias Model2 a =
         , height : Float
         , color : Vec4
     }
+
+
+
+--draw3: uDimension : Vector2.Vec2, uAbsolute : Mat4, uP : Vector2.Vec2
+
+
+fill : WebGL.Shader Plate { a | color : Vec4 } { uv : Vec2 } -> { a | color : Vec4 } -> WebGL.Entity
+fill vertexShader_ =
+    WebGL.entityWith
+        entitySettings
+        vertexShader_
+        fillFragment
+        plate
+
+
+fillFragment =
+    [glsl|
+        precision mediump float;
+        varying vec2 uv;
+        uniform vec4 color;
+        void main () {
+            gl_FragColor = color;
+        }
+    |]
 
 
 draw : WebGL.Shader Plate (Model a) { uv : Vec2 } -> Model a -> WebGL.Entity

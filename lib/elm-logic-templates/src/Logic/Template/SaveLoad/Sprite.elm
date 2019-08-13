@@ -47,7 +47,7 @@ decode spec_ getTexture =
         decoder =
             D.map2 Tuple.pair D.id (decodeSprite getTexture)
     in
-    D.list decoder
+    D.reverseList decoder
         |> D.map (\list -> spec_.set (Entity.fromList list))
 
 

@@ -205,7 +205,7 @@ decoder =
                                 D.fail
                     )
     in
-    D.list itemDecoder
+    D.reverseList itemDecoder
 
 
 urlFromBytes : Bytes -> String

@@ -64,7 +64,7 @@ decode spec_ =
 
         indexedDecoder =
             D.map2 Tuple.pair D.id itemDecoder
-                |> D.list
+                |> D.reverseList
                 |> D.map Dict.fromList
 
         staticDecoder =

@@ -89,7 +89,7 @@ decode spec_ =
                 D.id
                 decodeItem
     in
-    D.list decoder
+    D.reverseList decoder
         |> D.map
             (\list -> Singleton.update spec_ (\_ -> Entity.fromList list))
 
@@ -108,7 +108,7 @@ decodeItem =
                 |> FrameChange.emptyComp
                 |> (\a -> { a | uMirror = Vec2.fromRecord uMirror })
         )
-        (D.list
+        (D.reverseList
             (D.map2 (\a b -> ( a, Vec4.fromRecord b )) D.id D.xyzw)
         )
         D.xy

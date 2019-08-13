@@ -1,7 +1,7 @@
-module Logic.Template.SaveLoad.Ammo exposing (decode, encode, extract, read)
+module Logic.Template.SaveLoad.Ammo exposing (decode, decodeItem, encode, encodeItem, extract, read)
 
 import AltMath.Vector2 as Vec2
-import Bytes.Decode as D
+import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Dict
 import Logic.Component exposing (Spec)
@@ -11,7 +11,7 @@ import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
-import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture)
+import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture, GetTexture)
 import Logic.Template.SaveLoad.Sprite as Sprite exposing (decodeSprite, encodeSprite)
 import Parser exposing ((|.), (|=))
 import Set
@@ -161,7 +161,7 @@ extract =
                                         )
                             )
                 )
-                (ResourceTask.succeed Dict.empty)
+                (ResourceTask.succeed Ammo.emptyComp)
 
 
 type Key
@@ -178,28 +178,27 @@ type Key
 encode : Spec Ammo world -> world -> Encoder
 encode { get } world =
     Entity.toList (get world)
+        |> E.list (\( id, ammo ) -> E.sequence [ E.id id, encodeItem ammo ])
+
+
+encodeItem : Ammo -> Encoder
+encodeItem ammo =
+    Ammo.toList ammo
         |> E.list
-            (\( id, ammo ) ->
+            (\( key, template ) ->
                 E.sequence
-                    [ E.id id
-                    , Dict.toList ammo
-                        |> E.list
-                            (\( key, template ) ->
-                                E.sequence
-                                    [ E.sizedString key
-                                    , E.list
-                                        (\content ->
-                                            E.sequence
-                                                [ encodeSprite content.sprite
-                                                , E.xy content.offset
-                                                , E.xy content.velocity
-                                                , E.id content.fireRate
-                                                , E.id content.damage
-                                                ]
-                                        )
-                                        template
-                                    ]
-                            )
+                    [ E.sizedString key
+                    , E.list
+                        (\content ->
+                            E.sequence
+                                [ encodeSprite content.sprite
+                                , E.xy content.offset
+                                , E.xy content.velocity
+                                , E.id content.fireRate
+                                , E.id content.damage
+                                ]
+                        )
+                        template
                     ]
             )
 
@@ -207,8 +206,25 @@ encode { get } world =
 decode : Spec Ammo world -> DecoderWithTexture world
 decode spec getTexture =
     let
+        decodeDict =
+            decodeItem getTexture
+    in
+    D.components decodeDict |> D.map spec.set
+
+
+decodeItem : GetTexture -> Decoder Ammo
+decodeItem getTexture =
+    let
         decodeTemplate =
-            D.succeed Ammo.Template
+            D.succeed
+                (\sprite offset velocity fireRate damage ->
+                    { sprite = sprite
+                    , offset = offset
+                    , velocity = velocity
+                    , fireRate = fireRate
+                    , damage = damage
+                    }
+                )
                 |> D.andMap (decodeSprite getTexture)
                 |> D.andMap D.xy
                 |> D.andMap D.xy
@@ -216,14 +232,7 @@ decode spec getTexture =
                 |> D.andMap D.id
 
         decodeTemplateList =
-            D.list decodeTemplate
-
-        decodeDict =
-            D.list (D.map2 Tuple.pair D.sizedString decodeTemplateList)
-                |> D.map Dict.fromList
-
-        decoder =
-            D.map2 (\id item -> ( id, item )) D.id decodeDict
+            D.reverseList decodeTemplate
     in
-    D.list decoder
-        |> D.map (\list -> spec.set (Entity.fromList list))
+    D.reverseList (D.map2 Tuple.pair D.sizedString decodeTemplateList)
+        |> D.map Ammo.fromList

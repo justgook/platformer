@@ -9,6 +9,7 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     , TileDataWith
     , WorldRead
     , WorldReader
+    , andThen
     , combine
     , combineListInTask
     , defaultRead
@@ -21,6 +22,7 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     )
 
 import Logic.Entity exposing (EntityID)
+import Logic.Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled(..), GetTileset)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Tiled exposing (GidInfo)
@@ -139,16 +141,49 @@ type Read from to
     | None
 
 
+andThen : (a -> WorldReader world) -> Reader a -> WorldReader world
+andThen doThen r =
+    let
+        resultToAsync f1 input result =
+            case f1 result of
+                Sync f ->
+                    ResourceTask.succeed (f input)
 
---
---sync : (from -> to) -> Read from to
---sync =
---    Sync
---
---
---async : (from -> CacheTask CacheTiled -> ResourceTask to CacheTiled) -> Read from to
---async =
---    Async
+                Async f ->
+                    f input
+
+                None ->
+                    ResourceTask.succeed identity
+
+        change a f1 =
+            case a of
+                Sync f2 ->
+                    Async
+                        (\input ->
+                            f2 input |> resultToAsync f1 input
+                        )
+
+                Async f2 ->
+                    Async
+                        (\input ->
+                            f2 input >> ResourceTask.andThen (resultToAsync f1 input)
+                        )
+
+                None ->
+                    None
+    in
+    { objectTile = change r.objectTile (doThen >> .objectTile)
+    , objectPoint = change r.objectPoint (doThen >> .objectPoint)
+    , objectRectangle = change r.objectRectangle (doThen >> .objectRectangle)
+    , objectEllipse = change r.objectEllipse (doThen >> .objectEllipse)
+    , objectPolygon = change r.objectPolygon (doThen >> .objectPolygon)
+    , objectPolyLine = change r.objectPolyLine (doThen >> .objectPolyLine)
+    , layerTile = change r.layerTile (doThen >> .layerTile)
+    , layerInfiniteTile = change r.layerInfiniteTile (doThen >> .layerInfiniteTile)
+    , layerImage = change r.layerImage (doThen >> .layerImage)
+    , layerObject = change r.layerObject (doThen >> .layerObject)
+    , level = change r.level (doThen >> .level)
+    }
 
 
 guard : GuardReader -> WorldReader world -> WorldReader world

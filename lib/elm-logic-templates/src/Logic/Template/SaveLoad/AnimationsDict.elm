@@ -65,13 +65,13 @@ decode : Decoder { a | uMirror : Vec2 } -> Component.Spec (TimeLineDict3 { a | u
 decode decodeItem spec_ =
     let
         decodeDict =
-            D.list (D.map2 (\animId animLine -> ( animId, animLine )) decodeAnimationId decodeItem)
+            D.reverseList (D.map2 (\animId animLine -> ( animId, animLine )) decodeAnimationId decodeItem)
                 |> D.map Dict.fromList
 
         decoder =
             D.map3 (\id current dict -> ( id, ( current, dict ) )) D.id decodeAnimationId decodeDict
     in
-    D.list decoder
+    D.reverseList decoder
         |> D.map
             (\list -> Singleton.update spec_ (\_ -> Entity.fromList list))
 
