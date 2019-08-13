@@ -215,6 +215,16 @@
                          "value":0
                         }, 
                         {
+                         "name":"spawn.onKill.reward.id",
+                         "type":"int",
+                         "value":9
+                        }, 
+                        {
+                         "name":"spawn.onKill.reward.tileset",
+                         "type":"int",
+                         "value":188
+                        }, 
+                        {
                          "name":"spawn.onKill.tileset",
                          "type":"int",
                          "value":59
@@ -1622,6 +1632,29 @@
                     }
                 }],
          "tilewidth":238
+        }, 
+        {
+         "columns":4,
+         "firstgid":188,
+         "image":"rewards.png",
+         "imageheight":64,
+         "imagewidth":64,
+         "margin":0,
+         "name":"rewards",
+         "spacing":0,
+         "tilecount":16,
+         "tileheight":16,
+         "tiles":[
+                {
+                 "id":9,
+                 "properties":[
+                        {
+                         "name":"setFire",
+                         "type":"string",
+                         "value":"BigBang"
+                        }]
+                }],
+         "tilewidth":16
         }],
  "tilewidth":16,
  "type":"map",

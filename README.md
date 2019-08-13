@@ -24,7 +24,7 @@
        * `velocity.x` / `velocity.y` - `int` - 
     1. `n` - `int` - each ammo pattern can have multiple bullets - it is just index of bullet  
 
-## Animactions
+## Animations
 
   Can be be assigned only to Tile-Object, and tile will be used as `anim.idle.E.id`
 
