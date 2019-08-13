@@ -49,7 +49,7 @@
   1. **NOT IMPLEMENTED** `onClick.[ID].loadLevel` - `filename`
 ### Physics
   1. `mass` - `float` - (default `1`) - 
-### Animactions
+### Animations
 
   **NOT IMPLEMENTED**
 
