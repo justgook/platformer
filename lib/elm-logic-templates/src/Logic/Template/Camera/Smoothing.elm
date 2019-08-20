@@ -1,20 +1,20 @@
 module Logic.Template.Camera.Smoothing exposing (smooth, xSmooth, ySmooth)
 
 import AltMath.Vector2 exposing (Vec2)
-import Logic.Template.Camera.Common exposing (Any)
+import Logic.Template.Camera.Common exposing (LegacyAny)
 
 
-smooth : Vec2 -> Any a -> Any a
+smooth : Vec2 -> LegacyAny a -> LegacyAny a
 smooth target cam =
     { cam | viewportOffset = target }
 
 
-xSmooth : Vec2 -> Any a -> Any a
+xSmooth : Vec2 -> LegacyAny a -> LegacyAny a
 xSmooth target cam =
     { cam | viewportOffset = { x = target.x, y = cam.viewportOffset.y } }
 
 
-ySmooth : Vec2 -> Any a -> Any a
+ySmooth : Vec2 -> LegacyAny a -> LegacyAny a
 ySmooth target cam =
     { cam | viewportOffset = { x = cam.viewportOffset.x, y = target.y } }
 

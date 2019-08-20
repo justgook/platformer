@@ -68,7 +68,7 @@ encoders =
     , RenderInfo.encode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.encode Logic.Template.Component.Layer.spec
     , Logic.Template.SaveLoad.Physics.encode Logic.Template.Component.Physics.spec
-    , Logic.Template.SaveLoad.Camera.encodeId Logic.Template.Camera.spec
+    , Logic.Template.SaveLoad.Camera.encode Logic.Template.Camera.spec
     , Logic.Template.SaveLoad.AudioSprite.encode Logic.Template.Component.SFX.spec
     ]
 
@@ -82,7 +82,7 @@ decoders getTexture =
     , RenderInfo.decode RenderInfo.spec
     , Logic.Template.SaveLoad.Layer.decode Logic.Template.Component.Layer.spec |> withTexture getTexture
     , Logic.Template.SaveLoad.Physics.decode Logic.Template.Component.Physics.spec
-    , Logic.Template.SaveLoad.Camera.decodeId Logic.Template.Camera.spec
+    , Logic.Template.SaveLoad.Camera.decode Logic.Template.Camera.spec
     , Logic.Template.SaveLoad.AudioSprite.decode Logic.Template.Component.SFX.spec
     ]
 
@@ -91,7 +91,7 @@ read : List (WorldReader PlatformerWorld)
 read =
     [ Sprite.read Sprite.spec
     , Logic.Template.SaveLoad.Input.read Logic.Template.Input.spec
-    , Logic.Template.SaveLoad.Camera.readId Logic.Template.Camera.spec
+    , Logic.Template.SaveLoad.Camera.read Logic.Template.Camera.spec
     , RenderInfo.read RenderInfo.spec
     , Logic.Template.SaveLoad.Physics.read Logic.Template.Component.Physics.spec
     , TimeLine.read TimeLine.spec

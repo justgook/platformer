@@ -1,6 +1,7 @@
 module Logic.Template.SaveLoad.Internal.ResourceTask exposing
     ( CacheTask
     , ResourceTask
+    , andMap
     , andThen
     , attempt
     , attemptWithCach
@@ -114,6 +115,11 @@ map4 :
     -> (CacheTask b -> ResourceTask a5 b)
 map4 f task1 task2 task3 task4 =
     task1 >> andThen (\a -> task2 >> andThen (\b -> task3 >> andThen (\c -> task4 >> map (\d -> f a b c d))))
+
+
+andMap : (CacheTask b -> ResourceTask a b) -> (CacheTask b -> ResourceTask (a -> c) b) -> CacheTask b -> ResourceTask c b
+andMap =
+    map2 (|>)
 
 
 andThen : (a -> CacheTask b -> ResourceTask a1 b) -> ResourceTask a b -> ResourceTask a1 b

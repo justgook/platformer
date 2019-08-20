@@ -37,6 +37,7 @@ fromList l =
             Empty
 
 
+add : ( Int, e ) -> EventSequence e -> EventSequence e
 add ( nextFireFrame_, next_ ) eventSequence =
     case eventSequence of
         Empty ->

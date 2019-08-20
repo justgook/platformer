@@ -1,17 +1,17 @@
-module Logic.Template.Camera.Common exposing (Any, Camera, WithId)
+module Logic.Template.Camera.Common exposing (LegacyAny, LegacyCamera, LegacyWithId)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
 
 
-type alias Any a =
+type alias LegacyAny a =
     { a
         | viewportOffset : Vec2
     }
 
 
-type alias Camera =
-    Any {}
+type alias LegacyCamera =
+    LegacyAny {}
 
 
-type alias WithId a =
-    Any { a | id : Int }
+type alias LegacyWithId a =
+    LegacyAny { a | id : Int }

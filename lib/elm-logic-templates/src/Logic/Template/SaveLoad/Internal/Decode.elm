@@ -5,6 +5,7 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     , float
     , foldl
     , id
+    , maybe
     , reverseList
     , sequence
     , sizedString
@@ -133,6 +134,19 @@ foldlStep decoder ( n, acc ) =
 
     else
         D.map (\x -> Loop ( n - 1, x )) (decoder acc)
+
+
+maybe : Decoder b -> Decoder (Maybe b)
+maybe d =
+    D.unsignedInt8
+        |> D.andThen
+            (\i ->
+                if i == 1 then
+                    D.map Just d
+
+                else
+                    D.succeed Nothing
+            )
 
 
 components : Decoder a -> Decoder (Component.Set a)

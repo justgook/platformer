@@ -3,9 +3,9 @@ module Logic.Template.SaveLoad.TiledReader exposing (parse)
 import Logic.Component as Component
 import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader, combineListInTask, pointData, polygonData, rectangleData, tileArgs, tileDataWith)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (WorldReader, combineListInTask, pointData, polygonData, rectangleData, tileArgs)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
-import Logic.Template.SaveLoad.Internal.Util as Util exposing (getTilesetByGid)
+import Logic.Template.SaveLoad.Internal.Util as Util
 import Tiled exposing (gidInfo)
 import Tiled.Layer
 import Tiled.Level
@@ -50,7 +50,7 @@ parse emptyECS readers level start =
                                 acc
                                     |> ResourceTask.andThen
                                         (\info ->
-                                            readFor .layerTile (tileDataWith (getTilesetByGid info.tilesets) tileData) info
+                                            readFor .layerTile tileData info
                                         )
 
                             Tiled.Layer.Object objectData ->
@@ -136,7 +136,7 @@ objectLayerParser level fix readers info_ objectData start =
                             (\( layerECS, info ) ->
                                 let
                                     args =
-                                        tileArgs level objectData data (gidInfo data.gid) (getTilesetByGid info.tilesets)
+                                        tileArgs level objectData data (gidInfo data.gid)
                                 in
                                 readFor .objectTile args ( layerECS, info )
                             )

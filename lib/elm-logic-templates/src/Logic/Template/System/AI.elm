@@ -9,7 +9,7 @@ import Logic.Template.Component.AI as AI
 import Set
 
 
-system lazyGetScale inputSpec posSpec velSpec aiSpec w =
+system inputSpec posSpec velSpec aiSpec w =
     Logic.System.step4
         (\( input, setInput ) ( pos, _ ) ( velocity, setVel ) ( ai, setAi ) acc ->
             let
@@ -32,11 +32,8 @@ system lazyGetScale inputSpec posSpec velSpec aiSpec w =
 
                     else if distance_ < 1 then
                         let
-                            scale =
-                                lazyGetScale w
-
                             targets__ =
-                                changeTarget scale ai
+                                changeTarget ai
 
                             targetPos =
                                 targets__.target.position
@@ -66,14 +63,15 @@ pointOnSegment a b c =
     ((c.x - a.x) * (c.x - b.x) + (c.y - a.y) * (c.y - b.y)) < 0
 
 
-changeTarget scale targets =
+changeTarget targets =
     let
         setPos ({ position } as info) =
             { info
                 | position =
                     position
-                        |> Vec2.mul { x = scale.x, y = scale.y }
-                        |> (\a -> Vec2.sub a { x = scale.x * 0.5, y = 0 })
+
+                --                        |> Vec2.mul { x = scale.x, y = scale.y }
+                --                        |> (\a -> Vec2.sub a { x = scale.x * 0.5, y = 0 })
             }
     in
     case targets.next of

@@ -1,10 +1,10 @@
 module Logic.Template.Camera.Trigger exposing (Trigger, yTrigger)
 
-import Logic.Template.Camera.Common exposing (Any)
+import Logic.Template.Camera.Common exposing (LegacyAny)
 
 
 type alias Trigger a =
-    Any { a | yTarget : Float }
+    LegacyAny { a | yTarget : Float }
 
 
 yTrigger speed =

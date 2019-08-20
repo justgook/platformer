@@ -95,9 +95,9 @@ set newName ammo_ =
                 ammo_
 
             else
-                case Dict.get name rest of
+                case Dict.get newName rest of
                     Just item ->
-                        Ammo ( name, item ) rest
+                        Ammo ( newName, item ) rest
 
                     Nothing ->
                         ammo_
@@ -106,7 +106,7 @@ set newName ammo_ =
 fromList : List ( String, Templates ) -> Ammo
 fromList l =
     case l of
-        ( name, templates ) :: rest ->
+        ( name, templates ) :: _ ->
             Ammo ( name, templates ) (Dict.fromList l)
 
         [] ->

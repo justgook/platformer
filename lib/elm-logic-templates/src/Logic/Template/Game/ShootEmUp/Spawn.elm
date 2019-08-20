@@ -1,4 +1,4 @@
-module Logic.Template.Game.ShootEmUp.Spawn exposing (Event(..), decodeExplosion, decodeItem, encodeExplosion, encodeItem, entity, read)
+module Logic.Template.Game.ShootEmUp.Spawn exposing (Event(..), Reward, decodeExplosion, decodeItem, encodeExplosion, encodeItem, read)
 
 import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Decode as D exposing (Decoder)
@@ -6,7 +6,7 @@ import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
-import Logic.Template.Component.AI as AI exposing (AiPercentage)
+import Logic.Template.Component.AI as AI exposing (AiTargets)
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.Component.Animation exposing (Animation)
 import Logic.Template.Component.Circles exposing (Circles)
@@ -20,6 +20,7 @@ import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.Circles as Circles
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
+import Logic.Template.SaveLoad.Internal.Loader exposing (TaskTiled)
 import Logic.Template.SaveLoad.Internal.Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture)
@@ -37,9 +38,10 @@ type Event
         , ammo : Ammo
         , hurtbox : Circles
         , explosion : Explosion
-        , targets : AiPercentage
+        , targets : AiTargets
         , lifetime : Int
         , hp : Int
+        , reward : Reward
         }
 
 
@@ -47,32 +49,50 @@ type alias Explosion =
     Maybe ( Animation, Sprite )
 
 
+type alias Reward =
+    Maybe { anim : Maybe Animation, sprite : Sprite, ammo : String }
+
+
 encodeExplosion : Explosion -> Encoder
 encodeExplosion =
-    Maybe.map
-        (\( anim, sprite ) ->
+    E.maybe <|
+        \( anim, sprite ) ->
             E.sequence
-                [ E.id 1
-                , Animation.encodeItem anim
+                [ Animation.encodeItem anim
                 , sprite |> Sprite.encodeSprite
                 ]
-        )
-        >> Maybe.withDefault (E.id 0)
 
 
 decodeExplosion : GetTexture -> Decoder Explosion
 decodeExplosion getTexture =
-    D.id
-        |> D.andThen
-            (\i ->
-                if i == 1 then
-                    D.map2 (\a b -> Just ( a, b )) Animation.decodeItem (Sprite.decodeSprite getTexture)
-
-                else
-                    D.succeed Nothing
-            )
+    D.maybe <|
+        D.map2 (\a b -> ( a, b )) Animation.decodeItem (Sprite.decodeSprite getTexture)
 
 
+encodeReward : Reward -> Encoder
+encodeReward =
+    E.maybe
+        (\{ anim, sprite, ammo } ->
+            E.sequence
+                [ E.maybe Animation.encodeItem anim
+                , sprite |> Sprite.encodeSprite
+                , ammo |> E.sizedString
+                ]
+        )
+
+
+decodeReward : GetTexture -> Decoder Reward
+decodeReward getTexture =
+    D.maybe
+        (D.map3
+            (\anim sprite ammo -> { anim = anim, sprite = sprite, ammo = ammo })
+            (D.maybe Animation.decodeItem)
+            (Sprite.decodeSprite getTexture)
+            D.sizedString
+        )
+
+
+encodeItem : Event -> Encoder
 encodeItem (Enemy data) =
     E.sequence
         [ data.sprite |> Sprite.encodeSprite
@@ -82,13 +102,14 @@ encodeItem (Enemy data) =
         , data.targets |> AI.encodeOne
         , data.lifetime |> E.id
         , data.hp |> E.id
+        , data.reward |> encodeReward
         ]
 
 
 decodeItem : GetTexture -> Decoder Event
 decodeItem getTexture =
     D.succeed
-        (\sprite ammo hurtbox explosion targets lifetime hp ->
+        (\sprite ammo hurtbox explosion targets lifetime hp reward ->
             Enemy
                 { sprite = sprite
                 , ammo = ammo
@@ -97,6 +118,7 @@ decodeItem getTexture =
                 , targets = targets
                 , lifetime = lifetime
                 , hp = hp
+                , reward = reward
                 }
         )
         |> D.andMap (Sprite.decodeSprite getTexture)
@@ -106,42 +128,7 @@ decodeItem getTexture =
         |> D.andMap AI.decodeOne
         |> D.andMap D.id
         |> D.andMap D.id
-
-
-entity (Enemy { sprite, ammo, hurtbox, explosion, targets, lifetime, hp }) idSpec hpSpec deadFx posSpec velSpec aiSpec2 lifetimeSpec spriteSpec ammoSpec inputSpec enemyHurtBoxSpec world =
-    let
-        input =
-            Input.emptyComp
-
-        startPos =
-            targets.target.position
-                |> Vec2.mul { x = world.render.virtualScreen.width, y = world.render.virtualScreen.height }
-                |> (\a -> Vec2.sub a { x = world.render.virtualScreen.width * 0.5, y = 0 })
-
-        target =
-            targets.target
-    in
-    IdSource.create idSpec world
-        |> Entity.with ( posSpec, startPos )
-        |> Entity.with ( velSpec, { x = 0, y = 0 } )
-        |> Entity.with ( aiSpec2, { targets | target = { target | position = startPos } } )
-        |> Entity.with ( lifetimeSpec, lifetime )
-        |> Entity.with ( spriteSpec, sprite )
-        |> Entity.with ( inputSpec, input )
-        |> Entity.with ( ammoSpec, ammo )
-        |> Entity.with ( hpSpec, hp )
-        |> maybeSpawn ( deadFx, explosion )
-        |> Entity.with ( enemyHurtBoxSpec, hurtbox )
-        |> Tuple.second
-
-
-maybeSpawn ( spec, value ) acc =
-    case value of
-        Just v ->
-            Entity.with ( spec, v ) acc
-
-        Nothing ->
-            acc
+        |> D.andMap (decodeReward getTexture)
 
 
 read : Singleton.Spec (EventSequence Event) world -> WorldReader world
@@ -182,24 +169,34 @@ read spec_ =
                                     >> toPercentage levelWidth levelHeight
 
                             getExplosion =
-                                Maybe.map2
-                                    (\tileID firstgid ->
-                                        Animation.extract { info | gid = tileID + firstgid }
-                                            >> ResourceTask.andThen
-                                                (Maybe.map
-                                                    (\anim ->
-                                                        Sprite.extract { info | gid = tileID + firstgid }
-                                                            >> ResourceTask.map (Tuple.pair anim >> Just)
+                                Maybe.map2 (+) (props.int "spawn.onKill.id") (props.int "spawn.onKill.tileset")
+                                    |> Maybe.map
+                                        (\tileID ->
+                                            Animation.extract { info | gid = tileID }
+                                                >> ResourceTask.andThen
+                                                    (Maybe.map
+                                                        (\anim ->
+                                                            Sprite.extract { info | gid = tileID } >> ResourceTask.map (Tuple.pair anim >> Just)
+                                                        )
+                                                        >> Maybe.withDefault (ResourceTask.succeed Nothing)
                                                     )
-                                                    >> Maybe.withDefault (ResourceTask.succeed Nothing)
-                                                )
-                                    )
-                                    (props.int "spawn.onKill.id")
-                                    (props.int "spawn.onKill.tileset")
+                                        )
+                                    |> Maybe.withDefault (ResourceTask.succeed Nothing)
+
+                            getReward : TaskTiled Reward
+                            getReward =
+                                Maybe.map2 (+) (props.int "spawn.onKill.reward.id") (props.int "spawn.onKill.reward.tileset")
+                                    |> Maybe.map
+                                        (\tileID ->
+                                            ResourceTask.map3 (\anim sprite tileProps -> Just { anim = anim, sprite = sprite, ammo = Maybe.withDefault "0" (tileProps.string "setAmmo") })
+                                                (Animation.extract { info | gid = tileID })
+                                                (Sprite.extract { info | gid = tileID })
+                                                (Util.tileProps { info | gid = tileID })
+                                        )
                                     |> Maybe.withDefault (ResourceTask.succeed Nothing)
                         in
-                        ResourceTask.map4
-                            (\sprite ammo hurtbox explosion ( entityId, world ) ->
+                        ResourceTask.succeed
+                            (\sprite ammo hurtbox explosion reward ( entityId, world ) ->
                                 ( entityId
                                 , Maybe.map3
                                     (\repeat_ delay_ interval_ ->
@@ -230,6 +227,7 @@ read spec_ =
                                                                             , targets = targets_
                                                                             , lifetime = lifetime
                                                                             , hp = hitPoints
+                                                                            , reward = reward
                                                                             }
                                                                         )
                                                                     )
@@ -247,10 +245,11 @@ read spec_ =
                                     |> Maybe.withDefault world
                                 )
                             )
-                            (Sprite.extract info)
-                            (Ammo.extract info)
-                            (Circles.extractCircles info)
-                            getExplosion
+                            |> ResourceTask.andMap (Sprite.extract info)
+                            |> ResourceTask.andMap (Ammo.extract info)
+                            |> ResourceTask.andMap (Circles.extractCircles info)
+                            |> ResourceTask.andMap getExplosion
+                            |> ResourceTask.andMap getReward
                 )
     }
 
@@ -259,7 +258,7 @@ aiTargets :
     (Object -> Object)
     -> Dict String Property
     -> List Object
-    -> AiPercentage
+    -> AiTargets
 aiTargets yInvert props objList =
     props
         |> Dict.foldl (addItem yInvert objList) Dict.empty
@@ -267,7 +266,7 @@ aiTargets yInvert props objList =
         |> (\l ->
                 case l of
                     target :: rest ->
-                        { waiting = 0
+                        { waiting = target.wait
                         , prev = [ target ]
                         , target = target
                         , next = rest

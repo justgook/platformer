@@ -1,11 +1,11 @@
-module Logic.Template.Component.AI exposing (AiPercentage, Spot, empty, emptySpot, spec)
+module Logic.Template.Component.AI exposing (AiTargets, Spot, empty, emptySpot, spec)
 
 import AltMath.Vector2 exposing (Vec2)
 import Logic.Component
 import Logic.System
 
 
-type alias AiPercentage =
+type alias AiTargets =
     { waiting : Int
     , prev : List Spot
     , target : Spot
@@ -30,13 +30,13 @@ emptySpot =
     }
 
 
-spec : Logic.Component.Spec AiPercentage { world | ai2 : Logic.Component.Set AiPercentage }
+spec : Logic.Component.Spec AiTargets { world | ai2 : Logic.Component.Set AiTargets }
 spec =
     { get = .ai2
     , set = \comps world -> { world | ai2 = comps }
     }
 
 
-empty : Logic.Component.Set AiPercentage
+empty : Logic.Component.Set AiTargets
 empty =
     Logic.Component.empty

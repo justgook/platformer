@@ -16,6 +16,7 @@ import Logic.Template.SaveLoad.Internal.Util as Util exposing (boolToFloat, hexC
 import Math.Vector2 as Vec2 exposing (vec2)
 import Math.Vector3 as Vec3 exposing (vec3)
 import Math.Vector4 as Vec4
+import Tiled.Level
 import Tiled.Tileset exposing (EmbeddedTileData)
 import WebGL.Texture exposing (Texture)
 
@@ -86,20 +87,15 @@ read spec =
     }
 
 
-extract : ExtractAsync TileArg Sprite
+extract : { a | level : Tiled.Level.Level, gid : Int, x : Float, y : Float, fh : Bool, fv : Bool } -> ExtractAsync Sprite
 extract =
-    \({ gid, getTilesetByGid } as info) ->
-        getTilesetByGid gid
+    \info ->
+        Util.getTilesetByGid (Util.levelCommon info.level).tilesets info.gid
             >> ResourceTask.andThen
                 (\t_ ->
                     case t_ of
                         Tiled.Tileset.Embedded t ->
-                            let
-                                uIndex =
-                                    gid - t.firstgid
-                            in
-                            Loader.getTextureTiled t.image
-                                >> ResourceTask.map (\image -> create t image info)
+                            Loader.getTextureTiled t.image >> ResourceTask.map (\image -> create t image info)
 
                         _ ->
                             ResourceTask.fail (Error 6002 "object tile readers works only with single image tilesets")
@@ -115,11 +111,10 @@ create t image { x, y, gid, fh, fv } =
         obj_ =
             emptyComp image
 
-        grid =
-            { x = t.imagewidth // t.tilewidth
-            , y = t.imageheight // t.tileheight
-            }
-
+        --        grid =
+        --            { x = t.imagewidth // t.tilewidth
+        --            , y = t.imageheight // t.tileheight
+        --            }
         tileUV =
             Util.tileUV t uIndex
 

@@ -5,7 +5,7 @@ import Logic.Component exposing (Set, Spec)
 
 
 type alias Position =
-    Vec2
+    AltMath.Vector2.Vec2
 
 
 spec : Spec Position { world | position : Set Position }

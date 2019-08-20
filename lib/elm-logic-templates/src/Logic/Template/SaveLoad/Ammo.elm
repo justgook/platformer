@@ -41,7 +41,7 @@ read spec =
     }
 
 
-extract : ExtractAsync TileArg Ammo
+extract : TileArg -> ExtractAsync Ammo
 extract =
     \({ properties } as info) ->
         let
@@ -54,10 +54,14 @@ extract =
 
             ammoKeyParser =
                 Parser.succeed
-                    (\name f index -> f name index)
+                    (\name index f -> f name index)
                     |. Parser.keyword "ammo"
                     |. Parser.symbol "."
                     |= var
+                    |= Parser.oneOf
+                        [ Parser.succeed identity |. Parser.symbol "[" |= Parser.int |. Parser.symbol "]"
+                        , Parser.succeed 0
+                        ]
                     |. Parser.symbol "."
                     |= Parser.oneOf
                         [ Parser.map (\_ -> Id) (Parser.keyword "id")
@@ -68,10 +72,6 @@ extract =
                         , Parser.map (\_ -> VelocityX) (Parser.keyword "velocity.x")
                         , Parser.map (\_ -> VelocityY) (Parser.keyword "velocity.y")
                         , Parser.map (\_ -> Damage) (Parser.keyword "damage")
-                        ]
-                    |= Parser.oneOf
-                        [ Parser.succeed identity |. Parser.symbol "[" |= Parser.int |. Parser.symbol "]"
-                        , Parser.succeed 0
                         ]
                     |. Parser.end
 

@@ -215,7 +215,7 @@ update w =
 
         cameraStep =
             Logic.Template.Camera.Trigger.yTrigger 3 contactForCamera target
-                >> Logic.Template.Camera.PositionLocking.xLock target
+                >> Logic.Template.Camera.PositionLocking.xLockLegacy target
 
         newOffset =
             Math.Vector2.fromRecord w.camera.viewportOffset

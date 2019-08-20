@@ -2,12 +2,12 @@ module Logic.Template.SaveLoad.AI exposing (decodeOne, encodeOne)
 
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
-import Logic.Template.Component.AI exposing (AiPercentage, Spot)
+import Logic.Template.Component.AI exposing (AiTargets, Spot)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 
 
-encodeOne : AiPercentage -> Encoder
+encodeOne : AiTargets -> Encoder
 encodeOne ai =
     E.sequence
         [ ai.waiting |> E.id
@@ -27,9 +27,9 @@ encodeSpot_ spot =
         ]
 
 
-decodeOne : Decoder AiPercentage
+decodeOne : Decoder AiTargets
 decodeOne =
-    D.succeed AiPercentage
+    D.succeed AiTargets
         |> D.andMap D.id
         |> D.andMap (D.reverseList decodeSpot_ |> D.map List.reverse)
         |> D.andMap decodeSpot_

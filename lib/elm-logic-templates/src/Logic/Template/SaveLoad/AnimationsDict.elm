@@ -14,6 +14,7 @@ import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
+import Logic.Template.SaveLoad.Internal.Util as Util
 import Math.Vector2 as Vec2 exposing (Vec2)
 import Parser exposing ((|.), (|=), Parser)
 import Set
@@ -26,8 +27,9 @@ read f spec =
     { defaultRead
         | objectTile =
             Async
-                (\{ properties, gid, getTilesetByGid } ->
-                    getTilesetByGid gid
+                (\{ properties, gid, level } ->
+                    Util.getTilesetByGid (Util.levelCommon level).tilesets gid
+                        --                    getTilesetByGid gid
                         >> ResourceTask.andThen
                             (\t_ ->
                                 case t_ of

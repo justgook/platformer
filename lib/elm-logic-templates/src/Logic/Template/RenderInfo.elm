@@ -55,10 +55,7 @@ type alias Spec world =
     Singleton.Spec RenderInfo world
 
 
-
---setInitResize : Spec world -> Task x world -> Task x world
-
-
+setInitResize : Spec world -> Task x world -> Task x world
 setInitResize spec__ =
     Task.map2
         (\{ scene } w ->
@@ -132,6 +129,7 @@ spec =
     }
 
 
+applyOffset : { a | x : Float, y : Float } -> Mat4 -> Mat4
 applyOffset { x, y } m_ =
     let
         m =
@@ -146,6 +144,7 @@ applyOffset { x, y } m_ =
         |> Mat4.fromRecord
 
 
+applyOffsetVec : Vec2 -> Mat4 -> Mat4
 applyOffsetVec v =
     applyOffset (Vec2.toRecord v)
 
@@ -203,12 +202,6 @@ centerLevel { get, set } world =
             info
                 |> .virtualScreen
                 |> .width
-
-        levelWidth =
-            info
-                |> .levelSize
-                |> .width
-                |> toFloat
     in
     set (setOffsetX (width * -0.5) info) world
 

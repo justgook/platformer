@@ -6,7 +6,6 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     , Reader
     , RectangleData
     , TileArg
-    , TileDataWith
     , WorldRead
     , WorldReader
     , andThen
@@ -18,7 +17,6 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     , polygonData
     , rectangleData
     , tileArgs
-    , tileDataWith
     )
 
 import Logic.Entity exposing (EntityID)
@@ -47,7 +45,7 @@ type alias Reader to =
     , objectEllipse : Read EllipseData to
     , objectPolygon : Read PolygonData to
     , objectPolyLine : Read PolyLineData to
-    , layerTile : Read TileDataWith to
+    , layerTile : Read Tiled.Layer.TileData to
     , layerInfiniteTile : Read TileChunkedData to
     , layerImage : Read Tiled.Layer.ImageData to
     , layerObject : Read Tiled.Layer.ObjectData to
@@ -80,8 +78,8 @@ type alias PolyLineData =
     PolygonData
 
 
-type alias ExtractAsync from to =
-    from -> CacheTask CacheTiled -> ResourceTask to CacheTiled
+type alias ExtractAsync to =
+    CacheTask CacheTiled -> ResourceTask to CacheTiled
 
 
 pointData : Tiled.Layer.ObjectData -> Common {} -> PointData
@@ -279,7 +277,6 @@ type alias TileArg =
     { fd : Bool
     , fh : Bool
     , fv : Bool
-    , getTilesetByGid : GetTileset
     , gid : Int
     , height : Float
     , id : Int
@@ -296,55 +293,23 @@ type alias TileArg =
     }
 
 
-type alias TileDataWith =
-    { getTilesetByGid : GetTileset
-    , id : Int
-    , data : List Int
-    , name : String
-    , opacity : Float
-    , visible : Bool
-    , width : Int
-    , height : Int
-    , x : Float
-    , y : Float
-    , properties : Tiled.Properties.Properties
-    }
-
-
-tileDataWith : GetTileset -> Tiled.Layer.TileData -> TileDataWith
-tileDataWith getTilesetByGid tileData =
-    { getTilesetByGid = getTilesetByGid
-    , id = tileData.id
-    , data = tileData.data
-    , name = tileData.name
-    , opacity = tileData.opacity
-    , visible = tileData.visible
-    , width = tileData.width
-    , height = tileData.height
-    , x = tileData.x
-    , y = tileData.y
-    , properties = tileData.properties
-    }
-
-
-tileArgs : Tiled.Level.Level -> Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> GetTileset -> TileArg
-tileArgs level objectData a c d =
-    { id = a.id
-    , name = a.name
-    , kind = a.kind
-    , visible = a.visible
-    , x = a.x
-    , y = a.y
-    , rotation = a.rotation
-    , properties = a.properties
-    , width = a.width
-    , height = a.height
-    , getTilesetByGid = d
-    , gid = c.gid
-    , fh = c.fh
-    , fv = c.fv
-    , fd = c.fd
-    , layer = objectData
+tileArgs : Tiled.Level.Level -> Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> TileArg
+tileArgs level layer tileInfo gidInfo =
+    { id = tileInfo.id
+    , name = tileInfo.name
+    , kind = tileInfo.kind
+    , visible = tileInfo.visible
+    , x = tileInfo.x
+    , y = tileInfo.y
+    , rotation = tileInfo.rotation
+    , properties = tileInfo.properties
+    , width = tileInfo.width
+    , height = tileInfo.height
+    , gid = gidInfo.gid
+    , fh = gidInfo.fh
+    , fv = gidInfo.fv
+    , fd = gidInfo.fd
+    , layer = layer
     , level = level
     }
 

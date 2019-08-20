@@ -1,7 +1,7 @@
 module Logic.Template.Component.AnimationsDict exposing (AnimationId, TimeLineDict3, empty, spec)
 
 import Dict exposing (Dict)
-import Logic.Component exposing (Set, Spec)
+import Logic.Component as Component exposing (Set, Spec)
 
 
 type alias Current =
@@ -23,5 +23,6 @@ spec =
     }
 
 
+empty : Component.Set (TimeLineDict3 a)
 empty =
-    Logic.Component.empty
+    Component.empty

@@ -1,7 +1,7 @@
 module Logic.Template.Camera.CameraPath exposing (Points, centerStep, points, step)
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
-import Logic.Template.Camera.Common exposing (Any, Camera, WithId)
+import Logic.Template.Camera.Common exposing (LegacyAny, LegacyCamera, LegacyWithId)
 import Logic.Template.Internal exposing (Points(..), get)
 
 
@@ -13,7 +13,7 @@ type alias Points =
     Logic.Template.Internal.Points
 
 
-step : (Float -> Float) -> Points -> Int -> Any a -> Any a
+step : (Float -> Float) -> Points -> Int -> LegacyAny a -> LegacyAny a
 step easing (Points points_) frame cam =
     let
         speed =
@@ -42,7 +42,7 @@ step easing (Points points_) frame cam =
     { cam | viewportOffset = viewportOffset }
 
 
-centerStep : (Float -> Float) -> Points -> Vec2 -> Int -> Any a -> Any a
+centerStep : (Float -> Float) -> Points -> Vec2 -> Int -> LegacyAny a -> LegacyAny a
 centerStep easing (Points points_) center frame cam =
     let
         speed =

@@ -15,8 +15,9 @@ import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, GuardReader, Read(..), TileArg, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
-import Logic.Template.SaveLoad.Internal.Util exposing (getCollision)
-import Tiled.Object exposing (Object(..))
+import Logic.Template.SaveLoad.Internal.Util exposing (getCollision, getCollisionWith)
+import Tiled.Level exposing (Level)
+import Tiled.Object exposing (Gid, Object(..))
 
 
 readCircles : Component.Spec Circles world -> WorldReader world
@@ -25,7 +26,7 @@ readCircles spec =
         | objectTile =
             Async
                 (\info ->
-                    extractCircles info
+                    extractCircles info.level info.gid
                         >> ResourceTask.map
                             (\hurt_ ( entityID, world ) ->
                                 case hurt_ of
@@ -39,33 +40,34 @@ readCircles spec =
     }
 
 
-extractCircles : ExtractAsync TileArg (Maybe Circles)
-extractCircles tile =
-    getCollision tile
+extractCircles : Level -> Gid -> ExtractAsync (Maybe Circles)
+extractCircles level gid =
+    getCollisionWith level gid
         >> ResourceTask.map
             (Maybe.andThen
-                (.objects
-                    >> List.foldl
-                        (\item acc ->
-                            case item of
-                                Ellipse { x, y, width } ->
-                                    let
-                                        r =
-                                            width * 0.5
-                                    in
-                                    ( vec2 (x + r - tile.width * 0.5) (tile.height * 0.5 - r - y), r ) :: acc
+                (\( objectgroup, tileset ) ->
+                    objectgroup.objects
+                        |> List.foldl
+                            (\item acc ->
+                                case item of
+                                    Ellipse { x, y, width } ->
+                                        let
+                                            r =
+                                                width * 0.5
+                                        in
+                                        ( vec2 (x + r - toFloat tileset.tilewidth * 0.5) (toFloat tileset.tileheight * 0.5 - r - y), r ) :: acc
 
-                                _ ->
-                                    acc
-                        )
-                        []
-                    >> (\l ->
-                            if List.isEmpty l then
-                                Nothing
+                                    _ ->
+                                        acc
+                            )
+                            []
+                        |> (\l ->
+                                if List.isEmpty l then
+                                    Nothing
 
-                            else
-                                Just l
-                       )
+                                else
+                                    Just l
+                           )
                 )
             )
 

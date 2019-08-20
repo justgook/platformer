@@ -54,11 +54,11 @@ import Logic.Template.Camera.Common
 
 
 type alias Camera =
-    Logic.Template.Camera.Common.Any {}
+    Logic.Template.Camera.Common.LegacyAny {}
 
 
 type alias WithId a =
-    Logic.Template.Camera.Common.WithId a
+    Logic.Template.Camera.Common.LegacyWithId a
 
 
 spec =

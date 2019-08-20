@@ -6,6 +6,7 @@ module Logic.Template.SaveLoad.Internal.Util exposing
     , extractObjectGroup
     , firstGid
     , getCollision
+    , getCollisionWith
     , getTilesetByGid
     , hexColor2Vec3
     , imageBase64
@@ -15,10 +16,12 @@ module Logic.Template.SaveLoad.Internal.Util exposing
     , maybeDo
     , objFix
     , objectById
+    , objectByIdInLevel
     , objectPosition
     , properties
     , propertiesWithDefault
     , scrollRatio
+    , tileProps
     , tileUV
     , tilesetById
     , tilesets
@@ -31,16 +34,17 @@ import Dict
 import Image
 import Image.Magic
 import Logic.Launcher exposing (Error(..))
-import Logic.Template.SaveLoad.Internal.Loader exposing (GetTileset, TaskTiled, getTileset)
-import Logic.Template.SaveLoad.Internal.Reader exposing (TileArg, TileDataWith)
-import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (ResourceTask)
+import Logic.Template.SaveLoad.Internal.Loader exposing (CacheTiled, GetTileset, TaskTiled, getTileset)
+import Logic.Template.SaveLoad.Internal.Reader exposing (TileArg)
+import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
 import Math.Vector4 as Vec4 exposing (Vec4)
-import Tiled.Level as Level exposing (Level)
-import Tiled.Object exposing (Object(..))
+import Tiled.Layer
+import Tiled.Level as Level exposing (Level, LevelData)
+import Tiled.Object exposing (Gid, Object(..))
 import Tiled.Properties exposing (Properties, Property(..))
-import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset(..))
+import Tiled.Tileset exposing (SpriteAnimation, Tileset(..))
 
 
 imageBase64 : Int -> List Int -> String
@@ -81,23 +85,52 @@ getTilesetByGid tilesets_ gid =
             ResourceTask.fail (Error 5001 ("Not found Tileset for GID:" ++ String.fromInt gid))
 
 
+objectByIdInLevel : Int -> Level -> Maybe Tiled.Object.Object
+objectByIdInLevel id level =
+    (levelCommon level).layers
+        |> exitOnFirst
+            (\layer ->
+                case layer of
+                    Tiled.Layer.Object { objects } ->
+                        objectById id objects
+
+                    _ ->
+                        Nothing
+            )
+
+
+exitOnFirst : (a -> Maybe b) -> List a -> Maybe b
+exitOnFirst f l =
+    case l of
+        item :: rest ->
+            case f item of
+                Just a ->
+                    Just a
+
+                Nothing ->
+                    exitOnFirst f rest
+
+        [] ->
+            Nothing
+
+
 objectById : Int -> List Tiled.Object.Object -> Maybe Tiled.Object.Object
 objectById id l =
-    let
-        find : (a -> Bool) -> List a -> Maybe a
-        find predicate list =
-            case list of
-                [] ->
-                    Nothing
-
-                first :: rest ->
-                    if predicate first then
-                        Just first
-
-                    else
-                        find predicate rest
-    in
     find (objectId >> (==) id) l
+
+
+find : (a -> Bool) -> List a -> Maybe a
+find predicate list =
+    case list of
+        [] ->
+            Nothing
+
+        first :: rest ->
+            if predicate first then
+                Just first
+
+            else
+                find predicate rest
 
 
 objectPosition : Tiled.Object.Object -> { x : Float, y : Float }
@@ -144,6 +177,7 @@ objectId obj =
             id
 
 
+extractObjectGroup : Int -> Tileset -> Maybe Tiled.Tileset.TilesDataObjectgroup
 extractObjectGroup gid t_ =
     case t_ of
         Embedded t ->
@@ -154,13 +188,37 @@ extractObjectGroup gid t_ =
             Nothing
 
 
+extractObjectGroupWith : Int -> Tileset -> Maybe ( Tiled.Tileset.TilesDataObjectgroup, Tiled.Tileset.EmbeddedTileData )
+extractObjectGroupWith gid t_ =
+    case t_ of
+        Embedded t ->
+            Dict.get (gid - t.firstgid) t.tiles
+                |> Maybe.andThen .objectgroup
+                |> Maybe.map (\a -> ( a, t ))
+
+        _ ->
+            Nothing
+
+
 getCollision : TileArg -> TaskTiled (Maybe Tiled.Tileset.TilesDataObjectgroup)
 getCollision info =
-    info.getTilesetByGid info.gid
+    getTilesetByGid (levelCommon info.level).tilesets info.gid
         >> ResourceTask.map
-            (\t_ -> extractObjectGroup info.gid t_)
+            (\t_ ->
+                extractObjectGroup info.gid t_
+            )
 
 
+getCollisionWith : Level -> Gid -> TaskTiled (Maybe ( Tiled.Tileset.TilesDataObjectgroup, Tiled.Tileset.EmbeddedTileData ))
+getCollisionWith level gid =
+    getTilesetByGid (levelCommon level).tilesets gid
+        >> ResourceTask.map
+            (\t_ ->
+                extractObjectGroupWith gid t_
+            )
+
+
+objFix : Float -> Object -> Object
 objFix levelHeight obj =
     case obj of
         Tiled.Object.Point c ->
@@ -183,6 +241,7 @@ objFix levelHeight obj =
                 { c | y = levelHeight - c.y + c.height / 2, x = c.x + c.width / 2 }
 
 
+levelCommon : Level -> LevelData
 levelCommon level =
     case level of
         Level.Orthogonal info ->
@@ -250,7 +309,7 @@ levelCommon level =
             }
 
 
-scrollRatio : Bool -> PropertiesReader -> Vec2
+scrollRatio : Bool -> PropertiesReaderWithDefault -> Vec2
 scrollRatio dual props =
     if dual then
         vec2 (props.float "scrollRatio.x" 1) (props.float "scrollRatio.y" 1)
@@ -288,7 +347,7 @@ type alias TileUV =
     Vec4
 
 
-tileUV : EmbeddedTileData -> Int -> TileUV
+tileUV : Tiled.Tileset.EmbeddedTileData -> Int -> TileUV
 tileUV t uIndex =
     let
         grid =
@@ -306,6 +365,7 @@ tileUV t uIndex =
         |> Vec4.fromRecord
 
 
+updateTileset : a -> a -> List a -> List a -> List a
 updateTileset was now begin end =
     case begin of
         item :: left ->
@@ -319,7 +379,7 @@ updateTileset was now begin end =
             end |> List.reverse
 
 
-animation : EmbeddedTileData -> Int -> Maybe (List SpriteAnimation)
+animation : Tiled.Tileset.EmbeddedTileData -> Int -> Maybe (List SpriteAnimation)
 animation { tiles } id =
     Dict.get id tiles
         |> Maybe.andThen
@@ -389,7 +449,7 @@ type alias File =
     String
 
 
-type alias PropertiesReader =
+type alias PropertiesReaderWithDefault =
     { bool : String -> Bool -> Bool
     , int : String -> Int -> Int
     , float : String -> Float -> Float
@@ -399,7 +459,17 @@ type alias PropertiesReader =
     }
 
 
-levelProps : Level -> PropertiesReader
+type alias PropertiesReader =
+    { bool : String -> Maybe Bool
+    , int : String -> Maybe Int
+    , float : String -> Maybe Float
+    , string : String -> Maybe String
+    , color : String -> Maybe Vec3
+    , file : String -> Maybe File
+    }
+
+
+levelProps : Level -> PropertiesReaderWithDefault
 levelProps level =
     case level of
         Level.Orthogonal info ->
@@ -415,7 +485,34 @@ levelProps level =
             propertiesWithDefault info
 
 
-propertiesWithDefault : { a | properties : Properties } -> PropertiesReader
+propsNothing_ : PropertiesReader
+propsNothing_ =
+    { bool = \_ -> Nothing
+    , int = \_ -> Nothing
+    , float = \_ -> Nothing
+    , string = \_ -> Nothing
+    , color = \_ -> Nothing
+    , file = \_ -> Nothing
+    }
+
+
+tileProps : TileArg -> TaskTiled PropertiesReader
+tileProps info =
+    getTilesetByGid (levelCommon info.level).tilesets info.gid
+        >> ResourceTask.map
+            (\t_ ->
+                case t_ of
+                    Tiled.Tileset.Embedded t ->
+                        Dict.get (info.gid - t.firstgid) t.tiles
+                            |> Maybe.map properties
+                            |> Maybe.withDefault propsNothing_
+
+                    _ ->
+                        propsNothing_
+            )
+
+
+propertiesWithDefault : { a | properties : Properties } -> PropertiesReaderWithDefault
 propertiesWithDefault object =
     { bool =
         propWrap object.properties
@@ -480,6 +577,7 @@ propertiesWithDefault object =
     }
 
 
+properties : { a | properties : Properties } -> PropertiesReader
 properties object =
     let
         propWrap_ dict parser key =
@@ -554,11 +652,6 @@ propWrap dict parser key default =
     Dict.get key dict
         |> Maybe.andThen parser
         |> Maybe.withDefault default
-
-
-propWrap2 dict parser key =
-    Dict.get key dict
-        |> Maybe.andThen parser
 
 
 hexColor2Vec3 : String -> Maybe Vec3
