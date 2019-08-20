@@ -266,7 +266,7 @@ decodeTileData encoding compression =
                 )
 
     else if compression /= "none" then
-        Decode.fail ("Tile layer compression " ++ compression ++ " not supported yet")
+        Decode.fail ("Tile layer compression \"" ++ compression ++ "\" not supported yet")
 
     else if encoding == "base64" then
         Decode.string

@@ -1,4 +1,4 @@
-module Logic.Internal exposing (indexedFoldlArray, indexedMap2, map2, map3, map4, map5)
+module Logic.Internal exposing (indexedFoldlArray, indexedMap2, map2, map3, map4, map5, update)
 
 import Array exposing (Array)
 
@@ -60,3 +60,17 @@ apply fs xs =
         |> Array.toList
         |> List.filterMap identity
         |> Array.fromList
+
+
+update : Int -> (a -> a) -> Array a -> Array a
+update n f a =
+    let
+        element =
+            Array.get n a
+    in
+    case element of
+        Nothing ->
+            a
+
+        Just element_ ->
+            Array.set n (f element_) a

@@ -7,6 +7,7 @@ module Logic.System exposing
     , applyIf
     , UnfinishedSystem, start, andMap, end, endCustom
     , SetsReducer2, SetsReducer3, SetsReducer4
+    , applyMaybe
     )
 
 {-| Main logic driver is `System` that is what used to step each game-loop and update `World`
@@ -374,6 +375,17 @@ applyIf bool f world =
 
     else
         world
+
+
+{-| -}
+applyMaybe : Maybe a -> (a -> c -> c) -> c -> c
+applyMaybe m f world =
+    case m of
+        Just a ->
+            f a world
+
+        Nothing ->
+            world
 
 
 {-| -}

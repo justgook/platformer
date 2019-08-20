@@ -3,6 +3,7 @@ module Logic.Entity exposing
     , fromList, toList
     , fromDict, toDict
     , get, get2, removeFor
+    , update
     )
 
 {-|
@@ -39,10 +40,6 @@ type alias EntityID =
 
 type alias ComponentSpec comp world =
     Component.Spec comp world
-
-
-type alias ComponentSet comp =
-    Component.Set comp
 
 
 {-| Start point for spawning entity
@@ -95,39 +92,46 @@ with ( spec, component ) ( entityID, world ) =
 
 {-| Component for Entity by id
 -}
-get : EntityID -> ComponentSet comp -> Maybe comp
+get : EntityID -> Component.Set comp -> Maybe comp
 get i =
     Array.get i >> Maybe.withDefault Nothing
 
 
 {-| Components Tuple for Entity by id
 -}
-get2 : EntityID -> ComponentSet comp -> ComponentSet comp2 -> Maybe ( comp, comp2 )
+get2 : EntityID -> Component.Set comp -> Component.Set comp2 -> Maybe ( comp, comp2 )
 get2 i set1 set2 =
     Maybe.map2 Tuple.pair
         (get i set1)
         (get i set2)
 
 
+{-| Update Component by EntityID
+-}
+update : EntityID -> (comp -> comp) -> Component.Set comp -> Component.Set comp
+update i f =
+    Logic.Internal.update i (Maybe.map f)
+
+
 {-| -}
-fromList : List ( EntityID, a ) -> ComponentSet a
+fromList : List ( EntityID, a ) -> Component.Set a
 fromList =
     List.foldl (\( index, value ) components -> Component.spawn index value components) Component.empty
 
 
 {-| -}
-fromDict : Dict EntityID a -> ComponentSet a
+fromDict : Dict EntityID a -> Component.Set a
 fromDict =
     Dict.foldl (\index value components -> Component.spawn index value components) Component.empty
 
 
 {-| -}
-toDict : ComponentSet a -> Dict EntityID a
+toDict : Component.Set a -> Dict EntityID a
 toDict =
     indexedFoldlArray (\i a acc -> Maybe.map (\a_ -> Dict.insert i a_ acc) a |> Maybe.withDefault acc) Dict.empty
 
 
 {-| -}
-toList : ComponentSet a -> List ( EntityID, a )
+toList : Component.Set a -> List ( EntityID, a )
 toList =
     indexedFoldlArray (\i a acc -> Maybe.map (\a_ -> ( i, a_ ) :: acc) a |> Maybe.withDefault acc) []
