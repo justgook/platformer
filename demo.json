@@ -16,7 +16,7 @@
          "width":48,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "compression":"gzip",
          "data":"H4sIAAAAAAAEE+3UMQrAIAyF4XTv4Lm69ByFQk\/uHRoFNwcHfRL4C9JF8uJn0IwPAQQQQAABBBCYL\/DMLymtSP8a7stjeuvVxC9LYX6W0Q4Vju4\/dEg2hRU4j7Ct18Y\/+t96gfhv5beb+ZdcQHknk6\/sae1fgqPPvwSPEAQ6Aj9EETKcABgAAA==",
@@ -30,7 +30,7 @@
          "width":48,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "compression":"gzip",
          "data":"H4sIAAAAAAAEE+3QoQ0AAAzDsP7P9vFwT6jksFAnIkCAAAECBAgQIECAAAECBAi0wPU6AgQIECBAYFDgAbVQtgwAGAAA",
@@ -44,7 +44,7 @@
          "width":48,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "compression":"gzip",
          "data":"H4sIAAAAAAAEE+2VTW7CMBCFWbHoAiQK3AHEjnMUsYKKO0B3Be4BG+7D7z2AgsQdeIM80ihyYkwMIdVYehpnZmx\/ecpPoaBDHVAH1AF1QB1QB9QBdeA\/O1DM8c0Re2j+KvasORTKsmfwLwG3gtYxSsPex+JvswGzh\/Z\/j\/0P0DFG5viHAjPzffD1Q5uZRUPET6MFYgkqJwgl7+F6Hm31esIpM9TmlvoPcvT8dyy1NKkNFru0Rc\/OcUjXUacy8Vfu6PNp+UOzSyf0nMWmH2LOU1uOaxyZ\/4JEVNzjG5tY0IBkjJvb+qhXqpUAwPwJLW9VGoNmIojyxi\/Qb9M889P3OK\/8\/C9h\/ui7S9evHgMc+BWjKfL03+pFIvMjncmQ33j6H7WFfs2c4giyjaz5bUw+OeX3cSt8b1r\/5fMbns69Y1r+K82gj98AGAAA",
@@ -58,7 +58,7 @@
          "width":48,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "draworder":"topdown",
          "id":8,
@@ -81,7 +81,7 @@
                  "width":16,
                  "x":376,
                  "y":424
-                }, 
+                },
                 {
                  "gid":356,
                  "height":16,
@@ -99,7 +99,7 @@
                  "width":16,
                  "x":360,
                  "y":424
-                }, 
+                },
                 {
                  "gid":356,
                  "height":16,
@@ -117,7 +117,7 @@
                  "width":16,
                  "x":344,
                  "y":424
-                }, 
+                },
                 {
                  "gid":1073742166,
                  "height":16,
@@ -135,7 +135,7 @@
                  "width":16,
                  "x":384,
                  "y":288
-                }, 
+                },
                 {
                  "gid":2147483990,
                  "height":16,
@@ -153,7 +153,7 @@
                  "width":16,
                  "x":384,
                  "y":336
-                }, 
+                },
                 {
                  "gid":2147483990,
                  "height":16,
@@ -171,7 +171,7 @@
                  "width":16,
                  "x":424,
                  "y":336
-                }, 
+                },
                 {
                  "gid":342,
                  "height":16,
@@ -189,7 +189,7 @@
                  "width":16,
                  "x":422,
                  "y":416
-                }, 
+                },
                 {
                  "gid":310,
                  "height":16,
@@ -201,7 +201,7 @@
                  "width":16,
                  "x":304,
                  "y":416
-                }, 
+                },
                 {
                  "gid":526,
                  "height":16,
@@ -212,17 +212,17 @@
                          "name":"fx.emitter.count.max",
                          "type":"float",
                          "value":0.005
-                        }, 
+                        },
                         {
                          "name":"fx.emitter.count.min",
                          "type":"float",
                          "value":0.001
-                        }, 
+                        },
                         {
                          "name":"fx.emitter.size.max",
                          "type":"float",
                          "value":3
-                        }, 
+                        },
                         {
                          "name":"fx.emitter.size.min",
                          "type":"float",
@@ -240,7 +240,7 @@
          "visible":false,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "draworder":"topdown",
          "id":18,
@@ -256,67 +256,67 @@
                          "name":"anim.fall.east.id",
                          "type":"int",
                          "value":516
-                        }, 
+                        },
                         {
                          "name":"anim.fire.E.id",
                          "type":"int",
                          "value":608
-                        }, 
+                        },
                         {
                          "name":"anim.idle.E.id",
                          "type":"int",
                          "value":512
-                        }, 
+                        },
                         {
                          "name":"anim.jump.E.id",
                          "type":"int",
                          "value":548
-                        }, 
+                        },
                         {
                          "name":"anim.walk.east.id",
                          "type":"int",
                          "value":544
-                        }, 
+                        },
                         {
                          "name":"camera.follow.x",
                          "type":"int",
                          "value":-100
-                        }, 
+                        },
                         {
                          "name":"onKey[ ]",
                          "type":"string",
                          "value":"Jump"
-                        }, 
+                        },
                         {
                          "name":"onKey[ArrowLeft]",
                          "type":"string",
                          "value":"Move.west"
-                        }, 
+                        },
                         {
                          "name":"onKey[ArrowRight]",
                          "type":"string",
                          "value":"Move.east"
-                        }, 
+                        },
                         {
                          "name":"onKey[Shift]",
                          "type":"string",
                          "value":"Fire"
-                        }, 
+                        },
                         {
                          "name":"onKey[a]",
                          "type":"string",
                          "value":"Move.west"
-                        }, 
+                        },
                         {
                          "name":"onKey[d]",
                          "type":"string",
                          "value":"Move.east"
-                        }, 
+                        },
                         {
                          "name":"onKey[s]",
                          "type":"string",
                          "value":"Move.south"
-                        }, 
+                        },
                         {
                          "name":"onKey[w]",
                          "type":"string",
@@ -343,7 +343,7 @@
          "name":"audiosprite",
          "type":"file",
          "value":"..\/pack\/audiosprite.json"
-        }, 
+        },
         {
          "name":"pixelsPerUnit",
          "type":"float",
@@ -356,7 +356,7 @@
         {
          "firstgid":1,
          "source":"tiles.json"
-        }, 
+        },
         {
          "columns":16,
          "firstgid":1025,
@@ -374,15 +374,15 @@
                         {
                          "duration":100,
                          "tileid":290
-                        }, 
+                        },
                         {
                          "duration":100,
                          "tileid":291
-                        }, 
+                        },
                         {
                          "duration":100,
                          "tileid":292
-                        }, 
+                        },
                         {
                          "duration":100,
                          "tileid":293
