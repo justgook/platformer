@@ -3,14 +3,16 @@
  "infinite":false,
  "layers":[
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "compression":"zlib",
+         "data":"eAHt0AENAAAAwqD3T20ON4hAYcCAAQMGDBgwYMCAAQMGDBgwYMCAAQMGDBgwYMCAAQMGDLwPDCAAAAE=",
+         "encoding":"base64",
          "height":32,
          "id":3,
          "name":"Tile Layer 1",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
-         "width":16,
+         "width":64,
          "x":0,
          "y":0
         }, 
@@ -26,42 +28,162 @@
                  "name":"",
                  "properties":[
                         {
-                         "name":"ammo.0.damage[0]",
+                         "name":"ammo.0[0].damage",
                          "type":"int",
                          "value":50
                         }, 
                         {
-                         "name":"ammo.0.firerate[0]",
+                         "name":"ammo.0[0].firerate",
                          "type":"int",
                          "value":5
                         }, 
                         {
-                         "name":"ammo.0.id[0]",
+                         "name":"ammo.0[0].id",
                          "type":"int",
                          "value":9
                         }, 
                         {
-                         "name":"ammo.0.offset.x[0]",
+                         "name":"ammo.0[0].offset.x",
                          "type":"float",
                          "value":10
                         }, 
                         {
-                         "name":"ammo.0.offset.y[0]",
+                         "name":"ammo.0[0].offset.y",
                          "type":"float",
                          "value":-10
                         }, 
                         {
-                         "name":"ammo.0.tileset[0]",
+                         "name":"ammo.0[0].tileset",
                          "type":"int",
                          "value":1
                         }, 
                         {
-                         "name":"ammo.0.velocity.x[0]",
+                         "name":"ammo.0[0].velocity.x",
                          "type":"float",
                          "value":0
                         }, 
                         {
-                         "name":"ammo.0.velocity.y[0]",
+                         "name":"ammo.0[0].velocity.y",
+                         "type":"float",
+                         "value":15
+                        }, 
+                        {
+                         "name":"ammo.0[1].damage",
+                         "type":"int",
+                         "value":50
+                        }, 
+                        {
+                         "name":"ammo.0[1].firerate",
+                         "type":"int",
+                         "value":5
+                        }, 
+                        {
+                         "name":"ammo.0[1].id",
+                         "type":"int",
+                         "value":9
+                        }, 
+                        {
+                         "name":"ammo.0[1].offset.x",
+                         "type":"float",
+                         "value":-10
+                        }, 
+                        {
+                         "name":"ammo.0[1].offset.y",
+                         "type":"float",
+                         "value":-10
+                        }, 
+                        {
+                         "name":"ammo.0[1].tileset",
+                         "type":"int",
+                         "value":1
+                        }, 
+                        {
+                         "name":"ammo.0[1].velocity.x",
+                         "type":"float",
+                         "value":0
+                        }, 
+                        {
+                         "name":"ammo.0[1].velocity.y",
+                         "type":"float",
+                         "value":15
+                        }, 
+                        {
+                         "name":"ammo.1[0].damage",
+                         "type":"int",
+                         "value":50
+                        }, 
+                        {
+                         "name":"ammo.1[0].firerate",
+                         "type":"int",
+                         "value":5
+                        }, 
+                        {
+                         "name":"ammo.1[0].id",
+                         "type":"int",
+                         "value":4
+                        }, 
+                        {
+                         "name":"ammo.1[0].offset.x",
+                         "type":"float",
+                         "value":10
+                        }, 
+                        {
+                         "name":"ammo.1[0].offset.y",
+                         "type":"float",
+                         "value":-10
+                        }, 
+                        {
+                         "name":"ammo.1[0].tileset",
+                         "type":"int",
+                         "value":1
+                        }, 
+                        {
+                         "name":"ammo.1[0].velocity.x",
+                         "type":"float",
+                         "value":0
+                        }, 
+                        {
+                         "name":"ammo.1[0].velocity.y",
+                         "type":"float",
+                         "value":15
+                        }, 
+                        {
+                         "name":"ammo.1[1].damage",
+                         "type":"int",
+                         "value":50
+                        }, 
+                        {
+                         "name":"ammo.1[1].firerate",
+                         "type":"int",
+                         "value":5
+                        }, 
+                        {
+                         "name":"ammo.1[1].id",
+                         "type":"int",
+                         "value":4
+                        }, 
+                        {
+                         "name":"ammo.1[1].offset.x",
+                         "type":"float",
+                         "value":-10
+                        }, 
+                        {
+                         "name":"ammo.1[1].offset.y",
+                         "type":"float",
+                         "value":-10
+                        }, 
+                        {
+                         "name":"ammo.1[1].tileset",
+                         "type":"int",
+                         "value":1
+                        }, 
+                        {
+                         "name":"ammo.1[1].velocity.x",
+                         "type":"float",
+                         "value":0
+                        }, 
+                        {
+                         "name":"ammo.1[1].velocity.y",
                          "type":"float",
                          "value":15
                         }, 
@@ -109,7 +231,7 @@
                  "type":"",
                  "visible":true,
                  "width":48,
-                 "x":-16,
+                 "x":304,
                  "y":480
                 }],
          "opacity":1,
@@ -123,222 +245,6 @@
          "id":4,
          "name":"Enemy",
          "objects":[
-                {
-                 "gid":1073741857,
-                 "height":32,
-                 "id":14,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":17
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":32
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":5
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":34
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":35
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":8
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":200
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":800
-                        }, 
-                        {
-                         "name":"spawn.onKill.id",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.onKill.reward.id",
-                         "type":"int",
-                         "value":9
-                        }, 
-                        {
-                         "name":"spawn.onKill.reward.tileset",
-                         "type":"int",
-                         "value":188
-                        }, 
-                        {
-                         "name":"spawn.onKill.tileset",
-                         "type":"int",
-                         "value":59
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":3
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":-128,
-                 "y":-64
-                }, 
-                {
-                 "gid":1073741858,
-                 "height":32,
-                 "id":15,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":18
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":33
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":36
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":37
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":7
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":25
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":1
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":320,
-                 "y":-64
-                }, 
                 {
                  "height":0,
                  "id":32,
@@ -392,6 +298,37 @@
                  "id":36,
                  "name":"",
                  "point":true,
+                 "properties":[
+                        {
+                         "name":"onDeath.explosion[0].id",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"onDeath.explosion[0].tileset",
+                         "type":"int",
+                         "value":59
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].id",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].offset.x",
+                         "type":"float",
+                         "value":40
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].offset.y",
+                         "type":"float",
+                         "value":50
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].tileset",
+                         "type":"int",
+                         "value":53
+                        }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
@@ -412,104 +349,6 @@
                  "y":576
                 }, 
                 {
-                 "gid":1073741858,
-                 "height":32,
-                 "id":38,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":18
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":40
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":36
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":37
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":7
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":25
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":1
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":288,
-                 "y":-64
-                }, 
-                {
                  "height":0,
                  "id":40,
                  "name":"",
@@ -520,114 +359,6 @@
                  "width":0,
                  "x":228,
                  "y":65
-                }, 
-                {
-                 "gid":1073741857,
-                 "height":32,
-                 "id":41,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":17
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":43
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":5
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":34
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":35
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":8
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.onKill.id",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.onKill.tileset",
-                         "type":"int",
-                         "value":59
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":3
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":-96,
-                 "y":-64
                 }, 
                 {
                  "height":0,
@@ -642,114 +373,6 @@
                  "y":64
                 }, 
                 {
-                 "gid":1073741857,
-                 "height":32,
-                 "id":44,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":17
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":46
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":5
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":34
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":35
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":8
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.onKill.id",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.onKill.tileset",
-                         "type":"int",
-                         "value":59
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":3
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":-64,
-                 "y":-64
-                }, 
-                {
                  "height":0,
                  "id":46,
                  "name":"",
@@ -760,114 +383,6 @@
                  "width":0,
                  "x":39,
                  "y":64
-                }, 
-                {
-                 "gid":1073741857,
-                 "height":32,
-                 "id":47,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":17
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":49
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":5
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":34
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":35
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":8
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.onKill.id",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.onKill.tileset",
-                         "type":"int",
-                         "value":59
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":3
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":-32,
-                 "y":-64
                 }, 
                 {
                  "height":0,
@@ -882,104 +397,6 @@
                  "y":64
                 }, 
                 {
-                 "gid":1073741858,
-                 "height":32,
-                 "id":50,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":18
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":52
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":36
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":37
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":7
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":25
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":1
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":256,
-                 "y":-64
-                }, 
-                {
                  "height":0,
                  "id":52,
                  "name":"",
@@ -990,104 +407,6 @@
                  "width":0,
                  "x":210,
                  "y":64
-                }, 
-                {
-                 "gid":1073741858,
-                 "height":32,
-                 "id":53,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"ai.target[0]",
-                         "type":"int",
-                         "value":18
-                        }, 
-                        {
-                         "name":"ai.target[1]",
-                         "type":"int",
-                         "value":55
-                        }, 
-                        {
-                         "name":"ai.target[1].steps",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[1].wait",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ai.target[2]",
-                         "type":"int",
-                         "value":36
-                        }, 
-                        {
-                         "name":"ai.target[2].action",
-                         "type":"string",
-                         "value":"Fire"
-                        }, 
-                        {
-                         "name":"ai.target[3]",
-                         "type":"int",
-                         "value":37
-                        }, 
-                        {
-                         "name":"ammo.0.firerate[0]",
-                         "type":"int",
-                         "value":10
-                        }, 
-                        {
-                         "name":"ammo.0.id[0]",
-                         "type":"int",
-                         "value":7
-                        }, 
-                        {
-                         "name":"ammo.0.offset.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.tileset[0]",
-                         "type":"int",
-                         "value":1
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.x[0]",
-                         "type":"float",
-                         "value":0
-                        }, 
-                        {
-                         "name":"ammo.0.velocity.y[0]",
-                         "type":"float",
-                         "value":-5
-                        }, 
-                        {
-                         "name":"spawn.delay",
-                         "type":"int",
-                         "value":25
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.repeat",
-                         "type":"int",
-                         "value":1
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":32,
-                 "x":224,
-                 "y":-64
                 }, 
                 {
                  "height":0,
@@ -1133,69 +452,84 @@
                          "value":5
                         }, 
                         {
-                         "name":"ammo.0.firerate[0]",
+                         "name":"ammo.0[0].firerate",
                          "type":"int",
                          "value":10
                         }, 
                         {
-                         "name":"ammo.0.id[0]",
+                         "name":"ammo.0[0].id",
                          "type":"int",
                          "value":8
                         }, 
                         {
-                         "name":"ammo.0.offset.x[0]",
+                         "name":"ammo.0[0].offset.x",
                          "type":"float",
                          "value":0
                         }, 
                         {
-                         "name":"ammo.0.tileset[0]",
+                         "name":"ammo.0[0].tileset",
                          "type":"int",
                          "value":1
                         }, 
                         {
-                         "name":"ammo.0.velocity.x[0]",
+                         "name":"ammo.0[0].velocity.x",
                          "type":"float",
                          "value":0
                         }, 
                         {
-                         "name":"ammo.0.velocity.y[0]",
+                         "name":"ammo.0[0].velocity.y",
                          "type":"float",
                          "value":-5
                         }, 
                         {
-                         "name":"spawn.delay",
+                         "name":"hp",
+                         "type":"int",
+                         "value":12
+                        }, 
+                        {
+                         "name":"onDeath.explosion[0].id",
                          "type":"int",
                          "value":0
                         }, 
                         {
-                         "name":"spawn.hp",
-                         "type":"int",
-                         "value":1000
-                        }, 
-                        {
-                         "name":"spawn.interval",
-                         "type":"int",
-                         "value":100
-                        }, 
-                        {
-                         "name":"spawn.lifetime",
-                         "type":"int",
-                         "value":8000
-                        }, 
-                        {
-                         "name":"spawn.onKill.id",
-                         "type":"int",
-                         "value":0
-                        }, 
-                        {
-                         "name":"spawn.onKill.tileset",
+                         "name":"onDeath.explosion[0].tileset",
                          "type":"int",
                          "value":59
                         }, 
                         {
-                         "name":"spawn.repeat",
+                         "name":"onDeath.explosion[1].id",
                          "type":"int",
-                         "value":1
+                         "value":0
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].offset.x",
+                         "type":"float",
+                         "value":40
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].offset.y",
+                         "type":"float",
+                         "value":50
+                        }, 
+                        {
+                         "name":"onDeath.explosion[1].tileset",
+                         "type":"int",
+                         "value":53
+                        }, 
+                        {
+                         "name":"onDeath.reward.id",
+                         "type":"int",
+                         "value":9
+                        }, 
+                        {
+                         "name":"onDeath.reward.setAmmo",
+                         "type":"string",
+                         "value":"1"
+                        }, 
+                        {
+                         "name":"onDeath.reward.tileset",
+                         "type":"int",
+                         "value":188
                         }],
                  "rotation":0,
                  "type":"",
@@ -1227,6 +561,44 @@
                  "width":0,
                  "x":160,
                  "y":96
+                }, 
+                {
+                 "gid":54,
+                 "height":64,
+                 "id":64,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"spawn.delay",
+                         "type":"int",
+                         "value":0
+                        }, 
+                        {
+                         "name":"spawn.interval",
+                         "type":"int",
+                         "value":10
+                        }, 
+                        {
+                         "name":"spawn.lifetime_",
+                         "type":"int",
+                         "value":60
+                        }, 
+                        {
+                         "name":"spawn.object",
+                         "type":"int",
+                         "value":60
+                        }, 
+                        {
+                         "name":"spawn.repeat",
+                         "type":"int",
+                         "value":4
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":64,
+                 "x":-256,
+                 "y":-64
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1235,7 +607,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":63,
+ "nextobjectid":65,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -1246,10 +618,10 @@
         {
          "name":"pixelsPerUnit",
          "type":"float",
-         "value":480
+         "value":512
         }],
  "renderorder":"right-down",
- "tiledversion":"2019.07.31",
+ "tiledversion":"2019.08.11",
  "tileheight":16,
  "tilesets":[
         {
@@ -1647,17 +1019,34 @@
          "tiles":[
                 {
                  "id":9,
-                 "properties":[
-                        {
-                         "name":"setFire",
-                         "type":"string",
-                         "value":"BigBang"
-                        }]
+                 "objectgroup":
+                    {
+                     "draworder":"index",
+                     "name":"",
+                     "objects":[
+                            {
+                             "ellipse":true,
+                             "height":80,
+                             "id":1,
+                             "name":"",
+                             "rotation":0,
+                             "type":"",
+                             "visible":true,
+                             "width":80,
+                             "x":-32,
+                             "y":-32
+                            }],
+                     "opacity":1,
+                     "type":"objectgroup",
+                     "visible":true,
+                     "x":0,
+                     "y":0
+                    }
                 }],
          "tilewidth":16
         }],
  "tilewidth":16,
  "type":"map",
  "version":1.2,
- "width":16
+ "width":64
 }

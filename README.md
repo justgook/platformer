@@ -1,3 +1,16 @@
+# Tutorials for graphics
+https://www.slynyrd.com/blog/2019/5/21/pixelblog-17-human-anatomy
+
+https://raymond-schlitter.squarespace.com/blog/2018/1/10/pixelblog-1-color-palettes
+
+https://makegames.tumblr.com/post/42648699708/pixel-art-tutorial
+
+![](https://images.squarespace-cdn.com/content/v1/551a19f8e4b0e8322a93850a/1505784288105-DMW1RHB3RCZ8G6GLJ0OL/ke17ZwdGBToddI8pDm48kMql2_yefxtFZB38HrfJP65Zw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpzHWhcVKNmqX8Cqzw5ie5qqyN8Fihd2F-VIlcCn_YqesH5fieixBNmAtelFUm2FaA8/image-asset.gif?format=750w)
+
+https://raymond-schlitter.squarespace.com/blog/2017/9/18/thyria-devlog-06-one-year-and-going-strong
+
+
+
 # Custom Level properties
   1. `pixelsPerUnit` - `float` - (Default `160.0`) - height in pixels of viewport vertically (horizontally adjusting based on screen ratio)
   1. `offset.x` - `float` - (Default `0`) camera offset of left-bottom corner by **horizontal** axis in pixels
@@ -13,7 +26,7 @@
 
 # Custom Object properties
   1. `onKey[event.key]` - `string` - `Move.south` | `Move.west` | `Move.east` | `Move.north` | `Fire` or any other that supported by system
-  1. `ammo.(name).(prop)[n]` - `int`:
+  1. `ammo.(name)[n].(prop)` - `int`:
     1. `name` - `string` - (default `_`) - any name to reference in `Fire` action   
     1. `prop` is one of 
        * `id`  - `int` - (default `0`) - relative tile id
@@ -52,14 +65,31 @@
 
 ## Artificial Intelligence (Enemies)
 
+   Hit points 
+   
+   1. `hp` - `int` -(default `10`)
+   
+   Death
+   
+   `onDeath.(explosion|reward|loadLevel|spwn)[n].(prop)` - `Int` - Animation atlas
+   
+   1. `onDeath.explosion[0].id` - `int`
+   1. `onDeath.explosion[0].tileset` - `int`
+   1. `onDeath.reward.id` - `int` -
+   1. `onDeath.reward.tileset` - `int` -  
+   1. `onDeath.reward.setAmmo` - `string` - 
+
    Spawn definition
    
    1. `spawn.delay` - `int`
    1. `spawn.interval` - `int`
    1. `spawn.lifetime` - `int`
    1. `spawn.repeat` - `int`
-   1. `spawn.onKill.id` - `int`
-   1. `spawn.onKill.tileset` - `int`
+   1. `spawn.object` - `int`
+   
+   
+ 
+
   
    Path definition `a.target[n].(steps|wait|action)` - path definition of enemy
     
