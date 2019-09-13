@@ -9,7 +9,7 @@ import Logic.Template.Component.Sprite exposing (Sprite, emptyComp)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Loader as Loader exposing (CacheTiled)
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileData, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture, GetTexture, Selector(..))
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (boolToFloat, hexColor2Vec3)

@@ -140,8 +140,12 @@ read spec =
                 )
         , layerTile =
             Async
-                (\{ data, getTilesetByGid } ->
-                    recursionSpawn staticBody getTilesetByGid data ( 0, Dict.empty, identity )
+                (\{ data, level } ->
+                    let
+                        tilesets =
+                            Util.tilesets level
+                    in
+                    recursionSpawn tilesets staticBody data ( 0, Dict.empty, identity )
                         >> ResourceTask.map
                             (\spawn ( mId, world ) ->
                                 let
@@ -157,8 +161,8 @@ read spec =
                 )
         , objectTile =
             Async
-                (\({ gid, getTilesetByGid } as info) ->
-                    getTilesetByGid gid
+                (\({ gid, level } as info) ->
+                    Util.getTilesetByGid (Util.levelCommon level).tilesets gid
                         >> ResourceTask.map
                             (\t_ ( mId, world ) ->
                                 extractObjectGroup gid t_
@@ -183,25 +187,28 @@ read spec =
     }
 
 
-recursionSpawn f get dataLeft ( i, cache, acc ) =
+recursionSpawn tilesets f dataLeft ( i, cache, acc ) =
     let
         spawnMagic index acc_ =
             .objects >> List.foldl (\o a -> a >> f index o) acc_
+
+        getTileset =
+            Util.getTilesetByGid tilesets
     in
     case dataLeft of
         gid_ :: rest ->
             case ( gid_, Dict.get gid_ cache ) of
                 ( 0, _ ) ->
-                    recursionSpawn f get rest ( i + 1, cache, acc )
+                    recursionSpawn tilesets f rest ( i + 1, cache, acc )
 
                 ( _, Just Nothing ) ->
-                    recursionSpawn f get rest ( i + 1, cache, acc )
+                    recursionSpawn tilesets f rest ( i + 1, cache, acc )
 
                 ( _, Just (Just info) ) ->
-                    recursionSpawn f get rest ( i + 1, cache, spawnMagic i acc info )
+                    recursionSpawn tilesets f rest ( i + 1, cache, spawnMagic i acc info )
 
                 ( gid, Nothing ) ->
-                    get gid
+                    getTileset gid
                         >> ResourceTask.andThen
                             (\t ->
                                 let
@@ -213,7 +220,7 @@ recursionSpawn f get dataLeft ( i, cache, acc ) =
                                             |> Maybe.map (spawnMagic i acc)
                                             |> Maybe.withDefault acc
                                 in
-                                recursionSpawn f get rest ( i + 1, Dict.insert gid cacheValue cache, newAcc )
+                                recursionSpawn tilesets f rest ( i + 1, Dict.insert gid cacheValue cache, newAcc )
                             )
 
         [] ->

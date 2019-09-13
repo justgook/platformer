@@ -3,11 +3,12 @@ module Logic.Template.SaveLoad.TileLayer exposing (TileLayer(..), read)
 import Dict exposing (Dict)
 import Logic.Component.Singleton as Component
 import Logic.Template.SaveLoad.Internal.Loader as Loader
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), TileDataWith, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (animationFraming, hexColor2Vec3, tilesetById, updateTileset)
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
+import Tiled.Layer
 import Tiled.Tileset exposing (EmbeddedTileData, SpriteAnimation, Tileset)
 import WebGL.Texture as WebGL
 
@@ -47,21 +48,23 @@ read : Component.Spec (List TileLayer) world -> WorldReader world
 read { set, get } =
     { defaultRead
         | layerTile =
-            Async (\info -> tileLayerNew info >> ResourceTask.map (\parsedLayers ( id, w ) -> ( id, set (get w ++ parsedLayers) w )))
+            Async
+                (\info ->
+                    tileLayerNew info >> ResourceTask.map (\parsedLayers ( id, w ) -> ( id, set (get w ++ parsedLayers) w ))
+                )
     }
 
 
-tileLayerNew : TileDataWith -> Loader.TaskTiled (List TileLayer)
+tileLayerNew : Reader.LayerTileData -> Loader.TaskTiled (List TileLayer)
 tileLayerNew layerData =
     tileLayer2_ layerData
         >> ResourceTask.map Tuple.first
 
 
-tileLayer2_ : TileDataWith -> Loader.TaskTiled ( List TileLayer, List Tileset )
+tileLayer2_ : Reader.LayerTileData -> Loader.TaskTiled ( List TileLayer, List Tileset )
 tileLayer2_ tileDataWith =
     splitTileLayerByTileSet2
-        []
-        tileDataWith.getTilesetByGid
+        (Util.tilesets tileDataWith.level)
         tileDataWith.data
         { cache = [], static = Dict.empty, animated = Dict.empty }
         >> ResourceTask.andThen
@@ -72,12 +75,15 @@ tileLayer2_ tileDataWith =
             )
 
 
-splitTileLayerByTileSet2 tilesets getTileset dataLeft ({ cache, static, animated } as acc) =
+splitTileLayerByTileSet2 tilesets dataLeft ({ cache, static, animated } as acc) =
+    let
+        getTileset =
+            Util.getTilesetByGid tilesets
+    in
     case dataLeft of
         gid :: rest ->
             if gid == 0 then
                 splitTileLayerByTileSet2 tilesets
-                    getTileset
                     rest
                     { animated = others 0 animated
                     , cache = 0 :: cache
@@ -89,7 +95,7 @@ splitTileLayerByTileSet2 tilesets getTileset dataLeft ({ cache, static, animated
                     Just t ->
                         case t of
                             Tiled.Tileset.Embedded info ->
-                                splitTileLayerByTileSet2 tilesets getTileset rest (fillTiles gid info acc)
+                                splitTileLayerByTileSet2 tilesets rest (fillTiles gid info acc)
 
                             (Tiled.Tileset.Source { firstgid, source }) as was ->
                                 Loader.getTileset source firstgid
@@ -97,16 +103,15 @@ splitTileLayerByTileSet2 tilesets getTileset dataLeft ({ cache, static, animated
                                         (\tileset ->
                                             splitTileLayerByTileSet2
                                                 (updateTileset was tileset tilesets [])
-                                                getTileset
                                                 dataLeft
                                                 acc
                                         )
 
                             Tiled.Tileset.ImageCollection _ ->
-                                splitTileLayerByTileSet2 tilesets getTileset rest { acc | cache = 0 :: cache }
+                                splitTileLayerByTileSet2 tilesets rest { acc | cache = 0 :: cache }
 
                     Nothing ->
-                        getTileset gid >> ResourceTask.andThen (\t -> splitTileLayerByTileSet2 (t :: tilesets) getTileset dataLeft acc)
+                        getTileset gid >> ResourceTask.andThen (\t -> splitTileLayerByTileSet2 (t :: tilesets) dataLeft acc)
 
         [] ->
             ResourceTask.succeed
@@ -200,24 +205,6 @@ tileAnimatedLayerBuilder_ constructor layerData =
                                 )
                     )
         )
-
-
-
---fillTiles :
---    Int
---    -> EmbeddedTileData
---    ->
---        { animated :
---            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
---        , cache : List Int
---        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
---        }
---    ->
---        { animated :
---            Dict Int ( ( EmbeddedTileData, List SpriteAnimation ), Image.Pixels )
---        , cache : List Int
---        , static : Dict Int ( EmbeddedTileData, Image.Pixels )
---        }
 
 
 fillTiles tileId info { cache, static, animated } =

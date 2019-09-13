@@ -13,7 +13,7 @@ import Logic.Template.Game.ShootEmUp.ReadHelper as ReadHelper
 import Logic.Template.SaveLoad.Ammo as Ammo
 import Logic.Template.SaveLoad.Animation as Animation
 import Logic.Template.SaveLoad.Circles as Circles
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileData, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask exposing (CacheTask, ResourceTask)
 import Logic.Template.SaveLoad.Internal.Util as Util
 import Logic.Template.SaveLoad.Sprite as Sprite
@@ -110,7 +110,7 @@ read spec_ =
     }
 
 
-extractEvent : { a | repeat : Int, delay : Int, interval : Int, lifetime : Maybe Int } -> TileArg -> ExtractAsync (EventSequence Event -> EventSequence Event)
+extractEvent : { a | repeat : Int, delay : Int, interval : Int, lifetime : Maybe Int } -> TileData -> ExtractAsync (EventSequence Event -> EventSequence Event)
 extractEvent { repeat, delay, interval, lifetime } info =
     let
         onDeathTask =
@@ -160,7 +160,7 @@ extractEvent { repeat, delay, interval, lifetime } info =
         |> ResourceTask.andMap onDeathTask
 
 
-extractExplosion : TileArg -> ExtractAsync (List OnDeath)
+extractExplosion : TileData -> ExtractAsync (List OnDeath)
 extractExplosion info =
     let
         explosion item =
@@ -182,7 +182,7 @@ extractExplosion info =
     oneOrMany explosion [ "onDeath", "explosion" ] info.properties
 
 
-extractReward : TileArg -> ExtractAsync (List OnDeath)
+extractReward : TileData -> ExtractAsync (List OnDeath)
 extractReward info =
     let
         reward item =

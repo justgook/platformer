@@ -2,10 +2,11 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     ( EllipseData
     , ExtractAsync
     , GuardReader
+    , LayerTileData
     , Read(..)
     , Reader
     , RectangleData
-    , TileArg
+    , TileData
     , WorldRead
     , WorldReader
     , andThen
@@ -13,6 +14,7 @@ module Logic.Template.SaveLoad.Internal.Reader exposing
     , combineListInTask
     , defaultRead
     , guard
+    , layerTileData
     , pointData
     , polygonData
     , rectangleData
@@ -27,7 +29,7 @@ import Tiled exposing (GidInfo)
 import Tiled.Layer exposing (TileChunkedData)
 import Tiled.Level
 import Tiled.Object exposing (Common, CommonDimension, CommonDimensionGid, CommonDimensionPolyPoints, Dimension, Gid, PolyPoints)
-import Tiled.Properties
+import Tiled.Properties exposing (Properties)
 
 
 type alias WorldReader world =
@@ -39,17 +41,48 @@ type alias GuardReader =
 
 
 type alias Reader to =
-    { objectTile : Read TileArg to
+    { objectTile : Read TileData to
     , objectPoint : Read PointData to
     , objectRectangle : Read RectangleData to
     , objectEllipse : Read EllipseData to
     , objectPolygon : Read PolygonData to
     , objectPolyLine : Read PolyLineData to
-    , layerTile : Read Tiled.Layer.TileData to
+    , layerTile : Read LayerTileData to
     , layerInfiniteTile : Read TileChunkedData to
     , layerImage : Read Tiled.Layer.ImageData to
     , layerObject : Read Tiled.Layer.ObjectData to
     , level : Read Tiled.Level.Level to
+    }
+
+
+type alias LayerTileData =
+    { id : Int
+    , data : List Int
+    , name : String
+    , opacity : Float
+    , visible : Bool
+    , width : Int
+    , height : Int
+    , x : Float
+    , y : Float
+    , properties : Properties
+    , level : Tiled.Level.Level
+    }
+
+
+layerTileData : Tiled.Layer.TileData -> Tiled.Level.Level -> LayerTileData
+layerTileData layer level =
+    { id = layer.id
+    , data = layer.data
+    , name = layer.name
+    , opacity = layer.opacity
+    , visible = layer.visible
+    , width = layer.width
+    , height = layer.height
+    , x = layer.x
+    , y = layer.y
+    , properties = layer.properties
+    , level = level
     }
 
 
@@ -273,7 +306,7 @@ defaultRead =
     }
 
 
-type alias TileArg =
+type alias TileData =
     { fd : Bool
     , fh : Bool
     , fv : Bool
@@ -293,7 +326,7 @@ type alias TileArg =
     }
 
 
-tileArgs : Tiled.Level.Level -> Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> TileArg
+tileArgs : Tiled.Level.Level -> Tiled.Layer.ObjectData -> CommonDimensionGid -> GidInfo -> TileData
 tileArgs level layer tileInfo gidInfo =
     { id = tileInfo.id
     , name = tileInfo.name

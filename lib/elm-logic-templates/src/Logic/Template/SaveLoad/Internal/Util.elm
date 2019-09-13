@@ -35,7 +35,7 @@ import Image
 import Image.Magic
 import Logic.Launcher exposing (Error(..))
 import Logic.Template.SaveLoad.Internal.Loader exposing (CacheTiled, GetTileset, TaskTiled, getTileset)
-import Logic.Template.SaveLoad.Internal.Reader exposing (TileArg)
+import Logic.Template.SaveLoad.Internal.Reader exposing (TileData)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Math.Vector2 exposing (Vec2, vec2)
 import Math.Vector3 exposing (Vec3, vec3)
@@ -200,7 +200,7 @@ extractObjectGroupWith gid t_ =
             Nothing
 
 
-getCollision : TileArg -> TaskTiled (Maybe Tiled.Tileset.TilesDataObjectgroup)
+getCollision : TileData -> TaskTiled (Maybe Tiled.Tileset.TilesDataObjectgroup)
 getCollision info =
     getTilesetByGid (levelCommon info.level).tilesets info.gid
         >> ResourceTask.map
@@ -496,7 +496,7 @@ propsNothing_ =
     }
 
 
-tileProps : TileArg -> TaskTiled PropertiesReader
+tileProps : TileData -> TaskTiled PropertiesReader
 tileProps info =
     getTilesetByGid (levelCommon info.level).tilesets info.gid
         >> ResourceTask.map

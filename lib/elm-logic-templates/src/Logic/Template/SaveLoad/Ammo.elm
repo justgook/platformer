@@ -9,7 +9,7 @@ import Logic.Entity as Entity
 import Logic.Template.Component.Ammo as Ammo exposing (Ammo)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, Read(..), TileData, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (DecoderWithTexture, GetTexture)
 import Logic.Template.SaveLoad.Sprite as Sprite exposing (decodeSprite, encodeSprite)
@@ -41,7 +41,7 @@ read spec =
     }
 
 
-extract : TileArg -> ExtractAsync Ammo
+extract : TileData -> ExtractAsync Ammo
 extract =
     \({ properties } as info) ->
         let

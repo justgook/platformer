@@ -10,7 +10,7 @@ import Logic.Template.Component.Animation as FrameChange exposing (Animation)
 import Logic.Template.Internal.RangeTree as RangeTree exposing (RangeTree)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileArg, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (ExtractAsync, Read(..), TileData, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (WorldDecoder)
 import Logic.Template.SaveLoad.Internal.Util as Util exposing (TileUV, boolToFloat)
@@ -36,7 +36,7 @@ read spec =
     }
 
 
-extract : TileArg -> ExtractAsync (Maybe Animation)
+extract : TileData -> ExtractAsync (Maybe Animation)
 extract { gid, fh, fv, level } =
     Util.getTilesetByGid (Util.levelCommon level).tilesets gid
         >> ResourceTask.map

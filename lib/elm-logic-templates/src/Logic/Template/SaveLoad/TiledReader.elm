@@ -50,7 +50,7 @@ parse emptyECS readers level start =
                                 acc
                                     |> ResourceTask.andThen
                                         (\info ->
-                                            readFor .layerTile tileData info
+                                            readFor .layerTile (Reader.layerTileData tileData level) info
                                         )
 
                             Tiled.Layer.Object objectData ->

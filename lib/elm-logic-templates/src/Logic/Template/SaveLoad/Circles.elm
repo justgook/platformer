@@ -13,7 +13,7 @@ import Logic.Entity as Entity
 import Logic.Template.Component.Circles exposing (Circles)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
-import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, GuardReader, Read(..), TileArg, WorldReader, defaultRead)
+import Logic.Template.SaveLoad.Internal.Reader exposing (ExtractAsync, GuardReader, Read(..), TileData, WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.Util exposing (getCollision, getCollisionWith)
 import Tiled.Level exposing (Level)
