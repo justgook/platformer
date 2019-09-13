@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:justgook/elm-image-encode.git
 	branch = master
-	commit = 55827ac5856ac5db1b5ddc3acb49a590c3b1ff4f
-	parent = bff632d27fb9f5f9c2ab5c32658ebb46f1b8adbe
+	commit = 86c9d3a7a54506a1245b01a43adafb04dd1b3207
+	parent = 707a86d0c8d80be9202676801b69b4065b01ccbf
 	method = merge
 	cmdver = 0.4.0
