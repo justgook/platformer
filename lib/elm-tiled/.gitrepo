@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:justgook/elm-tiled.git
+	branch = master
+	commit = 3485879e025ac5cb535a98ca1823f2a95c907213
+	parent = 34a86678edeb3b397370af1e1a30d936b7275170
+	method = merge
+	cmdver = 0.4.0
