@@ -1,8 +1,9 @@
-port module Game exposing (main)
+module Game exposing (main)
 
 import Json.Decode as Decode exposing (Value)
 import Logic.Launcher as Launcher exposing (Launcher)
 import Logic.Template.Game.Platformer as Platformer
+import Task
 
 
 game : Launcher.Document flags Platformer.World
@@ -12,12 +13,12 @@ game =
 
 main : Launcher Value Platformer.World
 main =
-    Launcher.document { game | init = \_ -> Platformer.run "game.bin" }
+    --    Launcher.document { game | init = \_ -> Platformer.run "game.bin" }
+    --    Launcher.document { game | init = init }
+    Launcher.document { game | init = debugInit }
 
 
 
---    Launcher.document { game | init = init }
---    Launcher.document { game | init = debugInit }
 --    Launcher.document { game | init = \_ -> Platformer.load "./assets/demo.json" }
 --init : Value -> Task.Task Launcher.Error Platformer.World
 --init flags =
@@ -37,20 +38,24 @@ main =
 --        |> Maybe.withDefault (Platformer.run levelUrl)
 --
 --
---debugInit : Value -> Task.Task Launcher.Error Platformer.World
---debugInit flags =
---    Platformer.encode "./ThomasLean/level.json"
---        --    Platformer.encode "./assets/demo.json"
---        --    Platformer.encoadde "./elm-europe/slides2.json"
---        |> Task.andThen
---            (\( b, w ) ->
---                --                let
---                --                    _ =
---                --                        Base64.fromBytes
---                --                            b
---                --
---                --                    --                            |> Debug.log "Base64.toBytes"
---                --                in
---                Platformer.decode b
---             --                Task.succeed w
---            )
+
+
+debugInit : Value -> Task.Task Launcher.Error Platformer.World
+debugInit flags =
+    --    Platformer.encode "./ThomasLean/level.json"
+    Platformer.encode "./platformer/demo.json"
+        --    Platformer.load "./develop/delme.json"
+        --    Platformer.encoadde "./elm-europe/slides2.json"
+        |> Task.andThen
+            (\( b, w ) ->
+                --                let
+                --                    _ =
+                --                        Base64.fromBytes
+                --                            b
+                --
+                --                    --                            |> Debug.log "Base64.toBytes"
+                --                in
+                --                Platformer.decode b
+                Task.succeed w
+             --                    |> setInitResize
+            )

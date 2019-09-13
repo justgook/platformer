@@ -11,7 +11,7 @@
         "lib/collision/src",
         "lib/direction/src"
     ],
-    "elm-version": "0.19.1",
+    "elm-version": "0.19.0",
     "dependencies": {
         "direct": {
             "NoRedInk/elm-json-decode-pipeline": "1.0.0",

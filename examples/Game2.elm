@@ -13,7 +13,7 @@ game =
 main : Launcher Value ShootEmUp.World
 main =
     --    Launcher.document { game | init = debugInit }
-    Launcher.document { game | init = \_ -> ShootEmUp.load "./shootEmUp/demo.json" }
+    Launcher.document { game | init = \_ -> ShootEmUp.load "./space-shooter/demo.json" }
 
 
 

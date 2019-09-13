@@ -1,12 +1,12 @@
 [submodule "gh-pages/space-shooter"]
 	path = gh-pages/space-shooter
-	url = git@github.com:justgook/platformer.git
+	url = ../platformer.git
 	branch = assets/space-shooter
 [submodule "gh-pages/top-down-adventure"]
 	path = gh-pages/top-down-adventure
-	url = git@github.com:justgook/platformer.git
+	url = ../platformer.git
 	branch = assets/top-down-adventure
 [submodule "gh-pages/platformer"]
 	path = gh-pages/platformer
-	url = git@github.com:justgook/platformer.git
+	url = ../platformer.git
 	branch = assets/platformer
