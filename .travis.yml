@@ -1,5 +1,10 @@
 language: elm
-node_js: '10' # latest 10.x
+node_js: '10'
+#os:
+#  - linux
+##  - osx
+sudo: required
+dist: trusty
 
 elm-test: 0.19.0-rev6
 elm-format: 0.8.1
@@ -8,45 +13,57 @@ cache:
   yarn: true
   directories:
     - node_modules
+    - elm-stuff
 
-os:
-  - linux
-#  - osx
-sudo: required
-dist: trusty
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:mc3man/trusty-media; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y ffmpeg; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg; fi
-  - ffmpeg -hwaccels
-#  for Electron application
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99.0; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sleep 3; fi
+matrix:
+  include:
+    - os: osx
+      before_install:
+        - then brew update
+        - brew install ffmpeg
+    - os: linux
+      before_install:
+        - sudo add-apt-repository -y ppa:mc3man/trusty-media
+        - sudo apt-get update
+        - sudo apt-get install -y ffmpeg
+        - export DISPLAY=:99.0
+        - sh -e /etc/init.d/xvfb start
+        - then sleep 3
 
-script:
-  - elm-format --validate . && elm-test && elm-test lib/elm-tiled && elm-test lib/elm-image-encode
-#  - && elm-test lib/elm-logic-templates
-  - elm make ./examples/Game.elm --optimize --output=./gh-pages/bundle.js
-  - elm make ./examples/PlatformerBuild.elm --optimize --output=./gh-pages/encoder.js
-  - jscodeshift -t transform.js ./gh-pages/bundle.js
-  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters" --output=./gh-pages/bundle.js
-  - prepack ./gh-pages/bundle.js --inlineExpressions --out ./gh-pages/bundle.js
-  - terser ./gh-pages/bundle.js ./gh-pages/script.js --compress 'keep_fargs=false,unsafe_comps,unsafe' --mangle --output=./gh-pages/bundle.js
+#before_install:
+#  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:mc3man/trusty-media; fi
+#  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update; fi
+#  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y ffmpeg; fi
+#  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
+#  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg; fi
+#  - ffmpeg -hwaccels
+#  #  for Electron application
+#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99.0; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sleep 3; fi
+#
+#script:
+#  - elm-format --validate . && elm-test && elm-test lib/elm-tiled && elm-test lib/elm-image
+#  #  - && elm-test lib/elm-logic-templates
+#
+#  - elm make ./examples/Game.elm --optimize --output=./gh-pages/bundle.js
+#  - elm make ./examples/PlatformerBuild.elm --optimize --output=./gh-pages/encoder.js
+#  - jscodeshift -t transform.js ./gh-pages/bundle.js
+#  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters" --output=./gh-pages/bundle.js
+#  - prepack ./gh-pages/bundle.js --inlineExpressions --out ./gh-pages/bundle.js
+#  - terser ./gh-pages/bundle.js ./gh-pages/script.js --compress 'keep_fargs=false,unsafe_comps,unsafe' --mangle --output=./gh-pages/bundle.js
+#
+#
+#after_success:
+#  #  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe" | uglifyjs --mangle --output=./gh-pages/bundle.js
+#  - git clone -b assets --single-branch https://github.com/$TRAVIS_REPO_SLUG.git ./gh-pages/assets
+#  - mkdir -p ./gh-pages/images
+#  - posthtml ./gh-pages/index.html -o ./gh-pages/index.html -c posthtml.config.js
+#  - audiosprite --format howler2 --loop Background --output ./gh-pages/pack/audiosprite ./gh-pages/assets/sounds/*.wav ./gh-pages/assets/sounds/*.mp3 -u ./pack
+#  - node build-assets.js assets/demo.json
 
-
-after_success:
-  #  - uglifyjs ./gh-pages/bundle.js --compress "pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe" | uglifyjs --mangle --output=./gh-pages/bundle.js
-  - git clone -b assets --single-branch https://github.com/$TRAVIS_REPO_SLUG.git ./gh-pages/assets
-  - mkdir -p ./gh-pages/images
-  - posthtml ./gh-pages/index.html -o ./gh-pages/index.html -c posthtml.config.js
-  - audiosprite --format howler2 --loop Background --output ./gh-pages/pack/audiosprite ./gh-pages/assets/sounds/*.wav ./gh-pages/assets/sounds/*.mp3 -u ./pack
-  - node build-assets.js assets/demo.json
-
-
-
+# https://docs.travis-ci.com/user/build-stages/
+# https://docs.travis-ci.com/user/build-stages/matrix-expansion/
 deploy:
   provider: pages
   skip-cleanup: true
