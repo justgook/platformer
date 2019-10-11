@@ -342,7 +342,7 @@
         {
          "name":"audiosprite",
          "type":"file",
-         "value":"..\/pack\/audiosprite.json"
+         "value":"../dist/MazePlatformer.json"
         },
         {
          "name":"pixelsPerUnit",
