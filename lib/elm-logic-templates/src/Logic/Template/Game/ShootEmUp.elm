@@ -1,4 +1,4 @@
-module Logic.Template.Game.ShootEmUp exposing (World, decode, encode, game, load, setInitResize)
+module Logic.Template.Game.ShootEmUp exposing (World, decode, encode, game, load, run, setInitResize)
 
 --https://www.gamedev.net/articles/visual-arts/the-total-beginner%E2%80%99s-guide-to-better-2d-game-art-r2959/
 --https://www.shadertoy.com/view/XlfGRj
@@ -99,7 +99,7 @@ encode levelUrl =
         |> ResourceTask.toTask
 
 
-decode : Bytes -> Task Launcher.Error (Launcher.World ShootEmUpWorld)
+decode : Bytes -> Task Launcher.Error World
 decode bytes =
     let
         worldTask =
@@ -108,7 +108,7 @@ decode bytes =
     setInitResize worldTask
 
 
-run : String -> Task Launcher.Error (Launcher.World ShootEmUpWorld)
+run : String -> Task Launcher.Error World
 run levelUrl =
     let
         worldTask =
@@ -137,6 +137,7 @@ type alias ShootEmUpWorld =
         , fx : FX
         , camera : EntityID
 
+        --        ,cameraClamp: {xMin:Int, xMax: Int}
         --        , deadFx : Component.Set ( Animation, Sprite )
         , seed : Random.Seed
         , score : Int
@@ -151,6 +152,9 @@ type alias ShootEmUpWorld =
         , playerHurtBox : Component.Set Circles
         , enemyHurtBox : Component.Set Circles
         , rewardHurtBox : Component.Set Circles
+
+        -- Particles
+        --        , particles:
         }
 
 
@@ -230,16 +234,12 @@ update world =
                             |> (\w__ -> Circles.collide onEnemyHit w__.position w__.enemyHurtBox w__.playerHitBox w__)
                             |> (\w__ -> Circles.collide onRewardHit w__.position w__.playerHurtBox w__.rewardHurtBox w__)
                 in
-                ( newWorld, Cmd.none )
+                newWorld
            )
 
 
 spawnEnemy2 ({ targets } as item) world =
     let
-        --        {
-        --            , onContact : List OnContact
-        --            , onDeath : List OnDeath
-        --            }
         startPos =
             item.targets.target.position
 
@@ -422,8 +422,8 @@ view w_ =
             0
     in
     [ objRender w
-        --        ++ debug2
-        |> (::) space
+        ++ debug2
+        --        |> (::) space
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
     , OnScreenControl.twoButtonStick
         (OnScreenControl.onscreenSpecExtend ""
@@ -622,7 +622,6 @@ setInitResize =
         (\{ scene } w ->
             RenderInfo.resize RenderInfo.spec w (round scene.width) (round scene.height)
                 |> update
-                |> Tuple.first
         )
         Browser.getViewport
 

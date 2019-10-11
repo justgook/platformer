@@ -1,8 +1,8 @@
-module Logic.Component.Singleton exposing (Spec, update)
+module Logic.Component.Singleton exposing (Spec, update, cursor)
 
 {-|
 
-@docs Spec, update
+@docs Spec, update, cursor
 
 -}
 
@@ -20,3 +20,14 @@ type alias Spec comp world =
 update : { get : world -> comp, set : comp -> world -> world } -> (comp -> comp) -> world -> world
 update spec f world =
     spec.set (f (spec.get world)) world
+
+
+{-| Helper function to create nested components
+-}
+cursor : Spec subWorld world -> Spec comp subWorld -> Spec comp world
+cursor spec2 spec1 =
+    { get = spec2.get >> spec1.get
+    , set =
+        \comp world ->
+            spec2.set (spec1.set comp (spec2.get world)) world
+    }

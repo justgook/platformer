@@ -1,10 +1,10 @@
-module PlatformerBuild exposing (main)
+module MazePlarformer.Build exposing (main)
 
 import Build exposing (build)
 import Json.Decode as Decode exposing (Value)
-import Logic.Template.Game.Platformer as Platformer
+import Logic.Template.Game.Platformer as Game
 
 
 main : Program Value () (Maybe String)
 main =
-    build Platformer.encode
+    build Game.encode

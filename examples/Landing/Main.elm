@@ -1,4 +1,4 @@
-module Landing exposing (main)
+module Landing.Main exposing (main)
 
 import Browser
 import Browser.Dom as Browser
@@ -101,11 +101,13 @@ initModel =
         }
 
 
-gamePlatformer name =
+gamePlatformer name thumbnail =
     { success = Success
     , fail = "String"
     , name = name
-    , templateUrl = "not Set yet"
+    , templateUrl = "https://github.com/z0lv/platformer-puzzle"
+    , thumbnail = thumbnail
+    , startUrl = ""
     , parse =
         \level ->
             TiledReader.parse Platformer.empty Platformer.read level
@@ -114,11 +116,13 @@ gamePlatformer name =
     }
 
 
-gameTopDown name =
+gameTopDown name thumbnail =
     { success = Success
     , fail = "String"
     , name = name
-    , templateUrl = "not Set yet"
+    , templateUrl = "https://github.com/z0lv/top-down-adventure"
+    , thumbnail = thumbnail
+    , startUrl = ""
     , parse =
         \level ->
             TiledReader.parse TopDown.empty TopDown.read level
@@ -128,12 +132,8 @@ gameTopDown name =
 
 
 games =
-    [ gamePlatformer "Platformer puzzle"
-    , gamePlatformer "Space Shoot'em up"
-    , gameTopDown "Top-down Adventure"
-    , gamePlatformer "Beat'em up"
-    , gamePlatformer "Fighting"
-    , gamePlatformer "Scrolling shooter"
+    [ gamePlatformer "Platformer puzzle" "dist/MazePlatformer_thumbnail.png"
+    , gameTopDown "Top-down Adventure" "dist/RPG_thumbnail.png"
     ]
 
 

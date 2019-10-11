@@ -77,10 +77,6 @@ read { get, set } =
                         levelData =
                             Util.levelCommon level
 
-                        aaa =
-                            levelData.width
-                                * levelData.tilewidth
-
                         prop =
                             Util.levelProps level
 
@@ -113,13 +109,32 @@ read { get, set } =
 
 encode : Spec world -> world -> Encoder
 encode { get } world =
-    E.float (get world).px
+    let
+        info =
+            get world
+    in
+    E.sequence
+        [ E.float info.px
+        , E.int info.levelSize.width
+        , E.int info.levelSize.height
+        ]
 
 
 decode : Spec world -> Decoder (world -> world)
 decode spec_ =
-    D.float
-        |> D.map (\px -> Singleton.update spec_ (\info -> { info | px = px }))
+    D.map3
+        (\px width height ->
+            Singleton.update spec_
+                (\info ->
+                    { info
+                        | px = px
+                        , levelSize = { width = width, height = height }
+                    }
+                )
+        )
+        D.float
+        D.id
+        D.id
 
 
 spec : Spec { world | render : RenderInfo }

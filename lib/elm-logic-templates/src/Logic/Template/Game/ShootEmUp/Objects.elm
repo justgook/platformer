@@ -130,7 +130,6 @@ extractEvent { repeat, delay, interval, lifetime } info =
 
                 hitPoints =
                     (Util.propertiesWithDefault info).int "hp" 10
-                        |> Debug.log "hp"
             in
             List.range 0 (repeat - 1)
                 |> List.foldl

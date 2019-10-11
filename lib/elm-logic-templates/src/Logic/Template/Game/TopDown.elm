@@ -132,12 +132,10 @@ webGLOption =
 
 
 update w =
-    ( w
+    w
         |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
         |> Control.shootEmUp { x = 3, y = 3 } Logic.Template.Input.spec Position.spec w.render.virtualScreen
         |> TimelineChange.topDown (Logic.Template.Input.toComps Logic.Template.Input.spec) AnimationsDict.spec Animation.spec
-    , Cmd.none
-    )
 
 
 load : String -> Task Launcher.Error (Launcher.World World)

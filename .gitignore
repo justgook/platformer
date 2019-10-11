@@ -26,6 +26,7 @@ gh-pages/*
 !gh-pages/game.html
 !gh-pages/screenshot.html
 !gh-pages/game.css
+!gh-pages/index.css
 !gh-pages/script.js
 !gh-pages/.gitignore
 

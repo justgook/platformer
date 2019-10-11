@@ -1,4 +1,4 @@
-module Logic.Template.SaveLoad.Internal.Encode exposing (bool, components, encoder, float, id, list, maybe, sizedString, xy, xyz, xyzw)
+module Logic.Template.SaveLoad.Internal.Encode exposing (bool, components, encodedList, encoder, float, id, int, list, maybe, sizedString, xy, xyz, xyzw)
 
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as E exposing (Encoder)
@@ -54,6 +54,11 @@ id =
     E.unsignedInt32 BE
 
 
+int : Int -> Encoder
+int =
+    E.unsignedInt32 BE
+
+
 sizedString : String -> Encoder
 sizedString str =
     E.sequence
@@ -65,6 +70,11 @@ sizedString str =
 list : (a -> Encoder) -> List a -> Encoder
 list f l =
     E.sequence (E.unsignedInt32 BE (List.length l) :: List.map f l)
+
+
+encodedList : List Encoder -> Encoder
+encodedList l =
+    E.sequence (id (List.length l) :: l)
 
 
 maybe : (a -> Encoder) -> Maybe a -> Encoder

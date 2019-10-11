@@ -235,4 +235,5 @@ decodeItem getTexture =
             D.reverseList decodeTemplate
     in
     D.reverseList (D.map2 Tuple.pair D.sizedString decodeTemplateList)
+        |> D.map List.reverse
         |> D.map Ammo.fromList

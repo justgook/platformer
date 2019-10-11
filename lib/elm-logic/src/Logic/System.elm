@@ -4,10 +4,9 @@ module Logic.System exposing
     , foldl, foldl2, foldl3, foldl4
     , indexedFoldl, indexedFoldl2, indexedFoldl3
     , map, filterMap
-    , applyIf
+    , applyIf, applyMaybe
     , UnfinishedSystem, start, andMap, end, endCustom
     , SetsReducer2, SetsReducer3, SetsReducer4
-    , applyMaybe
     )
 
 {-| Main logic driver is `System` that is what used to step each game-loop and update `World`
@@ -22,7 +21,7 @@ module Logic.System exposing
 
 # Util
 
-@docs applyIf
+@docs applyIf, applyMaybe
 
 
 # Custom Systems

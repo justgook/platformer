@@ -25,12 +25,12 @@ init encoder flags =
     let
         levelUrl =
             flags
-                |> Decode.decodeValue (Decode.field "levelUrl" Decode.string)
+                |> Decode.decodeValue (Decode.field "url" Decode.string)
                 |> Result.withDefault "default.json"
 
         send a =
             Http.task
-                { method = "Post"
+                { method = "POST"
                 , headers = []
                 , url = "http://localhost:3000/save-bytes"
                 , body = Http.bytesBody "application/game-level" a

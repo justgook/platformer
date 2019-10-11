@@ -4,25 +4,34 @@
   "main": "index.js",
   "repository": "git@github.com:justgook/platformer.git",
   "license": "MIT",
+  "author": {
+    "name": "Romāns Potašovs",
+    "email": "justgook@gmail.com",
+    "url": "http://https://github.com/justgook"
+  },
   "scripts": {
-    "posthtml": "posthtml index.html --auto-off  -o output.html -c posthtml.config.js"
+    "posthtml": "posthtml gh-pages/index.html --auto-off  -o gh-pages/output.html -c posthtml.config.js",
+    "start": "elm-live examples/Shump/Debug.elm --dir ./gh-pages -o --pushstate -p 8001  -- --output=./gh-pages/bundle.js"
   },
   "devDependencies": {
+    "elm-live": "4.0.0"
+  },
+  "dependencies": {
     "audiosprite": "0.7.1",
     "glslx": "0.1.26",
     "htmlnano": "0.2.4",
-    "image-size": "0.7.4",
+    "image-size": "0.8.2",
     "jscodeshift": "0.6.4",
-    "node-server-screenshot": "0.2.1",
+    "node-server-screenshot": "0.2.2",
     "posthtml-cli": "0.5.1",
+    "posthtml-content": "0.0.2",
     "posthtml-favicons": "1.3.0",
     "posthtml-head-elements": "0.5.1",
     "posthtml-minifier": "0.1.0",
+    "posthtml-style-to-file": "0.2.0",
     "prepack": "0.2.54",
-    "terser": "4.1.3",
+    "terser": "4.3.2",
     "uglify-js": "3.6.0",
     "xhr2": "0.2.0"
-  },
-  "dependencies": {},
-  "peerDependencies": {}
+  }
 }

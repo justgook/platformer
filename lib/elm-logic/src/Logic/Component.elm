@@ -1,8 +1,8 @@
-module Logic.Component exposing (Set, Spec, empty, remove, set, spawn)
+module Logic.Component exposing (Set, Spec, empty, spawn, set, remove)
 
 {-|
 
-@docs Set, Spec, empty, remove, set, spawn
+@docs Set, Spec, empty, spawn, set, remove
 
 -}
 

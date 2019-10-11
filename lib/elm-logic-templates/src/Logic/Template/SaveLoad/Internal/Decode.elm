@@ -5,6 +5,7 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     , float
     , foldl
     , id
+    , int
     , maybe
     , reverseList
     , sequence
@@ -15,7 +16,7 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     )
 
 import Bytes exposing (Bytes, Endianness(..))
-import Bytes.Decode as D exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt32)
+import Bytes.Decode as D exposing (Decoder, Step(..))
 import Logic.Component as Component
 import Logic.Entity as Entity
 
@@ -23,13 +24,6 @@ import Logic.Entity as Entity
 sequence : List (Decoder (a -> a)) -> Decoder (a -> a)
 sequence =
     List.foldl (D.map2 (<<)) (D.succeed identity)
-
-
-
---
---decodeWithTexture : List (Decoder (b -> a -> a)) -> Bytes -> Maybe (b -> a -> a)
---decodeWithTexture decoders =
---    D.decode (sequence2 (List.reverse decoders))
 
 
 sequence2 : List (Decoder (b -> a -> a)) -> Decoder (b -> a -> a)
@@ -40,13 +34,6 @@ sequence2 =
 composeBAA : (b -> a -> a) -> (b -> a -> a) -> b -> a -> a
 composeBAA f g b a =
     f b (g b a)
-
-
-
---andMap : Decoder a -> Decoder (a -> b) -> Decoder b
---andMap =
---    D.map2 (|>)
---
 
 
 andMap : Decoder a -> Decoder (a -> b) -> Decoder b
@@ -101,6 +88,11 @@ id =
     D.unsignedInt32 BE
 
 
+int : Decoder Int
+int =
+    D.signedInt32 BE
+
+
 sizedString : Decoder String
 sizedString =
     D.unsignedInt32 BE
@@ -109,17 +101,17 @@ sizedString =
 
 reverseList : Decoder a -> Decoder (List a)
 reverseList decoder =
-    unsignedInt32 BE
-        |> andThen (\len -> loop ( len, [] ) (listStep decoder))
+    D.unsignedInt32 BE
+        |> D.andThen (\len -> D.loop ( len, [] ) (listStep decoder))
 
 
 listStep : Decoder a -> ( Int, List a ) -> Decoder (Step ( Int, List a ) (List a))
 listStep decoder ( n, xs ) =
     if n <= 0 then
-        succeed (Done xs)
+        D.succeed (Done xs)
 
     else
-        map (\x -> Loop ( n - 1, x :: xs )) decoder
+        D.map (\x -> Loop ( n - 1, x :: xs )) decoder
 
 
 foldl : Int -> (b -> Decoder b) -> b -> Decoder b

@@ -4,7 +4,7 @@ import Base64
 import Dict
 import File exposing (File)
 import Html exposing (Html, button, div, li, main_, text, ul)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (class, classList, href, style, target)
 import Html.Events
 import Json.Decode as Decode exposing (Decoder, field, list)
 import Logic.Launcher exposing (Error(..))
@@ -31,7 +31,9 @@ type alias Item world msg =
     { success : world -> msg
     , fail : String
     , name : String
+    , thumbnail : String
     , templateUrl : String
+    , startUrl : String
     , parse : Level -> CacheTask CacheTiled -> ResourceTask world CacheTiled
     }
 
@@ -99,7 +101,7 @@ selectLevel l =
 view : Model world msg -> List (Html (Message world msg))
 view m =
     let
-        game i ({ name } as item) =
+        game i ({ name, thumbnail, templateUrl, startUrl } as item) =
             li
                 [ onDragover "dragenter" i
                 , onDragover "dragleave" 0
@@ -108,55 +110,49 @@ view m =
                     [ ( "drag-over", m.dragOver == i )
                     ]
                 ]
-                [ div []
+                [ div [ style "background-image" ("url(\"" ++ thumbnail ++ "\")") ]
                     [ if m.dragOver /= i then
                         text name
 
                       else
                         text ("Drop to Start - \"" ++ name ++ "\" game")
                     , div []
-                        [ button [] [ text "Template" ]
-                        , Html.a [ class "button" ] [ text "Start" ]
+                        [ Html.a [ class "button", href templateUrl, target "_blank" ] [ text "Template" ]
+                        , Html.a [ class "button", href startUrl ] [ text "Start" ]
                         ]
                     ]
                 ]
 
-        small t =
+        comingSoon text1 text2 =
             li
-                [ class "small" ]
+                [ class "coming-soon" ]
                 [ div []
-                    [ text t
+                    [ text text1
+                    , div [] [ text text2 ]
                     ]
                 ]
 
-        withSmall =
-            li
-                [ class "with-small" ]
-                [ div []
-                    [ text "Coming Soon.."
-                    , ul [ class "small-wrapper" ]
-                        [ small "1"
-                        , small "2"
-                        , small "3"
-                        , small "4"
-                        , small "5"
-                        , small "6"
-                        , small "7"
-                        ]
-                    ]
-                ]
-    in
-    [ main_ []
-        [ ul [ class "clearfix" ]
+        items =
             (m.items
                 |> List.indexedMap (\i -> game i)
-                |> (::) withSmall
             )
+                ++ [ comingSoon "Space Shoot'em up" "..almost ready.."
+                   , comingSoon "Beat'em up" "..coming soon.."
+                   , comingSoon "Fighting" "..coming soon.."
+                   , comingSoon "Scrolling shooter" "..coming soon.."
+                   , comingSoon "Multiplayer" "..coming soon.."
+                   ]
+    in
+    [ main_ []
+        [ ul [ class "clearfix" ] items
         ]
     ]
 
 
-files : Decoder (Task Error (List ( String, CacheTiled )))
+
+--files : Decoder (Task Error (List ( String, CacheTiled )))
+
+
 files =
     field "dataTransfer" (field "files" (list File.decoder))
         |> Decode.map

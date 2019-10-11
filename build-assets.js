@@ -3,13 +3,21 @@ const fs = require("fs");
 const takeScreenShot = require("node-server-screenshot");
 const port = 3000;
 
-const argv = process.argv.slice(2);
-// const levelJsonUrl =argv[0] ? argv[0] : "elm-europe/slides2.json";
-const levelJsonUrl =argv[0] ? argv[0] : "default.json";
+// return;
 
 const server = http.createServer((req, res) => {
-    if (req.url === "/") req.url = "/index.html";
-    if (req.url === "/save-bytes") {
+    // `${process.env.GAME}_bundle.js`;
+    if (req.url === "/") {
+        req.url = `/${process.env.GAME}.html`;
+    } else if (/bundle\.js$/.test(req.url)) {
+        req.url = `/dist/${process.env.GAME}_bundle.js`;
+    } else if (req.url === `/${process.env.GAME}.age.bin` || req.url === "/default.age.bin") {
+        req.url = `/dist/${process.env.GAME}.age.bin`;
+    } else if (fs.existsSync(__dirname + "/gh-pages/dist" + req.url)) {
+        req.url = "/dist" + req.url;
+    }
+
+    if (req.url.startsWith("/save-bytes")) {
         res.writeHead(200, { "Content-Type": "text/plain" });
         res.write("All Done");
 
@@ -19,10 +27,10 @@ const server = http.createServer((req, res) => {
         }).on("end", () => {
             body = Buffer.concat(body);
             saveBytes(body);
-            screenshot(`http://localhost:${port}/screenshot.html`, () => server.close());
+
+            screenshot(() => server.close());
             res.end();
         });
-
     } else {
         const path = __dirname + "/gh-pages" + req.url;
         fs.access(path, fs.F_OK, (err) => {
@@ -30,11 +38,11 @@ const server = http.createServer((req, res) => {
                 console.error(err);
                 res.writeHead(404);
                 res.end();
+                server.close();
                 return;
             }
             res.writeHead(200);
             res.end(fs.readFileSync(path));
-            //file exists
         })
     }
 });
@@ -50,7 +58,6 @@ global.Image = class {
     }
 
     set src(url) {
-        // console.log("setUrls", url);
         sizeOf(url.replace(`http://localhost:${port}`, "gh-pages"), (notUsed, data) => {
                 if (data) {
                     this.width = data.width;
@@ -64,35 +71,48 @@ global.Image = class {
     constructor(props) {
         this.onloadMock = function () {
         };
-
     }
 
 };
 
+const { Elm } = require(`./gh-pages/dist/${process.env.GAME}_encoder.js`);
 
-const { Elm } = require("./gh-pages/encoder.js");
-
-Object.values(Elm)[0].init({
-    flags: {
-        // levelUrl: `http://localhost:${port}/assets/demo.json`
-        levelUrl: `http://localhost:${port}/${levelJsonUrl}`
-    }
-});
+Object.values(Object.values(Elm)[0])[0].init({ flags: { url: `http://localhost:${port}/${process.env.GAME_FILE}` } });
 
 function saveBytes(buff) {
-    console.log("saveBytes", buff);
-    fs.writeFileSync("./gh-pages/game.bin", buff);
-    console.log("level file file created");
+    const name = `${process.env.GAME}.age.bin`;
+    console.log(`Save Bytes: ./gh-pages/dist/${name}`);
+    fs.writeFileSync(`./gh-pages/dist/${name}`, buff);
+    console.log("Bytes Saved");
 }
 
-function screenshot(url, callback) {
-    takeScreenShot.fromURL(url, "gh-pages/preview.png",
-        {
-            show: false,
-            width: 1200,
-            height: 675,
-            waitMilliseconds: 10000,
-        },
-        callback
-    );
+function screenshot(done) {
+    const url = `http://localhost:${port}/dist/${process.env.GAME}.html`;
+    const savePreview = `gh-pages/dist/${process.env.GAME}.png`;
+    const thumbnail = `gh-pages/dist/${process.env.GAME}_thumbnail.png`;
+    console.log(`Screenshot: ${savePreview}`);
+
+    const small = new Promise((resolve, reject) =>
+        takeScreenShot.fromURL(url, thumbnail,
+            {
+                show: false,
+                width: 230 * 2,
+                height: 260 * 2,
+                waitAfterSelector: "body > canvas",
+                waitMilliseconds: 100,
+            },
+            resolve
+        ));
+    const preview = new Promise((resolve, reject) =>
+        takeScreenShot.fromURL(url, savePreview,
+            {
+                show: false,
+                width: 1200,
+                height: 675,
+                waitAfterSelector: "body > canvas",
+                waitMilliseconds: 100,
+            },
+            resolve
+        ));
+    Promise.all([small, preview]).then(done);
 }

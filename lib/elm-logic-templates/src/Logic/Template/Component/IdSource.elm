@@ -1,4 +1,4 @@
-module Logic.Template.Component.IdSource exposing (IdSource, create, empty, spec)
+module Logic.Template.Component.IdSource exposing (IdSource, create, empty, remove, spec)
 
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity exposing (EntityID)
@@ -32,3 +32,12 @@ create { get, set } world =
 
         [] ->
             Entity.create next (set { comp | next = next + 1 } world)
+
+
+remove : Singleton.Spec IdSource world -> EntityID -> world -> ( EntityID, world )
+remove { get, set } entityID world =
+    let
+        comp =
+            get world
+    in
+    ( entityID, set { comp | pool = entityID :: comp.pool } world )

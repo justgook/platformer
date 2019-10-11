@@ -74,7 +74,9 @@ run : String -> Task Launcher.Error (Launcher.World PlatformerWorld)
 run levelUrl =
     let
         worldTask =
-            SaveLoad.loadBytes levelUrl empty decoders |> ResourceTask.toTask
+            SaveLoad.loadBytes levelUrl empty decoders
+                |> ResourceTask.toTask
+                |> Task.map (AudioSprite.spawn AudioSprite.spec (AudioSprite.sound "Background"))
     in
     setInitResize RenderInfo.spec worldTask
 
@@ -231,7 +233,6 @@ update w =
         |> aabb.system
         |> TimelineChange.sideScroll TimeLineDict2.spec aabb.spec TimeLine2.spec
         |> Singleton.update Logic.Template.Camera.spec cameraStep
-        |> (\m -> ( m, Cmd.none ))
 
 
 aabb =

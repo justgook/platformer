@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="landing.css">
+    <link rel="stylesheet" href="index.css">
     <posthtml-head-elements>
         <title>Game</title>
         <meta charset="utf-8" />
@@ -25,7 +25,7 @@
     document.addEventListener("dragover", function( event ) {event.preventDefault(); }, false);
     document.addEventListener("drop", function( event ) {event.preventDefault(); }, false);
 
-    Object.values(Elm)[0].init();
+    Object.values(Object.values(Elm)[0])[0].init();
 
 </script>
 </body>

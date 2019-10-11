@@ -19,10 +19,12 @@ sub spec world =
         ]
 
 
+onKeyDown : Singleton.Spec InputSingleton world -> world -> Decoder world
 onKeyDown =
     onKeyChange Set.insert
 
 
+onKeyUp : Singleton.Spec InputSingleton world -> world -> Decoder world
 onKeyUp =
     onKeyChange Set.remove
 
@@ -80,7 +82,7 @@ updateKeys { get, set } update keyChanged world pressed =
                                             { x, y } =
                                                 arrows2 keyNames actionSet
                                         in
-                                        Component.spawn id
+                                        Component.set id
                                             { comp
                                                 | x = x
                                                 , y = y

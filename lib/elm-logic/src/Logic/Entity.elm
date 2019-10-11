@@ -2,8 +2,7 @@ module Logic.Entity exposing
     ( EntityID, create, with
     , fromList, toList
     , fromDict, toDict
-    , get, get2, removeFor
-    , update
+    , get, get2, removeFor, update
     )
 
 {-|
@@ -23,7 +22,7 @@ module Logic.Entity exposing
 
 # Manipulations
 
-@docs get, get2, removeFor
+@docs get, get2, removeFor, update
 
 -}
 
@@ -44,7 +43,7 @@ type alias ComponentSpec comp world =
 
 {-| Start point for spawning entity
 
-    Entity.create ( id, world )
+    Entity.create id world
         |> Entity.with ( positionSpec, positionComponent )
         |> Entity.with ( velocitySpec, velocityComponent )
 
