@@ -1,4 +1,11 @@
 { "compressionlevel":0,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":32,
  "infinite":false,
  "layers":[
@@ -621,7 +628,7 @@
          "value":512
         }],
  "renderorder":"right-down",
- "tiledversion":"2019.08.11",
+ "tiledversion":"2019.10.08",
  "tileheight":16,
  "tilesets":[
         {
@@ -832,7 +839,7 @@
         {
          "columns":6,
          "firstgid":53,
-         "image":"Explosion Medium.png",
+         "image":"ExplosionMedium.png",
          "imageheight":64,
          "imagewidth":384,
          "margin":0,
