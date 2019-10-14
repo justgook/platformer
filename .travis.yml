@@ -22,9 +22,9 @@ env:
     - GAME=RPG GAME_FILE="top-down-adventure/demo.json" GAME_FAVICON="top-down-adventure/favicon.png"
     - GAME=Shump GAME_FILE="space-shooter/demo.json" GAME_FAVICON="space-shooter/favicon.png"
 
-os:
-  - linux
-  - osx
+#os:
+#  - linux
+#  - osx
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:mc3man/trusty-media; fi
