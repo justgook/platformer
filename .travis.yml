@@ -11,7 +11,8 @@ cache:
   yarn: true
   directories:
     - node_modules
-    - elm-stuff
+    - elm_cache_linux
+    - elm_cache_osx
     - gh-pages/dist
 env:
   global:
@@ -37,6 +38,10 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99.0; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sleep 3; fi
+  #Elm cache folders for each OS
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export ELM_HOME=./elm_cache_linux; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export ELM_HOME=./elm_cache_osx; fi
+
 
 before_script:
   - elm-format --validate . && elm-test #&& elm-test lib/elm-tiled && elm-test lib/elm-image
