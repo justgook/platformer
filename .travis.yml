@@ -57,17 +57,25 @@ jobs:
   fast_finish: true
   include:
     - stage: after_success
-      before_install: echo "Build Landing before_install"
-      before_script: echo "Build Landing before_script"
+      before_install: skip
+      before_script: skip
       script: echo "Build Landing"
       # Keep in mind to overwrite these here
       env: FOO=foo
     - stage: deploy
-      before_install: echo "Build Deploy before_install"
-      before_script: echo "Build Deploy before_script"
+      before_install: skip
+      before_script: skip
       script: echo Deploy
       # Keep in mind to overwrite these here
       env: FOO=foo
+      #deploy:
+      provider: pages
+      skip-cleanup: true
+      github-token: $GITHUB_TOKEN
+      keep-history: true
+      local-dir: gh-pages/dist
+      on:
+        branch: master
 
 
 
@@ -112,11 +120,4 @@ jobs:
 
 # https://docs.travis-ci.com/user/build-stages/
 # https://docs.travis-ci.com/user/build-stages/matrix-expansion/
-#deploy:
-#  provider: pages
-#  skip-cleanup: true
-#  github-token: $GITHUB_TOKEN
-#  keep-history: true
-#  local-dir: gh-pages/dist
-#  on:
-#    branch: master
+
