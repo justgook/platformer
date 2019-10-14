@@ -25,7 +25,6 @@ const server = http.createServer((req, res) => {
         }).on("end", () => {
             body = Buffer.concat(body);
             saveBytes(body);
-
             screenshot(() => server.close());
             res.end();
         });
@@ -36,7 +35,7 @@ const server = http.createServer((req, res) => {
                 console.error(err);
                 res.writeHead(404);
                 res.end();
-                server.close();
+                process.exit(-1);
                 return;
             }
             res.writeHead(200);

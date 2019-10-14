@@ -1,5 +1,5 @@
 language: elm
-node_js: '10'
+node_js: '12'
 
 sudo: required
 dist: trusty
@@ -14,6 +14,7 @@ cache:
     - elm-stuff
     - gh-pages/dist
 env:
+  fast_finish: true
   global:
      - GAME_SOUNDS=""
      - NODE_ENV=production
@@ -23,11 +24,12 @@ env:
     - GAME=Shump GAME_FILE="space-shooter/demo.json" GAME_FAVICON="space-shooter/favicon.png"
 
 matrix:
+  fast_finish: true
   include:
-#    - os: osx
-#      before_install:
-#        - brew update
-#        - brew install ffmpeg
+    - os: osx
+      before_install:
+        - brew update
+        - brew install ffmpeg
     - os: linux
       before_install:
         - sudo add-apt-repository -y ppa:mc3man/trusty-media
