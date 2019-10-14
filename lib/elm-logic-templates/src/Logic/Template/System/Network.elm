@@ -4,7 +4,6 @@ module Logic.Template.System.Network exposing
     , Protocol
     , Unpack
     , compPacker
-    , initSync
     , subscription
     , sync
     , unsafePrivateCmd

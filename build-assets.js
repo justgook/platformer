@@ -3,8 +3,6 @@ const fs = require("fs");
 const takeScreenShot = require("node-server-screenshot");
 const port = 3000;
 
-// return;
-
 const server = http.createServer((req, res) => {
     // `${process.env.GAME}_bundle.js`;
     if (req.url === "/") {
@@ -101,7 +99,10 @@ function screenshot(done) {
                 waitAfterSelector: "body > canvas",
                 waitMilliseconds: 100,
             },
-            resolve
+            () => {
+                console.log(`Thumbnail: ${thumbnail}`);
+                resolve()
+            }
         ));
     const preview = new Promise((resolve, reject) =>
         takeScreenShot.fromURL(url, savePreview,
@@ -112,7 +113,10 @@ function screenshot(done) {
                 waitAfterSelector: "body > canvas",
                 waitMilliseconds: 100,
             },
-            resolve
+            () => {
+                console.log(`Screenshot: ${savePreview}`);
+                resolve()
+            }
         ));
     Promise.all([small, preview]).then(done);
 }

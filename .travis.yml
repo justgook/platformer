@@ -19,8 +19,8 @@ env:
      - NODE_ENV=production
   matrix:
     - GAME=MazePlatformer GAME_FILE="platformer/demo.json" GAME_FAVICON="platformer/favicon.png" GAME_SOUNDS="gh-pages/platformer/sounds"
-    - GAME=RPG GAME_FILE="top-down-adventure/demo.json" GAME_FAVICON="top-down-adventure/favicon.png" GAME_SOUNDS=""
-    - GAME=Shump GAME_FILE="space-shooter/demo.json" GAME_FAVICON="space-shooter/favicon.png" GAME_SOUNDS=""
+    - GAME=RPG GAME_FILE="top-down-adventure/demo.json" GAME_FAVICON="top-down-adventure/favicon.png"
+    - GAME=Shump GAME_FILE="space-shooter/demo.json" GAME_FAVICON="space-shooter/favicon.png"
 
 matrix:
   include:
