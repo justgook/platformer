@@ -1,4 +1,4 @@
-module Logic.Template.Game.Fight.World exposing (FightWorld, empty)
+module Logic.Template.Game.Fight.World exposing (FightWorld, empty, networkSpec)
 
 import Dict exposing (Dict)
 import Logic.Component as Component
@@ -13,6 +13,7 @@ import Logic.Template.Component.Velocity as Velocity exposing (Velocity)
 import Logic.Template.Input as Input exposing (Input, InputSingleton)
 import Logic.Template.Network exposing (SessionId)
 import Logic.Template.RenderInfo as RenderInfo exposing (RenderInfo)
+import Logic.Template.System.Network exposing (IntervalState)
 import Random
 
 
@@ -26,8 +27,12 @@ type alias FightWorld =
         , seed : Random.Seed
 
         --Network
-        , status : Status
-        , online : Dict SessionId EntityID
+        , network :
+            IntervalState
+                { position : Component.Set Position
+                , status : Status
+                , online : Dict SessionId EntityID
+                }
         }
 
 
@@ -41,9 +46,20 @@ empty =
     , position = Position.empty
     , velocity = Velocity.empty
     , idSource = IdSource.empty 1
-    , seed = Random.initialSeed 42
+    , seed = Random.initialSeed 43
 
     --Network
-    , status = Status.empty
-    , online = Dict.empty
+    , network =
+        { next = 0
+        , position = Position.empty
+        , status = Status.empty
+        , online = Dict.empty
+        }
+    }
+
+
+networkSpec : Singleton.Spec (IntervalState comps) { world | network : IntervalState comps }
+networkSpec =
+    { get = .network
+    , set = \comps world -> { world | network = comps }
     }

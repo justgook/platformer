@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>i-frames</title>
+    <style>
+        html, body, main {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        iframe {
+            display: block;
+            border: none;
+            margin: 0;
+            padding: 0;
+            width: 50%;
+            max-width: 50%;
+            height: 45%;
+        }
+
+        main {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .menu {
+            width: 100%;
+        }
+
+        .menu, .menu > li {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+
+            flex-shrink: 0;
+        }
+
+        .menu > li {
+            list-style: none;
+        }
+
+        .menu {
+            height: 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<script>
+    function refreshFrame(frameId) {
+        document.getElementById(frameId).contentWindow.location.reload();
+    }
+</script>
+
+<main>
+    <ul class="menu">
+        <li>
+            <button onclick="refreshFrame('frame1')">Frame 1</button>
+        </li>
+        <li>
+            <button onclick="refreshFrame('frame2')">Frame 2</button>
+        </li>
+        <li>
+            <button onclick="refreshFrame('frame3')">Frame 3</button>
+        </li>
+        <li>
+            <button onclick="refreshFrame('frame4')">Frame 4</button>
+        </li>
+
+    </ul>
+    <iframe id="frame1" src="/network.html" scrolling="no"></iframe>
+    <iframe id="frame2" src="/network.html" scrolling="no"></iframe>
+    <iframe id="frame3" src="/network.html" scrolling="no"></iframe>
+    <iframe id="frame4" src="/network.html" scrolling="no"></iframe>
+</main>
+</body>
+</html>

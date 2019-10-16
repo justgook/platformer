@@ -1,4 +1,7 @@
-module Logic.Component.Singleton exposing (Spec, update, cursor)
+module Logic.Component.Singleton exposing
+    ( Spec, update, cursor
+    , Spec2
+    )
 
 {-|
 
@@ -10,8 +13,14 @@ module Logic.Component.Singleton exposing (Spec, update, cursor)
 {-| Main way of creating ECS "anti-pattern", but time to time you need to create some component that can exist only one per whole application (viewport, keyboard, websocket-connection, etc. )
 -}
 type alias Spec comp world =
-    { get : world -> comp
-    , set : comp -> world -> world
+    Spec2 comp world world
+
+
+{-| Same as first but `set` and `get` can go to different worlds
+-}
+type alias Spec2 comp getWorld setWorld =
+    { get : getWorld -> comp
+    , set : comp -> setWorld -> setWorld
     }
 
 

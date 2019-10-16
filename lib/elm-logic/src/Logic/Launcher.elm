@@ -1,7 +1,7 @@
 module Logic.Launcher exposing
     ( document, documentWith, worker, workerWith
     , inline
-    , task, event
+    , async, sync
     , Document, DocumentWith, Error(..), Launcher, World, Message
     )
 
@@ -9,7 +9,7 @@ module Logic.Launcher exposing
 
 @docs document, documentWith, worker, workerWith
 @docs inline
-@docs task, event
+@docs async, sync
 @docs Document, DocumentWith, Error, Launcher, World, Message
 
 -}
@@ -125,9 +125,10 @@ documentWith { init, update, view, subscriptions } =
 {-| Instead of creating game as separate application, you can inline it inside your own application
 -}
 inline :
-    { update : World a -> World a
-    , view : c -> List (Html.Html (world -> world))
-    , subscriptions : b -> Sub world1
+    { aa
+        | update : World a -> World a
+        , view : c -> List (Html.Html (world -> world))
+        , subscriptions : b -> Sub world1
     }
     ->
         { subscriptions : b -> Sub (Message world1)
@@ -192,8 +193,8 @@ workerWith { init, update, subscriptions } =
 
 {-| Helper function, that allow convert `Task` into Cmd - for loading new `World` after `init`
 -}
-task : (Result x a -> world -> world) -> Task.Task x a -> Cmd (Message world)
-task f t =
+async : (Result x a -> world -> world) -> Task.Task x a -> Cmd (Message world)
+async f t =
     Task.attempt (f >> Event) t
 
 
@@ -202,8 +203,8 @@ task f t =
     Random.generate (\seed -> Launcher.event (\w -> { w | seed = seed })) Random.independentSeed
 
 -}
-event : (world -> world) -> Message world
-event =
+sync : (world -> world) -> Message world
+sync =
     Event
 
 

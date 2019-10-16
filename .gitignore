@@ -25,6 +25,8 @@ gh-pages/*
 !gh-pages/index.html
 !gh-pages/game.html
 !gh-pages/screenshot.html
+!gh-pages/network.html
+!gh-pages/iframes.html
 !gh-pages/game.css
 !gh-pages/index.css
 !gh-pages/script.js

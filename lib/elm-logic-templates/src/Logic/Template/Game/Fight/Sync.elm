@@ -8,8 +8,9 @@ import Logic.Entity as Entity exposing (EntityID)
 import Logic.Template.Component.IdSource as IdSource
 import Logic.Template.Component.Position as Position
 import Logic.Template.Component.Velocity as Velocity
-import Logic.Template.Game.Fight.World as World exposing (FightWorld)
+import Logic.Template.Game.Fight.World as World exposing (FightWorld, networkSpec)
 import Logic.Template.Input as Input
+import Logic.Template.Network exposing (SessionId)
 import Logic.Template.SaveLoad.Internal.Decode as D
 import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.System.Network as Network exposing (Packer)
@@ -20,19 +21,13 @@ import Set
 protocol : Network.Protocol FightWorld
 protocol =
     { event = [ inputSync ] -- from Client
-    , state =
-        [ ( \_ _ -> [], registerKeys )
-        , idSourceSync
-        , velocitySync
-        , positionSync
-        ]
-
-    --  from Server State
+    , state = [ setInput, idSourceSync, velocitySync, positionSync ] --  from Server State
     , join = join
     , leave = leave
     }
 
 
+join : SessionId -> FightWorld -> FightWorld
 join sessionId world =
     let
         x_ =
@@ -54,13 +49,17 @@ join sessionId world =
                 |> Entity.with ( Input.toComps Input.spec, Input.emptyComp )
                 |> Entity.with ( Velocity.spec, { x = 0, y = 0 } )
                 |> Entity.with ( Position.spec, pos )
+
+        network =
+            world.network
     in
     { newWorld
         | seed = seed
-        , online = Dict.insert sessionId entityId world.online
+        , network = { network | online = Dict.insert sessionId entityId world.network.online }
     }
 
 
+leave : SessionId -> FightWorld -> FightWorld
 leave sessionId world =
     let
         remove entityId w =
@@ -69,10 +68,16 @@ leave sessionId world =
                 |> Entity.removeFor Position.spec
                 |> Entity.removeFor (Input.toComps Input.spec)
     in
-    Dict.get sessionId world.online
+    Dict.get sessionId world.network.online
         |> Maybe.map (\id -> remove id world |> Tuple.second)
         |> Maybe.withDefault world
-        |> (\w -> { w | online = Dict.remove sessionId world.online })
+        |> (\w ->
+                let
+                    network =
+                        w.network
+                in
+                { w | network = { network | online = Dict.remove sessionId w.network.online } }
+           )
 
 
 velocitySync : Packer FightWorld
@@ -100,16 +105,35 @@ inputSync =
 
 positionSync : Packer FightWorld
 positionSync =
-    Network.compPacker Position.spec E.xy D.xy
+    Network.compPackerWithInterval networkSpec Position.spec Position.spec E.xy D.xy
 
 
-registerKeys world =
-    D.map (\entityId -> setKeys entityId world) D.id
+setInput : Packer FightWorld
+setInput =
+    let
+        createDiff before after =
+            let
+                privateMsg =
+                    if after.network.online /= before.network.online then
+                        Dict.diff after.network.online before.network.online
+                            |> Dict.foldl
+                                (\sessionId entityId -> Dict.insert sessionId [ E.id 1, E.id entityId ])
+                                Dict.empty
+
+                    else
+                        Dict.empty
+            in
+            ( [], privateMsg )
+    in
+    ( createDiff
+    , \world ->
+        D.map (\entityId -> setInitialKeys entityId world) D.id
+    )
 
 
-setKeys : EntityID -> FightWorld -> FightWorld
-setKeys entityId world =
-    world
+setInitialKeys : EntityID -> FightWorld -> FightWorld
+setInitialKeys entityId world_ =
+    world_
         |> Singleton.update Input.spec
             (\input ->
                 { input
@@ -132,10 +156,10 @@ idSourceSync =
     ( \was now ->
         if was.idSource /= now.idSource then
             -- E.encodedList to be able parse with same as components
-            [ E.id 1, E.id now.idSource.next ]
+            ( [ E.id 1, E.id now.idSource.next ], Dict.empty )
 
         else
-            []
+            ( [], Dict.empty )
     , \world ->
         D.id
             |> D.andThen

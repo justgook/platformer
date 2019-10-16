@@ -1,22 +1,13 @@
-module Logic.Template.System.Network exposing
-    ( Pack
-    , Packer
-    , Protocol
-    , Unpack
-    , compPacker
-    , subscription
-    , sync
-    , unsafePrivateCmd
-    )
+module Logic.Template.System.Network exposing (IntervalState, Pack, Packer, Protocol, Unpack, compPacker, compPacker2, compPackerWithInterval, intervalSave, prepareData, subscription, sync)
 
 import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
+import Dict exposing (Dict)
 import Logic.Component as Component
 import Logic.Component.Singleton as Singleton
 import Logic.Entity as Entity
-import Logic.System as System
 import Logic.Template.Component.Network.Status as Status exposing (Status)
 import Logic.Template.Network as Network exposing (Message(..), OutMessage, RoomId, SessionId)
 import Logic.Template.SaveLoad.Internal.Decode as D
@@ -36,11 +27,17 @@ type alias Packer world =
 
 
 type alias Pack world =
-    world -> world -> List Encoder
+    world -> world -> ( List Encoder, Dict SessionId (List Encoder) )
 
 
 type alias Unpack world =
     world -> Decoder world
+
+
+type alias IntervalState e =
+    { e
+        | next : Int
+    }
 
 
 compPacker :
@@ -52,14 +49,20 @@ compPacker spec_ =
     compPacker2 spec_.get spec_
 
 
-compPacker2 :
-    (world -> Component.Set comp)
-    -> Component.Spec comp world
-    -> (comp -> Encoder)
-    -> Decoder comp
-    -> Packer world
+compPackerWithInterval topSpec spec spec_ encode decode =
+    compPacker2 (topSpec.get >> spec.get) spec_ encode decode
+        |> Tuple.mapFirst
+            (\fn world ->
+                if world.frame == (topSpec.get >> .next) world then
+                    fn world
+
+                else
+                    \_ -> ( [], Dict.empty )
+            )
+
+
 compPacker2 wasGetter spec2 encode decode =
-    ( \was now -> componentDiff (E.maybe encode) (wasGetter was) (spec2.get now) []
+    ( \was now -> ( componentDiff (E.maybe encode) (wasGetter was) (spec2.get now) [], Dict.empty )
     , \world ->
         D.map2
             (\id maybeComp ->
@@ -75,17 +78,6 @@ compPacker2 wasGetter spec2 encode decode =
     )
 
 
-unsafePrivateCmd : (OutMessage -> Cmd msg) -> Int -> Encoder -> SessionId -> Cmd msg
-unsafePrivateCmd outcome packerIndex encoder sessionId =
-    Network.sendPrivateData sessionId
-        (E.int packerIndex
-            :: [ E.id 1, encoder, E.int endOfDecode ]
-            |> E.sequence
-            |> E.encode
-        )
-        |> outcome
-
-
 endOfDecode : Int
 endOfDecode =
     -1
@@ -94,85 +86,125 @@ endOfDecode =
 packCmd : (OutMessage -> Cmd msg) -> List (Packer world) -> world -> world -> Cmd msg
 packCmd outcome list was now =
     let
-        dataToSend : List Encoder
-        dataToSend =
+        ( broadcastData, privateData ) =
             prepareData list was now
+
+        cmdPrivate =
+            if Dict.isEmpty privateData then
+                []
+
+            else
+                privateData
+                    |> Dict.foldl
+                        (\sessionId dataToSend acc ->
+                            (E.sequence [ E.sequence dataToSend, E.int endOfDecode ]
+                                |> E.encode
+                                |> Network.sendPrivateData sessionId
+                                |> outcome
+                            )
+                                :: acc
+                        )
+                        []
+
+        cmdBroadcast =
+            if broadcastData == [] then
+                Cmd.none
+
+            else
+                E.sequence [ E.sequence broadcastData, E.int endOfDecode ]
+                    |> E.encode
+                    |> Network.sendData
+                    |> outcome
     in
-    if dataToSend == [] then
-        Cmd.none
-
-    else
-        E.sequence [ E.sequence dataToSend, E.int endOfDecode ]
-            |> E.encode
-            |> Network.sendData
-            |> outcome
+    cmdBroadcast :: cmdPrivate |> Cmd.batch
 
 
-prepareData : List (Packer world) -> world -> world -> List Encoder
+prepareData : List (Packer world) -> world -> world -> ( List Encoder, Dict SessionId (List Encoder) )
 prepareData list was now =
     list
         |> indexedFoldl
-            (\i ( fn, _ ) acc ->
+            (\i ( fn, _ ) ( acc1, acc2 ) ->
                 let
-                    diff =
+                    ( broadcast, private ) =
                         fn was now
                 in
-                if diff /= [] then
-                    diff
+                ( if broadcast == [] then
+                    acc1
+
+                  else
+                    broadcast
                         |> E.encodedList
                         |> List.singleton
                         |> (::) (E.int i)
                         |> E.sequence
-                        |> (\a -> a :: acc)
+                        |> (\a -> a :: acc1)
+                , if Dict.isEmpty private then
+                    acc2
 
-                else
-                    acc
+                  else
+                    Dict.foldl
+                        (\k v acc_ ->
+                            let
+                                readyValue =
+                                    v
+                                        |> E.encodedList
+                                        |> List.singleton
+                                        |> (::) (E.int i)
+                                        |> E.sequence
+
+                                newValue =
+                                    Dict.get k acc_
+                                        |> Maybe.map ((::) readyValue)
+                                        |> Maybe.withDefault [ readyValue ]
+                            in
+                            Dict.insert k newValue acc_
+                        )
+                        acc2
+                        private
+                )
             )
-            []
+            ( [], Dict.empty )
 
 
 sync : Singleton.Spec Status world -> Protocol world -> (OutMessage -> Cmd msg) -> world -> world -> Cmd msg
 sync { get, set } protocol outcome was now =
-    let
-        status =
-            get now
-    in
-    case status of
-        Status.Slave _ _ ->
-            packCmd outcome protocol.event was now
-
-        Status.Master _ _ ->
-            packCmd outcome protocol.state was now
-
-        Status.Disconnected ->
-            Cmd.none
-
-        Status.Connecting ->
-            Cmd.none
-
-
-initSync : Protocol world -> (OutMessage -> Cmd msg) -> world -> world -> SessionId -> Cmd msg
-initSync protocol outcome was now sessionId =
-    let
-        dataToSend =
-            prepareData protocol.state was now
-    in
-    if dataToSend == [] then
+    if was == now then
         Cmd.none
 
     else
-        E.sequence [ E.sequence dataToSend, E.int endOfDecode ]
-            |> E.encode
-            |> Network.sendPrivateData sessionId
-            |> outcome
+        case get now of
+            Status.Slave _ _ ->
+                packCmd outcome protocol.event was now
+
+            Status.Master _ _ ->
+                packCmd outcome protocol.state was now
+
+            Status.Disconnected ->
+                Cmd.none
+
+            Status.Connecting ->
+                Cmd.none
 
 
-subscription :
-    Singleton.Spec Status world
-    -> Protocol world
-    -> Bytes
-    -> world
-    -> world
+intervalSave frames subWorldSpec listOfSpecs world =
+    if remainderBy frames world.frame == 0 then
+        let
+            sub =
+                subWorldSpec.get world
+
+            setter spec =
+                spec.set (spec.get world)
+
+            newSub =
+                List.foldl setter sub listOfSpecs
+        in
+        subWorldSpec.set { newSub | next = world.frame + frames } world
+
+    else
+        world
+
+
+subscription : Singleton.Spec Status world -> Protocol world -> Bytes -> world -> world
 subscription spec protocol =
     let
         subConfig =
