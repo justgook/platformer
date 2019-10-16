@@ -1,6 +1,11 @@
 { "compressionlevel":0,
  "editorsettings":
     {
+     "chunksize":
+        {
+         "height":32,
+         "width":32
+        },
      "export":
         {
          "target":"."
