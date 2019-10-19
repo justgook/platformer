@@ -1,12 +1,12 @@
 [submodule "gh-pages/space-shooter"]
 	path = gh-pages/space-shooter
-	url = git@github.com:z0lv/-age-shump-age.git
+	url = ../../z0lv/-age-shump-age.git
 	branch = tiled
 [submodule "gh-pages/top-down-adventure"]
 	path = gh-pages/top-down-adventure
-	url = git@github.com:z0lv/-age-top-down-adventure.git
+	url = ../../z0lv/-age-top-down-adventure.git
 	branch = tiled
 [submodule "gh-pages/platformer"]
 	path = gh-pages/platformer
-	url = git@github.com:z0lv/-age-platformer-puzzle.git
+	url = ../../z0lv/-age-platformer-puzzle.git
 	branch = tiled
