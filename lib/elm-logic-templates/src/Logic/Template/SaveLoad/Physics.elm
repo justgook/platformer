@@ -35,7 +35,7 @@ encode { get } world =
     get world
         |> (\{ gravity, indexed } ->
                 E.sequence
-                    [ E.xy gravity
+                    [ E.vec2 gravity
                     , indexedEncoder indexed
                     , static
                     ]
@@ -77,7 +77,7 @@ decode spec_ =
                     { a | gravity = gravity, indexed = indexed, static = static }
                 )
         )
-        D.xy
+        D.vec2
         indexedDecoder
         staticDecoder
 

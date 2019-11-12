@@ -13,6 +13,7 @@ import Logic.Template.Input as Input exposing (InputSingleton)
 import Set
 
 
+shootEmUp : Vec2 -> Singleton.Spec InputSingleton world -> Component.Spec Vec2 world -> { a | width : b, height : c } -> world -> world
 shootEmUp speed inputSpec_ posSpec { width, height } world =
     let
         inputSpec =
@@ -20,9 +21,9 @@ shootEmUp speed inputSpec_ posSpec { width, height } world =
     in
     Logic.System.step2
         (\( { x, y }, _ ) ( pos, setPos ) ->
-            { x = pos.x + x * speed.x
-            , y = pos.y + y * speed.y
-            }
+            vec2 x y
+                |> Vec2.mul speed
+                |> Vec2.add pos
                 |> setPos
         )
         inputSpec
@@ -36,10 +37,13 @@ platformer :
     -> Singleton.Spec PhysicsComponent.World world
     -> Singleton.Spec AudioSprite world
     -> System world
-platformer force inputSpec_ physicsSpec audioSpec world =
+platformer force_ inputSpec_ physicsSpec audioSpec world =
     let
         engine =
             physicsSpec.get world
+
+        force =
+            Vec2.toRecord force_
 
         inputSpec =
             Input.toComps inputSpec_
@@ -62,23 +66,23 @@ platformer force inputSpec_ physicsSpec audioSpec world =
                 (\i body_ key acc ->
                     case ( key.x, Set.member "Jump" key.action ) of
                         ( a, True ) ->
-                            if .y (AABB.getContact body_) == -1 then
+                            if Vec2.getY (AABB.getContact body_) == -1 then
                                 acc
                                     |> setBody i (AABB.setVelocity (vec2 (key.x * force.x) force.y) body_)
                                     |> addSound (AudioSprite.sound "Jump")
 
                             else if a == 0 then
-                                setBody i (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
+                                setBody i (AABB.updateVelocity (Vec2.setX 0) body_) acc
 
                             else
-                                setBody i (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
+                                setBody i (AABB.updateVelocity (Vec2.setX (key.x * force.x)) body_) acc
 
                         ( a, False ) ->
                             if a == 0 then
-                                setBody i (AABB.updateVelocity (\v -> { v | x = 0 }) body_) acc
+                                setBody i (AABB.updateVelocity (Vec2.setX 0) body_) acc
 
                             else
-                                setBody i (AABB.updateVelocity (\v -> { v | x = key.x * force.x }) body_) acc
+                                setBody i (AABB.updateVelocity (Vec2.setX (key.x * force.x)) body_) acc
                 )
                 combined.a
                 combined.b

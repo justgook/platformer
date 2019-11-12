@@ -10,11 +10,13 @@ module Logic.Template.SaveLoad.Internal.Decode exposing
     , reverseList
     , sequence
     , sizedString
+    , vec2
     , xy
     , xyz
     , xyzw
     )
 
+import AltMath.Vector2 as AltVec2
 import Bytes exposing (Bytes, Endianness(..))
 import Bytes.Decode as D exposing (Decoder, Step(..))
 import Logic.Component as Component
@@ -57,6 +59,13 @@ bool =
                 else
                     False
             )
+
+
+vec2 : Decoder AltVec2.Vec2
+vec2 =
+    D.map2 (\x y -> AltVec2.fromRecord { x = x, y = y })
+        float
+        float
 
 
 xy : Decoder { x : Float, y : Float }

@@ -32,6 +32,7 @@ fromPhysics renderInfo =
         pxToScreen : Float -> Vec2 -> Vector2.Vec2
         pxToScreen px p =
             AVec2.scale px p
+                |> AVec2.toRecord
                 |> Vector2.fromRecord
     in
     { circle =
@@ -74,7 +75,7 @@ fromPhysics renderInfo =
         \p r h ->
             let
                 w =
-                    r.x
+                    AVec2.getX r
             in
             { height = h * 2 * renderInfo.px
             , width = w * 2 * renderInfo.px

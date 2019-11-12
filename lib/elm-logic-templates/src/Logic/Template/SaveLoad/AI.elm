@@ -20,7 +20,7 @@ encodeOne ai =
 encodeSpot_ : Spot -> Encoder
 encodeSpot_ spot =
     E.sequence
-        [ spot.position |> E.xy
+        [ spot.position |> E.vec2
         , spot.action |> E.list E.sizedString
         , spot.wait |> E.id
         , spot.invSteps |> E.float
@@ -39,7 +39,7 @@ decodeOne =
 decodeSpot_ : Decoder Spot
 decodeSpot_ =
     D.succeed Spot
-        |> D.andMap D.xy
+        |> D.andMap D.vec2
         |> D.andMap (D.reverseList D.sizedString |> D.map List.reverse)
         |> D.andMap D.id
         |> D.andMap D.float

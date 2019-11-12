@@ -76,7 +76,7 @@ encodeCircles : Circles -> Encoder
 encodeCircles shapes =
     let
         encodeItem ( offset, radius ) =
-            E.sequence [ E.xy offset, E.float radius ]
+            E.sequence [ E.vec2 offset, E.float radius ]
     in
     E.list encodeItem shapes
 
@@ -85,6 +85,6 @@ decodeCircles : Decoder Circles
 decodeCircles =
     let
         decodeItem =
-            D.map2 Tuple.pair D.xy D.float
+            D.map2 Tuple.pair D.vec2 D.float
     in
     D.reverseList decodeItem

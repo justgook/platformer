@@ -54,7 +54,7 @@ emptyWith a =
     , camera = { viewportOffset = vec2 0 200, id = 0, yTarget = -1 }
     , sprites = Sprite.empty
     , input = Logic.Template.Input.empty
-    , physics = { physicsEmpty | gravity = { x = 0, y = -0.5 } }
+    , physics = { physicsEmpty | gravity = Vec2.vec2 0 -0.5 }
     , projectile = Projectile.empty
     , render = RenderInfo.empty
     , onScreen = OnScreenControl.emptyTwoButtonStick

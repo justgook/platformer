@@ -29,14 +29,6 @@ debugInit flags =
     Game.encode "./platformer/demo.json"
         |> Task.andThen
             (\( b, w ) ->
-                --                let
-                --                    _ =
-                --                        Base64.fromBytes
-                --                            b
-                --
-                --                    --                            |> Debug.log "Base64.toBytes"
-                --                in
-                --                ShootEmUp.decode b
                 w
                     --                    |> AudioSprite.spawn AudioSprite.spec (AudioSprite.sound "Background")
                     --                    |> Debug.log "audiosprite"

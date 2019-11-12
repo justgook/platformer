@@ -82,7 +82,7 @@ leave sessionId world =
 
 velocitySync : Packer FightWorld
 velocitySync =
-    Network.compPacker Velocity.spec E.xy D.xy
+    Network.compPacker Velocity.spec E.vec2 D.vec2
 
 
 inputSync : Packer FightWorld
@@ -105,7 +105,7 @@ inputSync =
 
 positionSync : Packer FightWorld
 positionSync =
-    Network.compPackerWithInterval networkSpec Position.spec Position.spec E.xy D.xy
+    Network.compPackerWithInterval networkSpec Position.spec Position.spec E.vec2 D.vec2
 
 
 setInput : Packer FightWorld

@@ -30,6 +30,8 @@ import Logic.Template.Component.EventSequence as EventSequence exposing (EventSe
 import Logic.Template.Component.FX as FX exposing (FX)
 import Logic.Template.Component.HitPoints as HitPoints exposing (HitPoints)
 import Logic.Template.Component.IdSource as IdSource exposing (IdSource)
+import Logic.Template.Component.Layer
+import Logic.Template.Component.LevelSize as LevelSize exposing (LevelSize)
 import Logic.Template.Component.Lifetime as Lifetime exposing (Lifetime)
 import Logic.Template.Component.OnScreenControl as OnScreenControl exposing (TwoButtonStick)
 import Logic.Template.Component.Position as Position exposing (Position)
@@ -54,6 +56,8 @@ import Logic.Template.SaveLoad.Internal.Encode as E
 import Logic.Template.SaveLoad.Internal.Reader as Reader exposing (Read(..), WorldReader, defaultRead)
 import Logic.Template.SaveLoad.Internal.ResourceTask as ResourceTask
 import Logic.Template.SaveLoad.Internal.TexturesManager exposing (GetTexture, WorldDecoder, withTexture)
+import Logic.Template.SaveLoad.Layer
+import Logic.Template.SaveLoad.LevelSize as LevelSize
 import Logic.Template.SaveLoad.Position as Position
 import Logic.Template.SaveLoad.Sprite as Sprite
 import Logic.Template.Sprite exposing (invertFragmentShader, mainFragmentShader)
@@ -120,6 +124,8 @@ run levelUrl =
 type alias ShootEmUpWorld =
     Launcher.World
         { render : RenderInfo
+        , levelSize : LevelSize
+        , layers : List Logic.Template.Component.Layer.Layer
 
         --        , layers : List Logic.Template.Component.Layer.Layer
         , sprites : Component.Set Sprite
@@ -164,6 +170,8 @@ empty =
     , runtime_ = 0
     , flow = Flow.Running
     , render = RenderInfo.empty
+    , levelSize = LevelSize.empty
+    , layers = Logic.Template.Component.Layer.empty
 
     --    , layers = Logic.Template.Component.Layer.empty
     , sprites = Sprite.empty
@@ -213,12 +221,12 @@ lazyGetScale w =
 update world =
     let
         cameraSystem =
-            Logic.Template.Camera.PositionLocking.xClamp RenderInfo.spec
+            Logic.Template.Camera.PositionLocking.xClamp LevelSize.spec RenderInfo.spec
     in
     world
         |> EventSequence.apply eventSequenceSpec2 spawnEnemy2
         |> AI.system (Input.toComps Input.spec) Position.spec Velocity.spec AI.spec
-        |> Control.shootEmUp { x = 10, y = 10 } Input.spec Position.spec world.render.virtualScreen
+        |> Control.shootEmUp (AltMath.Vector2.vec2 10 10) Input.spec Position.spec world.render.virtualScreen
         |> Logic.Template.System.CountDown.system removeEntity Lifetime.spec
         |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
         |> (\w_ -> System.applyMaybe (Entity.get w_.camera w_.position) cameraSystem w_)
@@ -252,7 +260,7 @@ spawnEnemy2 ({ targets } as item) world =
     IdSource.create IdSource.spec world
         |> Entity.with ( Sprite.spec, item.sprite )
         |> Entity.with ( Position.spec, startPos )
-        |> Entity.with ( Velocity.spec, { x = 0, y = 0 } )
+        |> Entity.with ( Velocity.spec, AltMath.Vector2.vec2 0 0 )
         |> Entity.with ( enemyHurtBoxSpec, item.hurtbox )
         |> Entity.with ( AI.spec, { targets | target = { target | position = startPos } } )
         |> Entity.with ( Ammo.spec, item.ammo )
@@ -411,18 +419,18 @@ view w_ =
                 , time = toFloat w.frame
                 }
 
-        debug2 =
-            Circles.debug { r = 90 / 255, g = 1, b = 80 / 255 } w.playerHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
-                ++ Circles.debug { r = 77 / 255, g = 0.5, b = 201 / 255 } w.enemyHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
-                ++ Circles.debug { r = 233 / 255, g = 56 / 255, b = 65 / 255 } w.enemyHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
-                ++ Circles.debug { r = 1, g = 1, b = 1 } w.playerHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
-                ++ Circles.debug { r = 0, g = modBy 5 w_.frame |> toFloat, b = 1 } w.rewardHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
-
+        --        debug2 =
+        --            Circles.debug { r = 90 / 255, g = 1, b = 80 / 255 } w.playerHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+        --                ++ Circles.debug { r = 77 / 255, g = 0.5, b = 201 / 255 } w.enemyHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+        --                ++ Circles.debug { r = 233 / 255, g = 56 / 255, b = 65 / 255 } w.enemyHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+        --                ++ Circles.debug { r = 1, g = 1, b = 1 } w.playerHitBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
+        --                ++ Circles.debug { r = 0, g = modBy 5 w_.frame |> toFloat, b = 1 } w.rewardHurtBox w.position { uAbsolute = w.render.absolute, px = w.render.px }
         playerEntityID =
             0
     in
-    [ objRender w
-        ++ debug2
+    [ Logic.Template.Component.Layer.draw (always []) w
+        ++ objRender w
+        --        ++ debug2
         --        |> (::) space
         |> WebGL.toHtmlWith webGLOption (RenderInfo.canvas w.render)
     , OnScreenControl.twoButtonStick
@@ -487,16 +495,16 @@ objRender w =
                             { animatedSprite
                                 | uP =
                                     position
-                                        |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
-                                        |> Math.Vector2.fromRecord
+                                        |> AltMath.Vector2.toRecord
+                                        |> (\{ x, y } -> Math.Vector2.vec2 (toFloat (round x)) (toFloat (round y)))
                             }
 
                         Nothing ->
                             { sprite
                                 | uP =
                                     position
-                                        |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
-                                        |> Math.Vector2.fromRecord
+                                        |> AltMath.Vector2.toRecord
+                                        |> (\{ x, y } -> Math.Vector2.vec2 (toFloat (round x)) (toFloat (round y)))
                             }
                     )
                 )
@@ -506,12 +514,10 @@ objRender w =
                                 let
                                     pxToScreen px p_ =
                                         p_
-                                            |> AltMath.Vector2.add { x = 0, y = -70 }
+                                            |> AltMath.Vector2.add (AltMath.Vector2.vec2 0 -70)
                                             |> AltMath.Vector2.scale px
+                                            |> AltMath.Vector2.toRecord
                                             |> Math.Vector2.fromRecord
-
-                                    p =
-                                        position
 
                                     width =
                                         toFloat hp * 0.1
@@ -523,7 +529,7 @@ objRender w =
                                         { uDimension = Math.Vector2.vec2 (width * w.render.px) (h * w.render.px)
                                         , absolute = w.render.absolute
                                         , uAbsolute = w.render.absolute
-                                        , uP = pxToScreen w.render.px p
+                                        , uP = pxToScreen w.render.px position
                                         , color = Math.Vector4.vec4 0.8 0.2 0.2 1
                                         }
                                             |> inlineRectangleFill
@@ -560,7 +566,8 @@ read =
         cameraRead =
             { defaultRead | objectTile = Sync (\_ ( entityID, world ) -> ( entityID, { world | camera = entityID } )) } |> ifPlayer
     in
-    [ Sprite.read Sprite.spec |> ifPlayer
+    [ Logic.Template.SaveLoad.Layer.read Logic.Template.Component.Layer.spec
+    , Sprite.read Sprite.spec |> ifPlayer
     , Animation.read Animation.spec |> ifPlayer
     , AnimationsDict.read Animation.fromTileset AnimationsDict.spec |> ifPlayer
     , Ammo.read Ammo.spec |> ifPlayer
@@ -568,6 +575,7 @@ read =
     , cameraRead
     , Input.read Input.spec
     , RenderInfo.read RenderInfo.spec
+    , LevelSize.read LevelSize.spec
 
     ---- NEW "physics"
     , Circles.readCircles playerHurtBoxSpec |> ifPlayer
@@ -586,6 +594,7 @@ encoders =
     , Position.encode Position.spec
     , Input.encode Input.spec
     , RenderInfo.encode RenderInfo.spec
+    , LevelSize.encode LevelSize.spec
     , .camera >> E.id
 
     --    , EventSequence.spec.get >> EventSequence.encode Spawn.encodeItem
@@ -606,6 +615,7 @@ decoders getTexture =
     , Position.decode Position.spec
     , Input.decode Input.spec
     , RenderInfo.decode RenderInfo.spec
+    , LevelSize.decode LevelSize.spec
     , D.id |> D.map (\c w -> { w | camera = c })
 
     --    , EventSequence.decode (Spawn.decodeItem getTexture) |> D.map EventSequence.spec.set

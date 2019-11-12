@@ -3,7 +3,7 @@ module Logic.Template.System.AI exposing (system)
 --https://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732
 -- https://www.youtube.com/watch?v=oBJxLYIih7M
 
-import AltMath.Vector2 as Vec2
+import AltMath.Vector2 as Vec2 exposing (vec2)
 import Logic.System exposing (System)
 import Logic.Template.Component.AI as AI
 import Set
@@ -26,7 +26,7 @@ system inputSpec posSpec velSpec aiSpec w =
                                 { ai | waiting = ai.waiting - 1 }
 
                             velocity__ =
-                                { x = 0, y = 0 }
+                                vec2 0 0
                         in
                         ( targets__, velocity__, input )
 
@@ -59,7 +59,17 @@ system inputSpec posSpec velSpec aiSpec w =
         w
 
 
-pointOnSegment a b c =
+pointOnSegment a_ b_ c_ =
+    let
+        a =
+            Vec2.toRecord a_
+
+        b =
+            Vec2.toRecord b_
+
+        c =
+            Vec2.toRecord c_
+    in
     ((c.x - a.x) * (c.x - b.x) + (c.y - a.y) * (c.y - b.y)) < 0
 
 

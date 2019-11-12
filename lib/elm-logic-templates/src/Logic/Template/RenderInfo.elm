@@ -44,10 +44,6 @@ type alias RenderInfo =
         { width : Float
         , height : Float
         }
-    , levelSize :
-        { width : Int
-        , height : Int
-        }
     }
 
 
@@ -74,9 +70,6 @@ read { get, set } =
                         renderInfo =
                             get world
 
-                        levelData =
-                            Util.levelCommon level
-
                         prop =
                             Util.levelProps level
 
@@ -93,13 +86,7 @@ read { get, set } =
                     , set
                         (setOffset
                             (Vec2.fromRecord { x = x, y = y })
-                            { renderInfo
-                                | px = px
-                                , levelSize =
-                                    { width = levelData.width * levelData.tilewidth
-                                    , height = levelData.height * levelData.tileheight
-                                    }
-                            }
+                            { renderInfo | px = px }
                         )
                         world
                     )
@@ -113,28 +100,21 @@ encode { get } world =
         info =
             get world
     in
-    E.sequence
-        [ E.float info.px
-        , E.int info.levelSize.width
-        , E.int info.levelSize.height
-        ]
+    E.float info.px
 
 
 decode : Spec world -> Decoder (world -> world)
 decode spec_ =
-    D.map3
-        (\px width height ->
+    D.map
+        (\px ->
             Singleton.update spec_
                 (\info ->
                     { info
                         | px = px
-                        , levelSize = { width = width, height = height }
                     }
                 )
         )
         D.float
-        D.id
-        D.id
 
 
 spec : Spec { world | render : RenderInfo }
@@ -300,10 +280,6 @@ empty =
         , height = 1
         }
     , virtualScreen =
-        { width = 1
-        , height = 1
-        }
-    , levelSize =
         { width = 1
         , height = 1
         }

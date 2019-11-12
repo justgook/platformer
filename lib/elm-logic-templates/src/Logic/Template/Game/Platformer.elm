@@ -170,6 +170,7 @@ objRender w ( _, objLayer ) =
                                     | uP =
                                         c1
                                             |> AABB.getPosition
+                                            |> Vec2.toRecord
                                             |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
                                             |> Math.Vector2.fromRecord
                                 }
@@ -179,6 +180,7 @@ objRender w ( _, objLayer ) =
                                     | uP =
                                         c1
                                             |> AABB.getPosition
+                                            |> Vec2.toRecord
                                             |> Math.Vector2.fromRecord
                                 }
                         )
@@ -205,11 +207,11 @@ update w =
         contactForCamera =
             aabb.spec.get w
                 |> AABB.byId w.camera.id
-                |> Maybe.map (AABB.getContact >> .y)
+                |> Maybe.map (AABB.getContact >> Vec2.getY)
                 |> Maybe.andThen
                     (\a ->
                         if a == -1 then
-                            Just target.y
+                            Just (Vec2.getY target)
 
                         else
                             Nothing
@@ -220,7 +222,7 @@ update w =
                 >> Logic.Template.Camera.PositionLocking.xLockLegacy target
 
         newOffset =
-            Math.Vector2.fromRecord w.camera.viewportOffset
+            Math.Vector2.fromRecord (Vec2.toRecord w.camera.viewportOffset)
 
         updatedWorld =
             { w | render = RenderInfo.setOffset newOffset w.render }
@@ -241,7 +243,7 @@ aabb =
             Logic.Template.Component.Physics.empty
     in
     { spec = Logic.Template.Component.Physics.spec
-    , empty = { empty | gravity = { x = 0, y = -0.5 } }
+    , empty = { empty | gravity = vec2 0 -0.5 }
     , view = debugPhysicsAABB
     , system = Logic.Template.Component.Physics.system Logic.Template.Component.Physics.spec
     , getPosition = AABB.getPosition
@@ -264,6 +266,4 @@ getCenter w =
         pixelsPerUnit =
             1.0 / w.render.px
     in
-    { x = 0.5 / w.render.px * aspectRatio
-    , y = 0.5 / w.render.px
-    }
+    Vec2.vec2 (0.5 / w.render.px * aspectRatio) (0.5 / w.render.px)

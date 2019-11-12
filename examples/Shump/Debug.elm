@@ -31,20 +31,12 @@ debugInit flags =
                         (\w2 ->
                             let
                                 _ =
-                                    ( w.ammo |> Array.get 0 |> Maybe.withDefault Nothing |> Debug.log "w1"
+                                    """( w.ammo |> Array.get 0 |> Maybe.withDefault Nothing |> Debug.log "w1"
                                     , w2.ammo |> Array.get 0 |> Maybe.withDefault Nothing |> Debug.log "w2"
-                                    )
-
-                                --                                        |> Debug.log "aaa"
+                                    )"""
                             in
-                            w2
+                            w
                                 |> Task.succeed
                                 |> setInitResize RenderInfo.spec
                         )
-             --
-             --                w
-             --                    |> AudioSprite.spawn AudioSprite.spec (AudioSprite.sound "Background")
-             --                    |> Debug.log "audiosprite"
-             --                    |> Task.succeed
-             --                    |> setInitResize RenderInfo.spec
             )

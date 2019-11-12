@@ -4,8 +4,10 @@ node_js: '12'
 sudo: required
 dist: trusty
 
-elm-test: 0.19.0-rev6
-elm-format: 0.8.1
+elm:
+  - latest
+elm_test: latest
+elm_format: latest
 
 cache:
   yarn: true
@@ -44,7 +46,7 @@ before_install:
 
 
 before_script:
-  - elm-format --validate . && elm-test #&& elm-test lib/elm-tiled && elm-test lib/elm-image
+  - elm-format --validate ./src ./tests && elm-test #&& elm-test lib/elm-tiled && elm-test lib/elm-image
 
 script:
   - elm make examples/${GAME}/Game.elm --optimize --output=./gh-pages/dist/${GAME}_bundle.js

@@ -243,7 +243,7 @@ getGid item =
 
 getOffset : NestedProperties.Property -> Maybe Vec2
 getOffset item =
-    Maybe.map2 Vec2
+    Maybe.map2 vec2
         (item |> NestedProperties.at [ "offset", "y" ] |> Maybe.map float)
         (item |> NestedProperties.at [ "offset", "x" ] |> Maybe.map float)
 

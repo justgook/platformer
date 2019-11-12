@@ -269,14 +269,14 @@ subscription_ spec { masterDecoders, slaveDecoders, privateDecoders, joinCallbac
                             |> D.succeed
 
                     YouMaster sessionId roomId ->
-                        let
-                            _ =
-                                if spec.get world == Status.Connecting then
-                                    Debug.log "You Master and should start match" (Status.Master sessionId roomId)
-
-                                else
-                                    Debug.log "You BECOME Master - continue game" (Status.Master sessionId roomId)
-                        in
+                        --                        let
+                        --                            _ =
+                        --                                if spec.get world == Status.Connecting then
+                        --                                    Debug.log "You Master and should start match" (Status.Master sessionId roomId)
+                        --
+                        --                                else
+                        --                                    Debug.log "You BECOME Master - continue game" (Status.Master sessionId roomId)
+                        --                        in
                         world
                             |> spec.set (Status.Master sessionId roomId)
                             |> D.succeed

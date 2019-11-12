@@ -1,6 +1,6 @@
 module Logic.Template.Component.OnScreenControl exposing (Stick, TwoButtonStick, dir8, empty, emptyTwoButtonStick, onscreenSpecExtend, spec, stick, twoButtonStick)
 
-import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import AltMath.Vector2 as AVec2
 import Logic.Component
 import Logic.Component.Singleton as Singleton exposing (Spec)
 import Logic.Entity as Entity exposing (EntityID)
@@ -26,16 +26,20 @@ dir_ dead a b =
         clamp -40 40 current / -40
 
 
+type alias XY =
+    { x : Float, y : Float }
+
+
 type alias Stick a =
     { a
         | active : Bool
-        , center : Vec2
-        , cursor : Vec2
+        , center : XY
+        , cursor : XY
     }
 
 
 type alias Button a =
-    { a | active : Bool, center : Vec2 }
+    { a | active : Bool, center : XY }
 
 
 type alias TwoButtonStick a =
@@ -162,8 +166,8 @@ onscreenSpecExtend action1 action2 onScreenSpec inputSpec entityID =
 
 touchConfig : Spec (Stick a) world -> EventConfig (world -> world)
 touchConfig spec_ =
-    { down = ( "touchstart", \x y -> Singleton.update spec_ (\data -> { data | center = vec2 x y, cursor = vec2 x y, active = True }) )
-    , move = ( "touchmove", \x y -> Singleton.update spec_ (\data -> { data | cursor = vec2 x y }) )
+    { down = ( "touchstart", \x y -> Singleton.update spec_ (\data -> { data | center = XY x y, cursor = XY x y, active = True }) )
+    , move = ( "touchmove", \x y -> Singleton.update spec_ (\data -> { data | cursor = XY x y }) )
     , leave = ( "touchcancel", Singleton.update spec_ (\data -> { data | active = False, cursor = data.center }) )
     , up = ( "touchend", Singleton.update spec_ (\data -> { data | active = False, cursor = data.center }) )
     }
@@ -173,7 +177,7 @@ touchButtonConfig : Spec (Button a) world -> EventConfig (world -> world)
 touchButtonConfig spec_ =
     let
         active x y data =
-            { data | active = True, center = vec2 x y }
+            { data | active = True, center = XY x y }
 
         inActive data =
             { data | active = False }
@@ -289,25 +293,33 @@ stickHtml ({ center, active } as info) =
         ]
 
 
-limitDistance_ maxDistance { center, cursor } =
+limitDistance_ : Float -> Stick a -> { x : Float, y : Float }
+limitDistance_ maxDistance data =
     let
+        center =
+            AVec2.fromRecord data.center
+
+        cursor =
+            AVec2.fromRecord data.cursor
+
         maxDistanceSquared =
             maxDistance * maxDistance
 
         distance =
-            Vec2.sub cursor center
+            AVec2.sub cursor center
 
         lengthSquared =
-            Vec2.lengthSquared distance
+            AVec2.lengthSquared distance
     in
     if lengthSquared < maxDistanceSquared then
-        cursor
+        data.cursor
 
     else
         distance
-            |> Vec2.normalize
-            |> Vec2.scale maxDistance
-            |> Vec2.add center
+            |> AVec2.normalize
+            |> AVec2.scale maxDistance
+            |> AVec2.add center
+            |> AVec2.toRecord
 
 
 div =

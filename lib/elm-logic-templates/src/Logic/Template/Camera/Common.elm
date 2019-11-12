@@ -1,6 +1,6 @@
 module Logic.Template.Camera.Common exposing (LegacyAny, LegacyCamera, LegacyWithId)
 
-import AltMath.Vector2 as Vec2 exposing (Vec2)
+import AltMath.Vector2 exposing (Vec2)
 
 
 type alias LegacyAny a =

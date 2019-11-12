@@ -13,7 +13,7 @@ module Collision.Physic.AABB exposing
     , toList
     )
 
-import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import AltMath.Vector2 as Vec2 exposing (Vec2(..), vec2)
 import Collision.Broad.Grid
 import Collision.Physic.Narrow.AABB as AABB exposing (AABB)
 import Dict exposing (Dict)
@@ -142,7 +142,7 @@ simulate dt ({ indexed, static, gravity } as world) =
                             Vec2.add acceleration_ (AABB.getVelocity aabb)
 
                         stepsLeft =
-                            max (abs vLeft.x / step.width) (abs vLeft.y / step.height)
+                            max (abs (Vec2.getX vLeft) / step.width) (abs (Vec2.getY vLeft) / step.height)
 
                         oneStep =
                             if stepsLeft == 0 then
@@ -192,10 +192,10 @@ move withAccelerationObj obj step grid left tested prevResponse contact =
                                     |> (\vv ->
                                             case prevResponse of
                                                 AABB.Y _ ->
-                                                    Vec2.setY v.y vv
+                                                    Vec2.setY (Vec2.getY v) vv
 
                                                 AABB.X _ ->
-                                                    Vec2.setX v.x vv
+                                                    Vec2.setX (Vec2.getX v) vv
 
                                                 _ ->
                                                     vv
@@ -229,10 +229,9 @@ type MoveStep a b tested contact
     | Continue a b tested contact
 
 
-sumContact a b =
-    { x = a.x + b.x |> limit
-    , y = a.y + b.y |> limit
-    }
+sumContact : Vec2 -> Vec2 -> Vec2
+sumContact (Vec2 ax ay) (Vec2 bx by) =
+    Vec2.vec2 (ax + bx |> limit) (ay + by |> limit)
 
 
 limit a =
@@ -244,6 +243,10 @@ limit a =
 
     else
         a
+
+
+
+--moveFold : List ( comparable, AABB comparable ) -> AABB comparable -> AABB.Collision -> Set.Set comparable -> Vec2 -> MoveStep (AABB comparable) AABB.Collision (Set.Set comparable) Vec2
 
 
 moveFold l obj prevResponse tested contact =
@@ -263,23 +266,21 @@ moveFold l obj prevResponse tested contact =
                     contact_ =
                         sumContact contact contact__
 
-                    --                    _ =
-                    --                        Debug.log "newResponse" { a = AABB.getVelocity obj, b = prevResponse, c = newResponse, d = unionResponse }
                     newTested =
                         Set.insert k tested
                 in
                 case unionResponse of
                     AABB.XandY a b ->
-                        Break (AABB.updateVelocity (\v -> { v | x = v.x * a, y = v.y * b }) obj) contact_
+                        Break (AABB.updateVelocity (\v -> Vec2.mul v (vec2 a b)) obj) contact_
 
                     AABB.XorY _ _ ->
                         moveFold rest obj unionResponse newTested contact_
 
                     AABB.X a ->
-                        moveFold rest (AABB.updateVelocity (\v -> { v | x = v.x * a }) obj) (AABB.X 1) newTested contact_
+                        moveFold rest (AABB.updateVelocity (\v -> Vec2.mul v (vec2 a 1)) obj) (AABB.X 1) newTested contact_
 
                     AABB.Y a ->
-                        moveFold rest (AABB.updateVelocity (\v -> { v | y = v.y * a }) obj) (AABB.Y 1) newTested contact_
+                        moveFold rest (AABB.updateVelocity (\v -> Vec2.mul v (vec2 1 a)) obj) (AABB.Y 1) newTested contact_
 
                     AABB.None ->
                         moveFold rest obj unionResponse newTested contact_

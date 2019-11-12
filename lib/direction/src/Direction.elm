@@ -1,5 +1,6 @@
 module Direction exposing
     ( Direction(..)
+    , DirectionRecord
     , east
     , fromInt
     , fromRecord

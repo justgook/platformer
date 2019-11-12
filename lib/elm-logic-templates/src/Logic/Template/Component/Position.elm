@@ -8,7 +8,7 @@ type alias Position =
     AltMath.Vector2.Vec2
 
 
-spec : Component.Spec2 Position { world1 | position : Component.Set Position } { world2 | position : Component.Set Position }
+spec : Component.CustomSpec Position { world1 | position : Component.Set Position } { world2 | position : Component.Set Position }
 spec =
     { get = .position
     , set = \comps world -> { world | position = comps }

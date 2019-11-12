@@ -10,9 +10,7 @@ type alias Velocity =
 
 spec : Logic.Component.Spec Velocity { world | velocity : Logic.Component.Set Velocity }
 spec =
-    { get = .velocity
-    , set = \comps world -> { world | velocity = comps }
-    }
+    Logic.Component.Spec .velocity (\comps world -> { world | velocity = comps })
 
 
 empty : Logic.Component.Set Velocity

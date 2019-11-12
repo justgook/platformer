@@ -20,7 +20,7 @@ import Base64
 import Bytes exposing (Endianness(..))
 import Bytes.Decode
 import Dict
-import Inflate exposing (inflateGZip, inflateZLib)
+import Flate exposing (inflateGZip, inflateZlib)
 import Json.Decode as Decode exposing (Decoder, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode as Encode
@@ -37,19 +37,18 @@ type Layer
 
 
 {-| -}
-decode : Decoder Layer
-decode =
+decode : Bool -> Decoder Layer
+decode infinite =
     Decode.field "type" Decode.string
         |> Decode.andThen
             (\string ->
                 case string of
                     "tilelayer" ->
-                        Decode.oneOf
-                            [ Decode.map InfiniteTile decodeTileChunkedData
+                        if infinite then
+                            Decode.map InfiniteTile decodeTileChunkedData
 
-                            -- |> when (Decode.field "chub" Decode.bool) ((==) True)
-                            , Decode.map Tile decodeTile
-                            ]
+                        else
+                            Decode.map Tile decodeTileLayer
 
                     "imagelayer" ->
                         Decode.map Image decodeImage
@@ -195,16 +194,14 @@ encodeDraworder do =
 
 
 {-| -}
-decodeTile : Decoder TileData
-decodeTile =
-    Decode.succeed Tuple.pair
-        |> optional "encoding" Decode.string "none"
-        |> optional "compression" Decode.string "none"
+decodeTileLayer : Decoder TileData
+decodeTileLayer =
+    decodeEncodingCompression
         |> Decode.andThen
             (\( encoding, compression ) ->
                 Decode.succeed TileData
                     |> required "id" Decode.int
-                    |> required "data" (decodeTileData encoding compression)
+                    |> required "data" (decodeTiles encoding compression)
                     |> required "name" Decode.string
                     |> required "opacity" Decode.float
                     |> required "visible" Decode.bool
@@ -218,9 +215,7 @@ decodeTile =
 
 decodeTileChunkedData : Decoder TileChunkedData
 decodeTileChunkedData =
-    Decode.succeed Tuple.pair
-        |> optional "encoding" Decode.string "none"
-        |> optional "compression" Decode.string "none"
+    decodeEncodingCompression
         |> Decode.andThen
             (\( encoding, compression ) ->
                 Decode.succeed TileChunkedData
@@ -239,16 +234,31 @@ decodeTileChunkedData =
             )
 
 
-decodeTileData : String -> String -> Decoder (List Int)
-decodeTileData encoding compression =
-    let
-        bytesToList onFail bytes =
-            bytes
-                |> Maybe.andThen (\b -> Bytes.Decode.decode (listOfBytesDecode (Bytes.width b // 4) (Bytes.Decode.unsignedInt32 LE)) b)
-                |> Maybe.map List.reverse
-                |> Maybe.map Decode.succeed
-                |> Maybe.withDefault (Decode.fail onFail)
-    in
+decodeEncodingCompression : Decoder ( String, String )
+decodeEncodingCompression =
+    Decode.map2
+        (\encoding compression ->
+            ( toNone encoding, toNone compression )
+        )
+        (Decode.maybe (Decode.field "encoding" Decode.string))
+        (Decode.maybe (Decode.field "compression" Decode.string))
+
+
+toNone : Maybe String -> String
+toNone =
+    Maybe.map
+        (\s ->
+            if s == "" then
+                "none"
+
+            else
+                s
+        )
+        >> Maybe.withDefault "none"
+
+
+decodeTiles : String -> String -> Decoder (List Int)
+decodeTiles encoding compression =
     if compression == "gzip" then
         Decode.string
             |> Decode.andThen
@@ -261,7 +271,7 @@ decodeTileData encoding compression =
         Decode.string
             |> Decode.andThen
                 (Base64.toBytes
-                    >> Maybe.andThen inflateZLib
+                    >> Maybe.andThen inflateZlib
                     >> bytesToList "Tile layer zlib compression can not decompress"
                 )
 
@@ -281,6 +291,15 @@ decodeTileData encoding compression =
         Decode.list Decode.int
 
 
+bytesToList : String -> Maybe Bytes.Bytes -> Decoder (List Int)
+bytesToList onFail bytes =
+    bytes
+        |> Maybe.andThen (\b -> Bytes.Decode.decode (listOfBytesDecode (Bytes.width b // 4) (Bytes.Decode.unsignedInt32 LE)) b)
+        |> Maybe.map List.reverse
+        |> Maybe.map Decode.succeed
+        |> Maybe.withDefault (Decode.fail onFail)
+
+
 listOfBytesDecode : Int -> Bytes.Decode.Decoder a -> Bytes.Decode.Decoder (List a)
 listOfBytesDecode len decoder =
     Bytes.Decode.loop ( len, [] ) (listStep decoder)
@@ -298,7 +317,7 @@ listStep decoder ( n, xs ) =
 decodeChunk : String -> String -> Decoder Chunk
 decodeChunk encoding compression =
     Decode.succeed Chunk
-        |> required "data" (decodeTileData encoding compression)
+        |> required "data" (decodeTiles encoding compression)
         |> required "height" Decode.int
         |> required "width" Decode.int
         |> required "x" Decode.int

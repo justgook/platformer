@@ -1,5 +1,6 @@
 module Logic.Template.Game.ShootEmUp.ReadHelper exposing (aiTargets)
 
+import AltMath.Vector2 as Vec2
 import Dict exposing (Dict)
 import Logic.Template.Component.AI as AI exposing (AiTargets)
 import Logic.Template.SaveLoad.Internal.Util as Util
@@ -69,7 +70,7 @@ addItem yInvert_ objList key value acc =
     case ( Parser.run aiKeyParser key, value ) of
         ( Ok ( Index, index ), PropInt id ) ->
             Util.objectById id objList
-                |> Maybe.map (yInvert_ >> Util.objectPosition)
+                |> Maybe.map (yInvert_ >> Util.objectPosition >> Vec2.fromRecord)
                 |> Maybe.map (\pos -> Dict.update index (setPos pos) acc)
                 |> Maybe.withDefault acc
 

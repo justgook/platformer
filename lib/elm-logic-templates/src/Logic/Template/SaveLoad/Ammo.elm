@@ -1,6 +1,6 @@
 module Logic.Template.SaveLoad.Ammo exposing (decode, decodeItem, encode, encodeItem, extract, read)
 
-import AltMath.Vector2 as Vec2
+import AltMath.Vector2 as Vec2 exposing (vec2)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Dict
@@ -76,8 +76,8 @@ extract =
                     |. Parser.end
 
             emptyInfo =
-                { offset = { x = 0, y = 0 }
-                , velocity = { x = 0, y = 0 }
+                { offset = vec2 0 0
+                , velocity = vec2 0 0
                 , fireRate = 0
                 , firstGid = 0
                 , tileId = 0
@@ -192,8 +192,8 @@ encodeItem ammo =
                         (\content ->
                             E.sequence
                                 [ encodeSprite content.sprite
-                                , E.xy content.offset
-                                , E.xy content.velocity
+                                , E.vec2 content.offset
+                                , E.vec2 content.velocity
                                 , E.id content.fireRate
                                 , E.id content.damage
                                 ]
@@ -226,8 +226,8 @@ decodeItem getTexture =
                     }
                 )
                 |> D.andMap (decodeSprite getTexture)
-                |> D.andMap D.xy
-                |> D.andMap D.xy
+                |> D.andMap D.vec2
+                |> D.andMap D.vec2
                 |> D.andMap D.id
                 |> D.andMap D.id
 

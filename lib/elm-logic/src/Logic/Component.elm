@@ -1,6 +1,6 @@
 module Logic.Component exposing
     ( Set, Spec, empty, spawn, set, remove
-    , Spec2
+    , CustomSpec
     )
 
 {-|
@@ -25,12 +25,14 @@ type alias EntityID =
 {-| Component specification, how to get `Component.Set` from world and set back into world (mainly used by Systems)
 -}
 type alias Spec comp world =
-    Spec2 comp world world
+    { get : world -> Set comp
+    , set : Set comp -> world -> world
+    }
 
 
 {-| Same as first but `set` and `get` can go to different worlds
 -}
-type alias Spec2 comp getWorld setWorld =
+type alias CustomSpec comp getWorld setWorld =
     { get : getWorld -> Set comp
     , set : Set comp -> setWorld -> setWorld
     }

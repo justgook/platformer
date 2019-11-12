@@ -1,5 +1,6 @@
 module Logic.Template.Game.TopDown exposing (World, decode, decoders, empty, encode, encoders, game, load, read, run, setInitResize)
 
+import AltMath.Vector2 as AVec2
 import Browser.Events as Events
 import Bytes exposing (Bytes)
 import Bytes.Encode exposing (Encoder)
@@ -103,6 +104,7 @@ objRender w ( _, objLayer ) =
                             { animationFrame
                                 | uP =
                                     position
+                                        |> AVec2.toRecord
                                         |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
                                         |> Math.Vector2.fromRecord
                             }
@@ -111,6 +113,7 @@ objRender w ( _, objLayer ) =
                             { sprite
                                 | uP =
                                     position
+                                        |> AVec2.toRecord
                                         |> (\{ x, y } -> { x = toFloat (round x), y = toFloat (round y) })
                                         |> Math.Vector2.fromRecord
                             }
@@ -134,7 +137,7 @@ webGLOption =
 update w =
     w
         |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
-        |> Control.shootEmUp { x = 3, y = 3 } Logic.Template.Input.spec Position.spec w.render.virtualScreen
+        |> Control.shootEmUp (AVec2.vec2 3 3) Logic.Template.Input.spec Position.spec w.render.virtualScreen
         |> TimelineChange.topDown (Logic.Template.Input.toComps Logic.Template.Input.spec) AnimationsDict.spec Animation.spec
 
 

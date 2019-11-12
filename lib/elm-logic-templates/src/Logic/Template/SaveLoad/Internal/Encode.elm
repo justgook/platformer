@@ -1,5 +1,6 @@
-module Logic.Template.SaveLoad.Internal.Encode exposing (bool, components, encodedList, encoder, float, id, int, list, maybe, sizedString, xy, xyz, xyzw)
+module Logic.Template.SaveLoad.Internal.Encode exposing (bool, components, encodedList, encoder, float, id, int, list, maybe, sizedString, vec2, xy, xyz, xyzw)
 
+import AltMath.Vector2 as AltVec2
 import Bytes exposing (Endianness(..))
 import Bytes.Encode as E exposing (Encoder)
 import Logic.Component as Component
@@ -27,6 +28,15 @@ bool a =
 
 xy : { x : Float, y : Float } -> Encoder
 xy { x, y } =
+    E.sequence [ float x, float y ]
+
+
+vec2 : AltVec2.Vec2 -> Encoder
+vec2 v =
+    let
+        { x, y } =
+            AltVec2.toRecord v
+    in
     E.sequence [ float x, float y ]
 
 

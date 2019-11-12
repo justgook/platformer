@@ -1,5 +1,5 @@
 module AltMath.Vector2 exposing
-    ( Vec2, vec2
+    ( Vec2(..), vec2
     , getX, getY, setX, setY
     , add, sub, negate, scale, dot, normalize, direction, mul
     , length, lengthSquared, distance, distanceSquared
@@ -37,8 +37,8 @@ The set functions create a new copy of the vector, updating a single field.
 
 {-| Two dimensional vector type
 -}
-type alias Vec2 =
-    { x : Float, y : Float }
+type Vec2
+    = Vec2 Float Float
 
 
 {-| Creates a new 2-element vector with the given values.
@@ -51,64 +51,64 @@ vec2 =
 {-| Extract the x component of a vector.
 -}
 getX : Vec2 -> Float
-getX =
-    .x
+getX (Vec2 x _) =
+    x
 
 
 {-| Extract the y component of a vector.
 -}
 getY : Vec2 -> Float
-getY =
-    .y
+getY (Vec2 _ y) =
+    y
 
 
 {-| Update the x component of a vector, returning a new vector.
 -}
 setX : Float -> Vec2 -> Vec2
-setX x v2 =
-    { v2 | x = x }
+setX x (Vec2 _ y) =
+    Vec2 x y
 
 
 {-| Update the y component of a vector, returning a new vector.
 -}
 setY : Float -> Vec2 -> Vec2
-setY y v2 =
-    { v2 | y = y }
+setY y (Vec2 x _) =
+    Vec2 x y
 
 
 {-| Convert a vector to a record.
 -}
-toRecord : Vec2 -> Vec2
-toRecord =
-    identity
+toRecord : Vec2 -> { x : Float, y : Float }
+toRecord (Vec2 x y) =
+    { x = x, y = y }
 
 
 {-| Convert a record to a vector.
 -}
-fromRecord : Vec2 -> Vec2
-fromRecord =
-    identity
+fromRecord : { x : Float, y : Float } -> Vec2
+fromRecord { x, y } =
+    Vec2 x y
 
 
 {-| Vector addition: a + b
 -}
 add : Vec2 -> Vec2 -> Vec2
-add a b =
-    Vec2 (a.x + b.x) (a.y + b.y)
+add (Vec2 ax ay) (Vec2 bx by) =
+    Vec2 (ax + bx) (ay + by)
 
 
 {-| Vector subtraction: a - b
 -}
 sub : Vec2 -> Vec2 -> Vec2
-sub a b =
-    Vec2 (a.x - b.x) (a.y - b.y)
+sub (Vec2 ax ay) (Vec2 bx by) =
+    Vec2 (ax - bx) (ay - by)
 
 
 {-| Vector negation: -a
 -}
 negate : Vec2 -> Vec2
-negate a =
-    Vec2 -a.x -a.y
+negate (Vec2 x y) =
+    Vec2 -x -y
 
 
 {-| The normalized direction from b to a: (a - b) / |a - b|
@@ -116,70 +116,89 @@ negate a =
 direction : Vec2 -> Vec2 -> Vec2
 direction a b =
     let
-        c =
+        ((Vec2 x y) as c) =
             sub a b
 
         len =
             length c
     in
-    Vec2 (c.x / len) (c.y / len)
+    Vec2 (x / len) (y / len)
 
 
 {-| The length of the given vector: |a|
 -}
 length : Vec2 -> Float
-length { x, y } =
+length (Vec2 x y) =
     sqrt (x * x + y * y)
 
 
 {-| The square of the length of the given vector: |a| \* |a|
 -}
 lengthSquared : Vec2 -> Float
-lengthSquared { x, y } =
+lengthSquared (Vec2 x y) =
     x * x + y * y
 
 
 {-| The distance between two vectors.
 -}
 distance : Vec2 -> Vec2 -> Float
-distance a b =
-    length (sub a b)
+distance (Vec2 ax ay) (Vec2 bx by) =
+    let
+        dx =
+            ax - bx
+
+        dy =
+            ay - by
+    in
+    sqrt (dx * dx + dy * dy)
 
 
 {-| The square of the distance between two vectors.
 -}
 distanceSquared : Vec2 -> Vec2 -> Float
-distanceSquared a b =
-    lengthSquared (sub a b)
+distanceSquared (Vec2 ax ay) (Vec2 bx by) =
+    let
+        dx =
+            ax - bx
+
+        dy =
+            ay - by
+    in
+    dx * dx + dy * dy
 
 
 {-| A unit vector with the same direction as the given vector: a / |a|
 -}
 normalize : Vec2 -> Vec2
-normalize v2 =
+normalize ((Vec2 x y) as v2) =
     let
         len =
             length v2
     in
-    Vec2 (v2.x / len) (v2.y / len)
+    Vec2 (x / len) (y / len)
 
 
 {-| Multiply the vector by a scalar: s \* v
 -}
 scale : Float -> Vec2 -> Vec2
-scale s v2 =
-    Vec2 (s * v2.x) (s * v2.y)
+scale s (Vec2 x y) =
+    Vec2 (s * x) (s * y)
 
 
 {-| The dot product of a and b
 -}
 dot : Vec2 -> Vec2 -> Float
-dot a b =
-    a.x * b.x + a.y * b.y
+dot (Vec2 ax ay) (Vec2 bx by) =
+    ax * bx + ay * by
 
 
 {-| Multiply the vector by a vector: a \* b
 -}
 mul : Vec2 -> Vec2 -> Vec2
-mul a b =
-    { x = a.x * b.x, y = a.y * b.y }
+mul (Vec2 ax ay) (Vec2 bx by) =
+    Vec2 (ax * bx) (ay * by)
+
+
+perpDotProduct : Vec2 -> Vec2 -> Float
+perpDotProduct (Vec2 ax ay) (Vec2 bx by) =
+    ax * by - ay * bx

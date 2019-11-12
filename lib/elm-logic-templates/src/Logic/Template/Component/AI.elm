@@ -1,6 +1,6 @@
 module Logic.Template.Component.AI exposing (AiTargets, Spot, empty, emptySpot, spec)
 
-import AltMath.Vector2 exposing (Vec2)
+import AltMath.Vector2 exposing (Vec2, vec2)
 import Logic.Component
 import Logic.System
 
@@ -23,7 +23,7 @@ type alias Spot =
 
 emptySpot : Spot
 emptySpot =
-    { position = { x = 0, y = 0 }
+    { position = vec2 0 0
     , action = []
     , wait = 0
     , invSteps = 0.01

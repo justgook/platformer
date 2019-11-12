@@ -22,10 +22,10 @@ read spec =
 encode : Spec Position world -> world -> Encoder
 encode { get } world =
     Entity.toList (get world)
-        |> E.list (\( id, item ) -> E.sequence [ E.id id, E.xy item ])
+        |> E.list (\( id, item ) -> E.sequence [ E.id id, E.vec2 item ])
 
 
 decode : Spec Position world -> WorldDecoder world
 decode spec =
-    D.reverseList (D.map2 Tuple.pair D.id D.xy)
+    D.reverseList (D.map2 Tuple.pair D.id D.vec2)
         |> D.map (\list -> spec.set (Entity.fromList list))

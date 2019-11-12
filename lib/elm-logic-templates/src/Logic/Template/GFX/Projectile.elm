@@ -1,6 +1,6 @@
 module Logic.Template.GFX.Projectile exposing (Projectile, Setting, draw, empty, emptyWith, update, updateWith)
 
-import AltMath.Vector2 as Vec2 exposing (Vec2)
+import AltMath.Vector2 as AVec2
 import Logic.Template.GFX.P16 as P16
 import Logic.Template.GFX.Particle as Particle exposing (Emitter)
 import Math.Vector4 as Vec4 exposing (Vec4, vec4)
@@ -31,14 +31,14 @@ values =
 
 
 type alias Setting =
-    { generator : Vec2 -> Int -> Random.Generator Particle
+    { generator : AVec2.Vec2 -> Int -> Random.Generator Particle
     , spawn : Random.Seed -> Float
     }
 
 
 type alias Particle =
-    { acceleration : Vec2
-    , velocity : Vec2
+    { acceleration : AVec2.Vec2
+    , velocity : AVec2.Vec2
     , id : Int
     , data : Vec4
     }
@@ -57,7 +57,7 @@ emptyWith : Setting -> Projectile
 emptyWith settings =
     { live = []
     , dead = []
-    , generator = settings.generator (Vec2 -3 -3)
+    , generator = settings.generator (AVec2.vec2 -3 -3)
     , spawn = settings.spawn
     , queue = 0
     , seed = Random.initialSeed 42
@@ -71,16 +71,16 @@ defaultSettings =
     { generator =
         \pos i ->
             Random.map5
-                (\size acceleration velocity position lifespan ->
+                (\size acceleration velocity (AVec2.Vec2 positionX positionY) lifespan ->
                     { id = i
                     , acceleration = acceleration
                     , velocity = velocity
-                    , data = vec4 position.x position.y size lifespan
+                    , data = vec4 positionX positionY size lifespan
                     }
                 )
                 (Random.float 10 30)
-                (Random.map2 Vec2 (Random.constant 0.000003) (Random.constant 0))
-                (Random.map2 Vec2 (Random.float -0.001 0.001) (Random.float 0.001 0.003))
+                (Random.map2 AVec2.vec2 (Random.constant 0.000003) (Random.constant 0))
+                (Random.map2 AVec2.vec2 (Random.float -0.001 0.001) (Random.float 0.001 0.003))
                 (Random.constant pos)
                 (Random.float 10 160)
     , spawn = \seed -> Random.step (Random.float (5 / 60) (15 / 60)) seed |> Tuple.first
@@ -118,15 +118,15 @@ updateWith settings income emitter =
 
                 velocity =
                     item.acceleration
-                        |> Vec2.scale (sin (w / 5) * 10)
-                        |> Vec2.add item.velocity
+                        |> AVec2.scale (sin (w / 5) * 10)
+                        |> AVec2.add item.velocity
 
-                position =
-                    Vec2.add { x = x, y = y } velocity
+                (AVec2.Vec2 positionX positionY) =
+                    AVec2.add (AVec2.vec2 x y) velocity
             in
             { item
                 | velocity = velocity
-                , data = vec4 position.x position.y z (w - 1)
+                , data = vec4 positionX positionY z (w - 1)
             }
     in
     { emitter

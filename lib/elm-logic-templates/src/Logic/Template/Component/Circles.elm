@@ -1,7 +1,8 @@
 module Logic.Template.Component.Circles exposing
     ( Circles
-    , collide
-    , debug
+    ,  collide
+       --    , debug
+
     )
 
 import AltMath.Vector2 as Vec2 exposing (Vec2)
@@ -54,30 +55,31 @@ any2 f l1 l2 =
     List.any (\a -> List.any (f a) l2) l1
 
 
-debug : { r : Float, g : Float, b : Float } -> Component.Set (List ( { x : Float, y : Float }, Float )) -> Component.Set { x : Float, y : Float } -> { c | uAbsolute : Math.Matrix4.Mat4, px : Float } -> List WebGL.Entity
-debug color circles_ pos { uAbsolute, px } =
-    let
-        comp =
-            { color = Math.Vector4.vec4 1 1 0 1
-            , uAbsolute = uAbsolute
-            , uDimension = Math.Vector2.vec2 0.3 0.3
-            , uP = Math.Vector2.vec2 0.5 0.5
-            }
 
-        create { r, g, b } uP shapes acc =
-            List.foldl
-                (\( offset, radius ) ->
-                    (::)
-                        (Ellipse.draw tileVertexShader
-                            { comp
-                                | color = Math.Vector4.vec4 r g b 1
-                                , uP = Math.Vector2.fromRecord uP |> Math.Vector2.add (Math.Vector2.fromRecord offset) |> Math.Vector2.scale px
-                                , uDimension = Math.Vector2.vec2 (radius * 2) (radius * 2) |> Math.Vector2.scale px
-                            }
-                        )
-                )
-                acc
-                shapes
-    in
-    []
-        |> System.foldl2 (create color) pos circles_
+--debug : { r : Float, g : Float, b : Float } -> Component.Set (List ( { x : Float, y : Float }, Float )) -> Component.Set { x : Float, y : Float } -> { c | uAbsolute : Math.Matrix4.Mat4, px : Float } -> List WebGL.Entity
+--debug color circles_ pos { uAbsolute, px } =
+--    let
+--        comp =
+--            { color = Math.Vector4.vec4 1 1 0 1
+--            , uAbsolute = uAbsolute
+--            , uDimension = Math.Vector2.vec2 0.3 0.3
+--            , uP = Math.Vector2.vec2 0.5 0.5
+--            }
+--
+--        create { r, g, b } uP shapes acc =
+--            List.foldl
+--                (\( offset, radius ) ->
+--                    (::)
+--                        (Ellipse.draw tileVertexShader
+--                            { comp
+--                                | color = Math.Vector4.vec4 r g b 1
+--                                , uP = Math.Vector2.fromRecord uP |> Math.Vector2.add (Math.Vector2.fromRecord offset) |> Math.Vector2.scale px
+--                                , uDimension = Math.Vector2.vec2 (radius * 2) (radius * 2) |> Math.Vector2.scale px
+--                            }
+--                        )
+--                )
+--                acc
+--                shapes
+--    in
+--    []
+--        |> System.foldl2 (create color) pos circles_

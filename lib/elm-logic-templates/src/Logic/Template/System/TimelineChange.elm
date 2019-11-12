@@ -1,5 +1,6 @@
 module Logic.Template.System.TimelineChange exposing (sideScroll, topDown)
 
+import AltMath.Vector2
 import Collision.Physic.AABB
 import Collision.Physic.Narrow.AABB
 import Dict
@@ -53,9 +54,11 @@ sideScroll animSpec physicsSpec objSpec ecs =
                     let
                         velocity =
                             Collision.Physic.Narrow.AABB.getVelocity body
+                                |> AltMath.Vector2.toRecord
 
-                        contact =
+                        contactY =
                             Collision.Physic.Narrow.AABB.getContact body
+                                |> AltMath.Vector2.getY
 
                         dir =
                             { velocity | y = 0 } |> Dir.fromRecord |> Dir.toInt
@@ -67,7 +70,7 @@ sideScroll animSpec physicsSpec objSpec ecs =
                             else if velocity.y < 0 then
                                 ( "fall", nonZero dir dir_ )
 
-                            else if contact.y == -1 then
+                            else if contactY == -1 then
                                 if velocity.x == 0 then
                                     ( "idle", dir_ )
 

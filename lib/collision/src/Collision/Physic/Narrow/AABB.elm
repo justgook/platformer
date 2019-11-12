@@ -25,7 +25,7 @@ module Collision.Physic.Narrow.AABB exposing
     , withIndex
     )
 
-import AltMath.Vector2 as Vec2 exposing (Vec2, vec2)
+import AltMath.Vector2 as Vec2 exposing (Vec2(..), vec2)
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Collision.Broad exposing (Boundary)
@@ -43,8 +43,8 @@ toBytes : (Maybe comparable -> Encoder) -> AABB comparable -> Encoder
 toBytes enId (AABB c { h }) =
     E.sequence
         [ c.index |> enId
-        , c.p |> E.xy
-        , c.r |> E.xy
+        , c.p |> E.vec2
+        , c.r |> E.vec2
         , c.invMass |> E.float
         , h |> E.float
         ]
@@ -65,8 +65,8 @@ fromBytes deId =
                 { h = h }
         )
         deId
-        D.xy
-        D.xy
+        D.vec2
+        D.vec2
         D.float
         D.float
 
@@ -223,18 +223,27 @@ unionCollision a_ b_ =
 --    = FourBools Bool Bool Bool Bool
 
 
+response : AABB comparable -> AABB comparable -> ( Collision, Vec2 )
 response body1 body2 =
     let
         md =
             minkowskiDifference body1 body2
 
-        v1 =
+        v1_ =
             getVelocity body1
 
-        v2 =
+        v1 =
+            v1_
+                |> Vec2.toRecord
+
+        v2_ =
             getVelocity body2
+
+        v2 =
+            v2_
+                |> Vec2.toRecord
     in
-    if md.max.x == 0 then
+    (if md.max.x == 0 then
         if md.max.y == 0 then
             --            let
             --                _ =
@@ -251,7 +260,7 @@ response body1 body2 =
         else
             ( X 0, Direction.east )
 
-    else if md.min.x == 0 then
+     else if md.min.x == 0 then
         if md.max.y == 0 then
             ( XorY 0 0, Direction.northWest )
 
@@ -264,21 +273,21 @@ response body1 body2 =
         else
             ( X 0, Direction.west )
 
-    else if md.max.y == 0 && v1.y > 0 then
+     else if md.max.y == 0 && v1.y > 0 then
         ( Y 0, Direction.north )
 
-    else if md.max.y == 0 && v1.y < 0 then
+     else if md.max.y == 0 && v1.y < 0 then
         --next frame after hit celling
         ( None, Direction.north )
 
-    else if md.min.y == 0 then
+     else if md.min.y == 0 then
         if v1.y > 0 then
             ( None, Direction.neither )
 
         else
             ( Y 0, Direction.south )
 
-    else if md.min.x <= 0 && md.max.x >= 0 && md.min.y <= 0 && md.max.y >= 0 then
+     else if md.min.x <= 0 && md.max.x >= 0 && md.min.y <= 0 && md.max.y >= 0 then
         --Do they already collide?
         --        let
         --            _ =
@@ -286,18 +295,20 @@ response body1 body2 =
         --        in
         ( XandY 0 0, Direction.neither )
 
-    else
+     else
         let
             --            _ =
             --                Debug.log "here" v1
             rv =
                 --Relative velocity
-                Vec2.sub v1 v2
+                Vec2.sub v1_ v2_
 
             --            _ =
             --                Debug.log "something " md
         in
         getRayIntersectionFraction md (vec2 0 0) rv
+    )
+        |> Tuple.mapSecond Vec2.fromRecord
 
 
 getRayIntersectionFraction { min, max } origin direction =
@@ -384,8 +395,8 @@ getMin ( c1, v1 ) ( c2, v2 ) =
 getRayIntersectionFractionOfFirstRay : Vec2 -> Vec2 -> Vec2 -> Vec2 -> Maybe Float
 getRayIntersectionFractionOfFirstRay originA endA originB endB =
     let
-        perpDotProduct a b =
-            a.x * b.y - a.y * b.x
+        perpDotProduct (Vec2 ax ay) (Vec2 bx by) =
+            ax * by - ay * bx
 
         r =
             Vec2.sub endA originA
@@ -502,18 +513,18 @@ union ((AABB o1 o11) as body1) ((AABB o2 o22) as body2) =
             boundary body2
 
         newShape =
-            if o1.p.x == o2.p.x then
+            if Vec2.getX o1.p == Vec2.getX o2.p then
                 if b1.ymin < b2.ymin then
-                    AABB { o1 | p = vec2 o1.p.x ((b2.ymax - b1.ymin) / 2 + b1.ymin) } { h = o11.h + o22.h }
+                    AABB { o1 | p = vec2 (Vec2.getX o1.p) ((b2.ymax - b1.ymin) / 2 + b1.ymin) } { h = o11.h + o22.h }
 
                 else
-                    AABB { o1 | p = vec2 o1.p.x ((b1.ymax - b2.ymin) / 2 + b2.ymin) } { h = o11.h + o22.h }
+                    AABB { o1 | p = vec2 (Vec2.getX o1.p) ((b1.ymax - b2.ymin) / 2 + b2.ymin) } { h = o11.h + o22.h }
 
             else if b1.xmin < b2.xmin then
-                AABB { o1 | p = vec2 ((b2.xmax - b1.xmin) / 2 + b1.xmin) o1.p.y, r = vec2 (o1.r.x + o2.r.x) 0 } { h = o11.h }
+                AABB { o1 | p = vec2 ((b2.xmax - b1.xmin) / 2 + b1.xmin) (Vec2.getY o1.p), r = vec2 (Vec2.getX o1.r + Vec2.getX o2.r) 0 } { h = o11.h }
 
             else if b1.xmin > b2.xmin then
-                AABB { o1 | p = vec2 ((b1.xmax - b2.xmin) / 2 + b2.xmin) o1.p.y, r = vec2 (o1.r.x + o2.r.x) 0 } { h = o11.h }
+                AABB { o1 | p = vec2 ((b1.xmax - b2.xmin) / 2 + b2.xmin) (Vec2.getY o1.p), r = vec2 (Vec2.getX o1.r + Vec2.getX o2.r) 0 } { h = o11.h }
 
             else
                 AABB o1 o11
