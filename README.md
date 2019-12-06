@@ -18,6 +18,7 @@ To start, try to run some of the provided examples. To do that, make sure `node`
 **1. Clone the git repository to your machine**
 
 Open up your terminal and change to the folder, to which you want to clone the repo and run:
+
 `git clone --recursive <https://github.com/justgook/platformer.git>`
 
 To update an existing clone:
@@ -30,6 +31,7 @@ To update an existing clone:
 **2. Initialize the git submodules and update them**
 
 In your `/platformer` folder run this command:
+
 `git submodule init && git submodule update`
 
 **3. Run the examples** 
