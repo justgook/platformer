@@ -13,7 +13,7 @@ With Tiled, you can start changing the template (gravity, AI patterns, graphics,
 "Low level" is for more experienced developers. Instead of starting from a template based on a genre, you start creating your individual genre. AGE provides you with a lot of different building blocks, which you can glue together to build your own game. Those blocks can be found in `lib/elm-logic-templates`. The `Top Down` example in `/lib/elm-logic-templates/src/Logic/Template/Game/TopDown.elm` was created with those building blocks.
 
 ## Get started and run some examples
-To start, try to run some of the provided examples. To do that, make sure `node`, `npm`, `git`, `elm` and `elm-live` are installed on your machine. To check a installation, type `which {program-name}` in your terminal. For example, `which node` gives you back a path, when node is installed. If you don't see a path, the program is not installed. 
+To start, try to run some of the provided examples. To do that, make sure `node`, `npm`, `git`, `elm` and [`elm-live`](https://www.elm-live.com/) are installed on your machine. To check a installation, type `which {program-name}` in your terminal. For example, `which node` gives you back a path, when node is installed. If you don't see a path, the program is not installed. 
 
 **1. Clone the git repository to your machine**
 
