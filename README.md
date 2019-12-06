@@ -19,22 +19,17 @@ To start, try to run some of the provided examples. To do that, make sure `node`
 
 Open up your terminal and change to the folder, to which you want to clone the repo and run:
 
-`git clone --recursive <https://github.com/justgook/platformer.git>`
+`git clone --recursive https://github.com/justgook/platformer.git`
 
 To update an existing clone:
 ```
-> cd platformer
-> git pull
-> git submodule update --init --recursive
+cd platformer
+git pull
+git submodule update --init --recursive
 ```
+*Note: Make sure all submodules contain the assets needed by the examples. Either by cloning with the `--recursive` flag or by running `git submodule update --init --recursive`* 
 
-**2. Initialize the git submodules and update them**
-
-In your `/platformer` folder run this command:
-
-`git submodule init && git submodule update`
-
-**3. Run the examples** 
+**2. Run the examples** 
 
 To run the examples, we recommend using `elm-live`. This way, the examples are not only built, but a dev server is also set up, and the game opens automatically in your browser. To run an example, use this command:
 
