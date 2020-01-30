@@ -37,8 +37,8 @@ The set functions create a new copy of the vector, updating a single field.
 
 {-| Four dimensional vector type
 -}
-type Vec4
-    = Vec4 Float Float Float Float
+type alias Vec4 =
+    { x : Float, y : Float, z : Float, w : Float }
 
 
 {-| Creates a new 4-element vector with the given x, y, z, and w values.
@@ -51,92 +51,92 @@ vec4 =
 {-| Extract the x component of a vector.
 -}
 getX : Vec4 -> Float
-getX (Vec4 x y z w) =
-    x
+getX =
+    .x
 
 
 {-| Extract the y component of a vector.
 -}
 getY : Vec4 -> Float
-getY (Vec4 x y z w) =
-    y
+getY =
+    .y
 
 
 {-| Extract the z component of a vector.
 -}
 getZ : Vec4 -> Float
-getZ (Vec4 x y z w) =
-    z
+getZ =
+    .z
 
 
 {-| Extract the w component of a vector.
 -}
 getW : Vec4 -> Float
-getW (Vec4 x y z w) =
-    w
+getW =
+    .w
 
 
 {-| Update the x component of a vector, returning a new vector.
 -}
 setX : Float -> Vec4 -> Vec4
-setX x (Vec4 _ y z w) =
-    Vec4 x y z w
+setX x v4 =
+    { v4 | x = x }
 
 
 {-| Update the y component of a vector, returning a new vector.
 -}
 setY : Float -> Vec4 -> Vec4
-setY y (Vec4 x _ z w) =
-    Vec4 x y z w
+setY y v4 =
+    { v4 | y = y }
 
 
 {-| Update the z component of a vector, returning a new vector.
 -}
 setZ : Float -> Vec4 -> Vec4
-setZ z (Vec4 x y _ w) =
-    Vec4 x y z w
+setZ z v4 =
+    { v4 | z = z }
 
 
 {-| Update the w component of a vector, returning a new vector.
 -}
 setW : Float -> Vec4 -> Vec4
-setW w (Vec4 x y z _) =
-    Vec4 x y z w
+setW w v4 =
+    { v4 | w = w }
 
 
 {-| Convert a vector to a record.
 -}
 toRecord : Vec4 -> { x : Float, y : Float, z : Float, w : Float }
-toRecord (Vec4 x y z w) =
-    { x = x, y = y, z = z, w = w }
+toRecord =
+    identity
 
 
 {-| Convert a record to a vector.
 -}
 fromRecord : { x : Float, y : Float, z : Float, w : Float } -> Vec4
-fromRecord { x, y, z, w } =
-    Vec4 x y z w
+fromRecord =
+    identity
 
 
 {-| Vector addition: a + b
 -}
 add : Vec4 -> Vec4 -> Vec4
-add (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
-    Vec4 (ax + bx) (ay + by) (az + bz) (aw + bw)
+add a b =
+    Vec4 (a.x + b.x) (a.y + b.y) (a.z + b.z) (a.w + b.w)
 
 
 {-| Vector subtraction: a - b
 -}
 sub : Vec4 -> Vec4 -> Vec4
-sub (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
-    Vec4 (ax - bx) (ay - by) (az - bz) (aw - bw)
+sub a b =
+    Vec4 (a.x - b.x) (a.y - b.y) (a.z - b.z) (a.w - b.w)
 
 
 {-| Vector negation: -a
 -}
 negate : Vec4 -> Vec4
-negate (Vec4 ax ay az aw) =
-    Vec4 -ax -ay -az -aw
+negate a =
+    Vec4 -a.x -a.y -a.z -a.w
 
 
 {-| The normalized direction from b to a: (a - b) / |a - b|
@@ -144,26 +144,26 @@ negate (Vec4 ax ay az aw) =
 direction : Vec4 -> Vec4 -> Vec4
 direction a b =
     let
-        ((Vec4 x y z w) as c) =
+        c =
             sub a b
 
         len =
             length c
     in
-    Vec4 (x / len) (y / len) (z / len) (w / len)
+    Vec4 (c.x / len) (c.y / len) (c.z / len) (c.w / len)
 
 
 {-| The length of the given vector: |a|
 -}
 length : Vec4 -> Float
-length (Vec4 x y z w) =
+length { x, y, z, w } =
     sqrt (x * x + y * y + z * z + w * w)
 
 
 {-| The square of the length of the given vector: |a| \* |a|
 -}
 lengthSquared : Vec4 -> Float
-lengthSquared (Vec4 x y z w) =
+lengthSquared { x, y, z, w } =
     x * x + y * y + z * z + w * w
 
 
@@ -184,23 +184,23 @@ distanceSquared a b =
 {-| A unit vector with the same direction as the given vector: a / |a|
 -}
 normalize : Vec4 -> Vec4
-normalize ((Vec4 x y z w) as v4) =
+normalize v4 =
     let
         len =
             length v4
     in
-    Vec4 (x / len) (y / len) (z / len) (w / len)
+    Vec4 (v4.x / len) (v4.y / len) (v4.z / len) (v4.w / len)
 
 
 {-| Multiply the vector by a scalar: s \* v
 -}
 scale : Float -> Vec4 -> Vec4
-scale s (Vec4 x y z w) =
-    Vec4 (s * x) (s * y) (s * z) (s * w)
+scale s v =
+    Vec4 (s * v.x) (s * v.y) (s * v.z) (s * v.w)
 
 
 {-| The dot product of a and b
 -}
 dot : Vec4 -> Vec4 -> Float
-dot (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
-    ax * bx + ay * by + az * bz + aw * bw
+dot a b =
+    a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w

@@ -49,7 +49,7 @@ update outcomePort before =
     case before.network.status of
         Status.Slave _ _ ->
             ( before
-              --                |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
+                |> Logic.Template.System.VelocityPosition.system Velocity.spec Position.spec
             , Cmd.none
             )
 

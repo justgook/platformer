@@ -1,4 +1,4 @@
-module AltMath.Tuple.Matrix4 exposing
+module AltMath.ADT.Matrix4 exposing
     ( Mat4, identity
     , inverse, inverseOrthonormal, mul, mulAffine, transpose, makeBasis, transform
     , makeFrustum, makePerspective, makeOrtho, makeOrtho2D, makeLookAt

@@ -55,7 +55,6 @@ diffusedFragmentShader =
         uniform sampler2D uAtlas;
         uniform vec2 uAtlasSize;
         uniform vec4 uTileUV;
-        uniform vec4 uTileUV;
         uniform vec4 uDiffuseColor;
         void main () {
             vec2 uv_ = uv;

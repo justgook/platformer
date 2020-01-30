@@ -1,4 +1,4 @@
-module AltMath.Record.Vector4 exposing
+module AltMath.ADT.Vector4 exposing
     ( Vec4, vec4
     , getX, getY, getZ, getW, setX, setY, setZ, setW
     , add, sub, negate, scale, dot, normalize, direction
@@ -37,8 +37,8 @@ The set functions create a new copy of the vector, updating a single field.
 
 {-| Four dimensional vector type
 -}
-type alias Vec4 =
-    { x : Float, y : Float, z : Float, w : Float }
+type Vec4
+    = Vec4 Float Float Float Float
 
 
 {-| Creates a new 4-element vector with the given x, y, z, and w values.
@@ -51,92 +51,92 @@ vec4 =
 {-| Extract the x component of a vector.
 -}
 getX : Vec4 -> Float
-getX =
-    .x
+getX (Vec4 x y z w) =
+    x
 
 
 {-| Extract the y component of a vector.
 -}
 getY : Vec4 -> Float
-getY =
-    .y
+getY (Vec4 x y z w) =
+    y
 
 
 {-| Extract the z component of a vector.
 -}
 getZ : Vec4 -> Float
-getZ =
-    .z
+getZ (Vec4 x y z w) =
+    z
 
 
 {-| Extract the w component of a vector.
 -}
 getW : Vec4 -> Float
-getW =
-    .w
+getW (Vec4 x y z w) =
+    w
 
 
 {-| Update the x component of a vector, returning a new vector.
 -}
 setX : Float -> Vec4 -> Vec4
-setX x v4 =
-    { v4 | x = x }
+setX x (Vec4 _ y z w) =
+    Vec4 x y z w
 
 
 {-| Update the y component of a vector, returning a new vector.
 -}
 setY : Float -> Vec4 -> Vec4
-setY y v4 =
-    { v4 | y = y }
+setY y (Vec4 x _ z w) =
+    Vec4 x y z w
 
 
 {-| Update the z component of a vector, returning a new vector.
 -}
 setZ : Float -> Vec4 -> Vec4
-setZ z v4 =
-    { v4 | z = z }
+setZ z (Vec4 x y _ w) =
+    Vec4 x y z w
 
 
 {-| Update the w component of a vector, returning a new vector.
 -}
 setW : Float -> Vec4 -> Vec4
-setW w v4 =
-    { v4 | w = w }
+setW w (Vec4 x y z _) =
+    Vec4 x y z w
 
 
 {-| Convert a vector to a record.
 -}
 toRecord : Vec4 -> { x : Float, y : Float, z : Float, w : Float }
-toRecord =
-    identity
+toRecord (Vec4 x y z w) =
+    { x = x, y = y, z = z, w = w }
 
 
 {-| Convert a record to a vector.
 -}
 fromRecord : { x : Float, y : Float, z : Float, w : Float } -> Vec4
-fromRecord =
-    identity
+fromRecord { x, y, z, w } =
+    Vec4 x y z w
 
 
 {-| Vector addition: a + b
 -}
 add : Vec4 -> Vec4 -> Vec4
-add a b =
-    Vec4 (a.x + b.x) (a.y + b.y) (a.z + b.z) (a.w + b.w)
+add (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
+    Vec4 (ax + bx) (ay + by) (az + bz) (aw + bw)
 
 
 {-| Vector subtraction: a - b
 -}
 sub : Vec4 -> Vec4 -> Vec4
-sub a b =
-    Vec4 (a.x - b.x) (a.y - b.y) (a.z - b.z) (a.w - b.w)
+sub (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
+    Vec4 (ax - bx) (ay - by) (az - bz) (aw - bw)
 
 
 {-| Vector negation: -a
 -}
 negate : Vec4 -> Vec4
-negate a =
-    Vec4 -a.x -a.y -a.z -a.w
+negate (Vec4 ax ay az aw) =
+    Vec4 -ax -ay -az -aw
 
 
 {-| The normalized direction from b to a: (a - b) / |a - b|
@@ -144,26 +144,26 @@ negate a =
 direction : Vec4 -> Vec4 -> Vec4
 direction a b =
     let
-        c =
+        ((Vec4 x y z w) as c) =
             sub a b
 
         len =
             length c
     in
-    Vec4 (c.x / len) (c.y / len) (c.z / len) (c.w / len)
+    Vec4 (x / len) (y / len) (z / len) (w / len)
 
 
 {-| The length of the given vector: |a|
 -}
 length : Vec4 -> Float
-length { x, y, z, w } =
+length (Vec4 x y z w) =
     sqrt (x * x + y * y + z * z + w * w)
 
 
 {-| The square of the length of the given vector: |a| \* |a|
 -}
 lengthSquared : Vec4 -> Float
-lengthSquared { x, y, z, w } =
+lengthSquared (Vec4 x y z w) =
     x * x + y * y + z * z + w * w
 
 
@@ -184,23 +184,23 @@ distanceSquared a b =
 {-| A unit vector with the same direction as the given vector: a / |a|
 -}
 normalize : Vec4 -> Vec4
-normalize v4 =
+normalize ((Vec4 x y z w) as v4) =
     let
         len =
             length v4
     in
-    Vec4 (v4.x / len) (v4.y / len) (v4.z / len) (v4.w / len)
+    Vec4 (x / len) (y / len) (z / len) (w / len)
 
 
 {-| Multiply the vector by a scalar: s \* v
 -}
 scale : Float -> Vec4 -> Vec4
-scale s v =
-    Vec4 (s * v.x) (s * v.y) (s * v.z) (s * v.w)
+scale s (Vec4 x y z w) =
+    Vec4 (s * x) (s * y) (s * z) (s * w)
 
 
 {-| The dot product of a and b
 -}
 dot : Vec4 -> Vec4 -> Float
-dot a b =
-    a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w
+dot (Vec4 ax ay az aw) (Vec4 bx by bz bw) =
+    ax * bx + ay * by + az * bz + aw * bw
