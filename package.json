@@ -19,7 +19,7 @@
     "posthtml-head-elements": "0.5.1",
     "posthtml-minifier": "0.1.0",
     "prepack": "0.2.54",
-    "terser": "4.0.0",
+    "terser": "4.8.1",
     "uglify-js": "3.6.0",
     "xhr2": "0.2.0"
   },
